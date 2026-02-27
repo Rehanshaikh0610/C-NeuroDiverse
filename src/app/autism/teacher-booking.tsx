@@ -52,39 +52,39 @@ const AutismTeacherBooking = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
 
   // Filter teachers based on expertise
-  const filteredTeachers = filterExpertise 
-    ? autismTeachers.filter(teacher => 
-        teacher.expertise.some(skill => 
-          skill.toLowerCase().includes(filterExpertise.toLowerCase())
-        )
+  const filteredTeachers = filterExpertise
+    ? autismTeachers.filter(teacher =>
+      teacher.expertise.some(skill =>
+        skill.toLowerCase().includes(filterExpertise.toLowerCase())
       )
+    )
     : autismTeachers;
 
   // Generate available dates (next 14 days)
   const getAvailableDates = () => {
     const dates = [];
     const today = new Date();
-    
+
     for (let i = 1; i <= 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       const teacher = autismTeachers.find(t => t.id === selectedTeacher);
       const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-      
+
       // Only include days when the teacher is available
       if (teacher && teacher.availability.includes(dayName)) {
         dates.push({
           value: date.toISOString().split('T')[0],
-          label: date.toLocaleDateString('en-US', { 
-            weekday: 'short', 
-            month: 'short', 
-            day: 'numeric' 
+          label: date.toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric'
           })
         });
       }
     }
-    
+
     return dates;
   };
 
@@ -93,13 +93,13 @@ const AutismTeacherBooking = () => {
     const slots = [];
     const startHour = 9; // 9 AM
     const endHour = 17; // 5 PM
-    
+
     for (let hour = startHour; hour <= endHour; hour++) {
       slots.push({
         value: `${hour}:00`,
         label: `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? 'PM' : 'AM'}`
       });
-      
+
       if (hour < endHour) {
         slots.push({
           value: `${hour}:30`,
@@ -107,14 +107,14 @@ const AutismTeacherBooking = () => {
         });
       }
     }
-    
+
     return slots;
   };
 
   const handleBookSession = () => {
     // In a real app, this would send the booking to an API
     alert(`Booking confirmed with ${autismTeachers.find(t => t.id === selectedTeacher)?.name} on ${selectedDate} at ${selectedTime}`);
-    
+
     // Reset booking form
     setSelectedTeacher(null);
     setSelectedDate('');
@@ -126,7 +126,7 @@ const AutismTeacherBooking = () => {
   return (
     <div className="mb-10">
       {!showBookingForm ? (
-        <motion.div 
+        <motion.div
           className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-6 text-white shadow-lg"
           whileHover={{ scale: 1.02 }}
           transition={{ duration: 0.3 }}
@@ -138,7 +138,7 @@ const AutismTeacherBooking = () => {
                 Book one-on-one sessions with teachers experienced in autism education
               </p>
             </div>
-            <button 
+            <button
               onClick={() => setShowBookingForm(true)}
               className="bg-white text-indigo-700 hover:bg-indigo-100 px-6 py-2 rounded-lg font-medium transition"
             >
@@ -156,7 +156,7 @@ const AutismTeacherBooking = () => {
                   Connect with teachers specialized in supporting autistic learners
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowBookingForm(false)}
                 className="bg-white text-purple-700 hover:bg-purple-50 px-4 py-1 rounded-lg text-sm"
               >
@@ -182,7 +182,7 @@ const AutismTeacherBooking = () => {
                 />
               </div>
               <div className="w-full md:w-auto self-end">
-                <button 
+                <button
                   className="w-full md:w-auto bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition"
                   onClick={() => setFilterExpertise('')}
                 >
@@ -197,16 +197,15 @@ const AutismTeacherBooking = () => {
             <h3 className="text-lg font-semibold text-gray-800 mb-4">
               Available Teachers ({filteredTeachers.length})
             </h3>
-            
+
             <div className="space-y-6">
               {filteredTeachers.map((teacher) => (
-                <div 
-                  key={teacher.id} 
-                  className={`border rounded-xl overflow-hidden transition ${
-                    selectedTeacher === teacher.id 
-                      ? 'border-purple-500 ring-2 ring-purple-200' 
+                <div
+                  key={teacher.id}
+                  className={`border rounded-xl overflow-hidden transition ${selectedTeacher === teacher.id
+                      ? 'border-purple-500 ring-2 ring-purple-200'
                       : 'border-gray-200 hover:border-purple-300'
-                  }`}
+                    }`}
                 >
                   <div className="p-6">
                     <div className="flex flex-col md:flex-row gap-6">
@@ -219,7 +218,7 @@ const AutismTeacherBooking = () => {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Teacher Info */}
                       <div className="flex-1">
                         <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
@@ -233,15 +232,15 @@ const AutismTeacherBooking = () => {
                             <span className="ml-1 text-gray-500">({teacher.reviews} reviews)</span>
                           </div>
                         </div>
-                        
+
                         <p className="text-gray-600 mb-4">{teacher.bio}</p>
-                        
+
                         <div className="mb-4">
                           <h5 className="text-sm font-medium text-gray-700 mb-2">Expertise</h5>
                           <div className="flex flex-wrap gap-2">
                             {teacher.expertise.map((skill, index) => (
-                              <span 
-                                key={index} 
+                              <span
+                                key={index}
                                 className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full"
                               >
                                 {skill}
@@ -249,18 +248,17 @@ const AutismTeacherBooking = () => {
                             ))}
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between">
                           <div>
                             <span className="text-gray-700 font-medium">${teacher.hourlyRate}</span>
                             <span className="text-gray-500"> / hour</span>
                           </div>
-                          <button 
-                            className={`mt-3 sm:mt-0 px-6 py-2 rounded-lg transition ${
-                              selectedTeacher === teacher.id
+                          <button
+                            className={`mt-3 sm:mt-0 px-6 py-2 rounded-lg transition ${selectedTeacher === teacher.id
                                 ? 'bg-purple-100 text-purple-700 border border-purple-300'
                                 : 'bg-purple-600 text-white hover:bg-purple-700'
-                            }`}
+                              }`}
                             onClick={() => {
                               setSelectedTeacher(teacher.id);
                               setBookingStep(2);
@@ -272,14 +270,14 @@ const AutismTeacherBooking = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Booking Form - Only show if this teacher is selected */}
                   {selectedTeacher === teacher.id && bookingStep >= 2 && (
                     <div className="p-6 bg-purple-50 border-t border-purple-200">
                       <h4 className="text-lg font-semibold text-purple-800 mb-4">
                         Book a Session with {teacher.name}
                       </h4>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Date Selection */}
                         <div>
@@ -303,7 +301,7 @@ const AutismTeacherBooking = () => {
                             ))}
                           </select>
                         </div>
-                        
+
                         {/* Time Selection - Only show if date is selected */}
                         {bookingStep >= 3 && (
                           <div>
@@ -329,7 +327,7 @@ const AutismTeacherBooking = () => {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Confirm Booking - Only show if both date and time are selected */}
                       {bookingStep >= 4 && selectedDate && selectedTime && (
                         <div className="mt-6">
@@ -342,8 +340,8 @@ const AutismTeacherBooking = () => {
                               <span className="font-medium">Date:</span> {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                             </p>
                             <p className="text-gray-600">
-                              <span className="font-medium">Time:</span> {selectedTime.split(':')[0] > 12 
-                                ? `${parseInt(selectedTime.split(':')[0]) - 12}:${selectedTime.split(':')[1]} PM` 
+                              <span className="font-medium">Time:</span> {parseInt(selectedTime.split(':')[0]) > 12
+                                ? `${parseInt(selectedTime.split(':')[0]) - 12}:${selectedTime.split(':')[1]} PM`
                                 : `${selectedTime} AM`}
                             </p>
                             <p className="text-gray-600">
@@ -353,8 +351,8 @@ const AutismTeacherBooking = () => {
                               <span className="font-medium">Price:</span> ${teacher.hourlyRate}
                             </p>
                           </div>
-                          
-                          <button 
+
+                          <button
                             className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition"
                             onClick={handleBookSession}
                           >
@@ -366,11 +364,11 @@ const AutismTeacherBooking = () => {
                   )}
                 </div>
               ))}
-              
+
               {filteredTeachers.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-gray-500">No teachers found matching your criteria.</p>
-                  <button 
+                  <button
                     className="mt-4 text-purple-600 hover:text-purple-800"
                     onClick={() => setFilterExpertise('')}
                   >

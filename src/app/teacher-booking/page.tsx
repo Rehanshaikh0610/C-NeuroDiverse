@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FiUsers, FiBookOpen, FiBrain, FiCalendar, FiHeart, FiArrowRight } from 'react-icons/fi';
+import { FiUsers, FiBookOpen, FiZap, FiCalendar, FiHeart, FiArrowRight } from 'react-icons/fi';
 
 const TeacherBookingIndex = () => {
   return (
@@ -10,7 +10,7 @@ const TeacherBookingIndex = () => {
       <div className="p-8 bg-gradient-to-r from-indigo-700 to-purple-700 text-white">
         <h2 className="text-3xl font-bold mb-2">Specialized Teacher Booking</h2>
         <p className="text-lg opacity-90 max-w-3xl">
-          Connect with expert teachers specialized in supporting neurodiverse learners. 
+          Connect with expert teachers specialized in supporting neurodiverse learners.
           Book personalized sessions tailored to your specific learning needs.
         </p>
       </div>
@@ -18,10 +18,10 @@ const TeacherBookingIndex = () => {
       {/* Specialization Cards */}
       <div className="p-8">
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Find Teachers by Specialization</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* Autism Card */}
-          <Link 
+          <Link
             href="/teacher-booking/autism"
             className="group block rounded-xl overflow-hidden border border-gray-200 transition hover:shadow-md hover:border-purple-300"
           >
@@ -38,14 +38,14 @@ const TeacherBookingIndex = () => {
               </p>
             </div>
           </Link>
-          
+
           {/* ADHD Card */}
-          <Link 
+          <Link
             href="/teacher-booking/adhd"
             className="group block rounded-xl overflow-hidden border border-gray-200 transition hover:shadow-md hover:border-blue-300"
           >
             <div className="h-32 bg-blue-600 flex items-center justify-center">
-              <FiBrain className="text-white text-5xl" />
+              <FiZap className="text-white text-5xl" />
             </div>
             <div className="p-6">
               <div className="flex justify-between items-center mb-2">
@@ -57,9 +57,9 @@ const TeacherBookingIndex = () => {
               </p>
             </div>
           </Link>
-          
+
           {/* Dyslexia Card */}
-          <Link 
+          <Link
             href="/teacher-booking/dyslexia"
             className="group block rounded-xl overflow-hidden border border-gray-200 transition hover:shadow-md hover:border-green-300"
           >
@@ -77,13 +77,13 @@ const TeacherBookingIndex = () => {
             </div>
           </Link>
         </div>
-        
+
         {/* Manage Bookings Section */}
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Manage Your Learning Journey</h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* My Bookings Card */}
-          <Link 
+          <Link
             href="/teacher-booking/my-bookings"
             className="group flex items-center p-6 rounded-xl border border-gray-200 transition hover:shadow-md hover:border-indigo-300"
           >
@@ -100,9 +100,9 @@ const TeacherBookingIndex = () => {
               </p>
             </div>
           </Link>
-          
+
           {/* Favorite Teachers Card */}
-          <Link 
+          <Link
             href="/teacher-booking/favorites"
             className="group flex items-center p-6 rounded-xl border border-gray-200 transition hover:shadow-md hover:border-rose-300"
           >
@@ -121,11 +121,11 @@ const TeacherBookingIndex = () => {
           </Link>
         </div>
       </div>
-      
+
       {/* FAQ Section */}
       <div className="p-8 bg-gray-50 border-t border-gray-200">
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Frequently Asked Questions</h3>
-        
+
         <div className="space-y-6 max-w-4xl">
           <div>
             <h4 className="text-lg font-medium text-gray-800 mb-2">How do teacher bookings work?</h4>
@@ -133,21 +133,21 @@ const TeacherBookingIndex = () => {
               Browse teachers by specialization, select a teacher that matches your needs, choose an available date and time, and confirm your booking. You'll receive confirmation details and can manage all your bookings in the "My Bookings" section.
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-lg font-medium text-gray-800 mb-2">What happens during a session?</h4>
             <p className="text-gray-600">
               Sessions are typically conducted via video call and last for 60 minutes. Teachers will work with you on specific learning strategies tailored to your needs. You can add notes before sessions to help teachers prepare, and after sessions to track progress.
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-lg font-medium text-gray-800 mb-2">How do I prepare for my first session?</h4>
             <p className="text-gray-600">
               Before your first session, we recommend adding detailed notes about your learning goals and any specific challenges you'd like to address. Having examples of schoolwork or specific topics ready can help make the session more productive.
             </p>
           </div>
-          
+
           <div>
             <h4 className="text-lg font-medium text-gray-800 mb-2">Can I change or cancel my booking?</h4>
             <p className="text-gray-600">
