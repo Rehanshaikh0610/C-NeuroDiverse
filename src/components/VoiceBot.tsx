@@ -4,12 +4,33 @@ import React, { useState, useEffect, useRef } from 'react';
 
 interface VoiceBotProps {
   onSpeechResult: (text: string) => void;
+  botResponse?: string;
 }
 
-const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult }) => {
+const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult, botResponse }) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Text-to-speech function
+  const speak = React.useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Stop any current speech
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('Speech synthesis not supported in this browser');
+    }
+  }, []);
+
+  useEffect(() => {
+    if (botResponse) {
+      speak(botResponse);
+    }
+  }, [botResponse, speak]);
 
   useEffect(() => {
     // Check if browser supports SpeechRecognition
@@ -20,13 +41,13 @@ const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult }) => {
       recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = 'en-US';
 
-      recognitionRef.current.onresult = (event) => {
+      recognitionRef.current.onresult = (event: any) => {
         const current = event.resultIndex;
         const result = event.results[current];
         const transcriptText = result[0].transcript;
-        
+
         setTranscript(transcriptText);
-        
+
         if (result.isFinal) {
           onSpeechResult(transcriptText);
           setIsListening(false);
@@ -36,7 +57,7 @@ const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult }) => {
         }
       };
 
-      recognitionRef.current.onerror = (event) => {
+      recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error', event.error);
         setIsListening(false);
       };
@@ -49,7 +70,7 @@ const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult }) => {
         recognitionRef.current.stop();
       }
     };
-  }, [onSpeechResult]);
+  }, [onSpeechResult, speak]);
 
   const toggleListening = () => {
     if (isListening) {
@@ -66,28 +87,14 @@ const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult }) => {
     }
   };
 
-  // Text-to-speech function
-  const speak = (text: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      window.speechSynthesis.speak(utterance);
-    } else {
-      console.error('Speech synthesis not supported in this browser');
-    }
-  };
-
   return (
     <div className="fixed bottom-24 right-24 flex flex-col items-center">
       <button
         onClick={toggleListening}
-        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
-          isListening
-            ? 'bg-red-500 hover:bg-red-600'
-            : 'bg-blue-500 hover:bg-blue-600'
-        }`}
+        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${isListening
+          ? 'bg-red-500 hover:bg-red-600'
+          : 'bg-blue-500 hover:bg-blue-600'
+          }`}
         aria-label={isListening ? 'Stop listening' : 'Start listening'}
       >
         <i className={`fas ${isListening ? 'fa-microphone-slash' : 'fa-microphone'} text-white text-xl`}></i>
@@ -102,11 +109,3 @@ const VoiceBot: React.FC<VoiceBotProps> = ({ onSpeechResult }) => {
 };
 
 export default VoiceBot;
-
-// Add TypeScript declarations for the Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: typeof SpeechRecognition;
-    webkitSpeechRecognition: typeof SpeechRecognition;
-  }
-} 

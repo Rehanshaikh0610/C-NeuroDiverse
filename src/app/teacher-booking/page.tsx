@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { FiUsers, FiBookOpen, FiZap, FiCalendar, FiHeart, FiArrowRight } from 'react-icons/fi';
+import { FiUsers, FiBookOpen, FiCalendar, FiHeart, FiArrowRight } from 'react-icons/fi';
+import { FaBrain } from 'react-icons/fa';
 
 const TeacherBookingIndex = () => {
   return (
@@ -45,8 +46,8 @@ const TeacherBookingIndex = () => {
             className="group block rounded-xl overflow-hidden border border-gray-200 transition hover:shadow-md hover:border-blue-300"
           >
             <div className="h-32 bg-blue-600 flex items-center justify-center">
-              <FiZap className="text-white text-5xl" />
-            </div>
+              <FaBrain className="text-white text-5xl" />
+            </div >
             <div className="p-6">
               <div className="flex justify-between items-center mb-2">
                 <h4 className="text-lg font-semibold text-gray-800">ADHD Specialists</h4>
@@ -56,10 +57,10 @@ const TeacherBookingIndex = () => {
                 Find teachers who excel in executive function, focus techniques, and organization strategies.
               </p>
             </div>
-          </Link>
+          </Link >
 
           {/* Dyslexia Card */}
-          <Link
+          < Link
             href="/teacher-booking/dyslexia"
             className="group block rounded-xl overflow-hidden border border-gray-200 transition hover:shadow-md hover:border-green-300"
           >
@@ -75,11 +76,11 @@ const TeacherBookingIndex = () => {
                 Book sessions with teachers skilled in structured literacy, multisensory learning, and reading strategies.
               </p>
             </div>
-          </Link>
-        </div>
+          </Link >
+        </div >
 
         {/* Manage Bookings Section */}
-        <h3 className="text-xl font-semibold text-gray-800 mb-6">Manage Your Learning Journey</h3>
+        < h3 className="text-xl font-semibold text-gray-800 mb-6" > Manage Your Learning Journey</h3 >
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* My Bookings Card */}
@@ -120,10 +121,10 @@ const TeacherBookingIndex = () => {
             </div>
           </Link>
         </div>
-      </div>
+      </div >
 
       {/* FAQ Section */}
-      <div className="p-8 bg-gray-50 border-t border-gray-200">
+      < div className="p-8 bg-gray-50 border-t border-gray-200" >
         <h3 className="text-xl font-semibold text-gray-800 mb-6">Frequently Asked Questions</h3>
 
         <div className="space-y-6 max-w-4xl">
@@ -155,8 +156,8 @@ const TeacherBookingIndex = () => {
             </p>
           </div>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

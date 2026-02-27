@@ -20,8 +20,8 @@ const MiniPlayer: React.FC = () => {
     togglePlay,
     setVolume: setMusicVolume,
     toggleMute: toggleMusicMute,
-    playTrack: nextTrack,
-    playTrack: previousTrack,
+    nextTrack,
+    previousTrack,
     audioRef,
   } = useMusic();
 
@@ -33,7 +33,7 @@ const MiniPlayer: React.FC = () => {
   useEffect(() => {
     if (audioRef.current) {
       const audio = audioRef.current;
-      
+
       const updateProgress = () => {
         if (audio.duration) {
           setProgress((audio.currentTime / audio.duration) * 100);

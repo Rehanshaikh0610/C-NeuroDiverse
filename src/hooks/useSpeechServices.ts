@@ -3,7 +3,7 @@ import * as sdk from 'microsoft-cognitiveservices-speech-sdk';
 
 interface UseSpeechServicesProps {
   onSpeechInput?: (text: string) => void;
-  onSpeechOutput?: (text: string) => void;
+  onSpeechOutput?: (text: string | ((text: string) => Promise<any>)) => void;
 }
 
 export const useSpeechServices = ({ onSpeechInput, onSpeechOutput }: UseSpeechServicesProps) => {
@@ -85,18 +85,24 @@ export const useSpeechServices = ({ onSpeechInput, onSpeechOutput }: UseSpeechSe
   const speakText = useCallback(async (text: string) => {
     if (!synthesizerRef.current) return;
 
-    try {
-      const result = await synthesizerRef.current.speakTextAsync(text);
-      if (result) {
-        if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-          console.log('Speech synthesis completed');
-        } else {
-          console.error('Speech synthesis canceled or failed');
+    return new Promise((resolve, reject) => {
+      synthesizerRef.current?.speakTextAsync(
+        text,
+        (result) => {
+          if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
+            console.log('Speech synthesis completed');
+            resolve(result);
+          } else {
+            console.error('Speech synthesis canceled or failed:', result.errorDetails);
+            resolve(result);
+          }
+        },
+        (error) => {
+          console.error('Error synthesizing speech:', error);
+          reject(error);
         }
-      }
-    } catch (error) {
-      console.error('Error synthesizing speech:', error);
-    }
+      );
+    });
   }, []);
 
   useEffect(() => {

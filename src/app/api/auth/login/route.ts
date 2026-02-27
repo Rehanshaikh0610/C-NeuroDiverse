@@ -4,7 +4,7 @@ import User from '@/models/User';
 import UserProgress from '@/models/UserProgress';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Update user progress for login activity
     let userProgress = await UserProgress.findOne({ userId: user._id });
-    
+
     if (!userProgress) {
       // Create progress record if it doesn't exist
       userProgress = await UserProgress.create({
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Create JWT token
     const token = jwt.sign(
-      { 
+      {
         id: user._id,
         name: user.name,
         email: user.email

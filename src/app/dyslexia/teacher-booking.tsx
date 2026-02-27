@@ -203,8 +203,8 @@ const DyslexiaTeacherBooking = () => {
                 <div
                   key={teacher.id}
                   className={`border rounded-xl overflow-hidden transition ${selectedTeacher === teacher.id
-                      ? 'border-purple-500 ring-2 ring-purple-200'
-                      : 'border-gray-200 hover:border-purple-300'
+                    ? 'border-purple-500 ring-2 ring-purple-200'
+                    : 'border-gray-200 hover:border-purple-300'
                     }`}
                 >
                   <div className="p-6">
@@ -256,8 +256,8 @@ const DyslexiaTeacherBooking = () => {
                           </div>
                           <button
                             className={`mt-3 sm:mt-0 px-6 py-2 rounded-lg transition ${selectedTeacher === teacher.id
-                                ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                                : 'bg-purple-600 text-white hover:bg-purple-700'
+                              ? 'bg-purple-100 text-purple-700 border border-purple-300'
+                              : 'bg-purple-600 text-white hover:bg-purple-700'
                               }`}
                             onClick={() => {
                               setSelectedTeacher(teacher.id);

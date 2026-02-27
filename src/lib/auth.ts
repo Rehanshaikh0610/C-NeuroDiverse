@@ -1,9 +1,33 @@
 import { NextAuthOptions } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import connectToDatabase from './mongodb';
 import User from '@/models/User';
 import UserProgress from '@/models/UserProgress';
 import bcrypt from 'bcryptjs';
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      role?: string;
+    };
+  }
+  interface User {
+    id: string;
+    role?: string;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?: string;
+    role?: string;
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -39,7 +63,7 @@ export const authOptions: NextAuthOptions = {
 
           // Update user progress for login activity
           let userProgress = await UserProgress.findOne({ userId: user._id });
-          
+
           if (!userProgress) {
             // Create progress record if it doesn't exist
             userProgress = await UserProgress.create({
@@ -95,13 +119,10 @@ export const authOptions: NextAuthOptions = {
     signIn: '/login',
     error: '/login',
   },
-  secret: process.env.NEXTAUTH_SECRET || 'your-secret-key',
+  secret: process.env.NEXTAUTH_SECRET,
 };
 
 // Helper function to get the current session on the server
 export async function getServerAuthSession() {
   return await getServerSession(authOptions);
 }
-
-// Import this at the top of the file
-import { getServerSession } from 'next-auth/next'; 

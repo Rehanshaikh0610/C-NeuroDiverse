@@ -319,7 +319,7 @@ const DyslexiaTeacherBooking = () => {
                           <span className="font-medium">Date:</span> {new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </p>
                         <p className="text-gray-600">
-                          <span className="font-medium">Time:</span> {selectedTime.split(':')[0] > 12 
+                          <span className="font-medium">Time:</span> {parseInt(selectedTime.split(':')[0]) > 12 
                             ? `${parseInt(selectedTime.split(':')[0]) - 12}:${selectedTime.split(':')[1]} PM` 
                             : `${selectedTime} AM`}
                         </p>

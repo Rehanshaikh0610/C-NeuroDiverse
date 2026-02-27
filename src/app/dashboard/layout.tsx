@@ -17,12 +17,8 @@ export default function DashboardLayout({
     <div>
       {children}
       {/* Show MiniPlayer only when not on the music page */}
-      {currentTrack && !pathname.includes('/dashboard/music') && (
-        <MiniPlayer 
-          currentTrack={currentTrack}
-          isPlaying={isPlaying}
-          onTogglePlay={togglePlay}
-        />
+      {currentTrack && (!pathname || !pathname.includes('/dashboard/music')) && (
+        <MiniPlayer />
       )}
     </div>
   );

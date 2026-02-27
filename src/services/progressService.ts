@@ -5,12 +5,12 @@ import mongoose from 'mongoose';
 export async function getUserProgress(userId: string) {
   try {
     await connectToDatabase();
-    
+
     const userProgress = await UserProgress.findOne({ userId });
     if (!userProgress) {
       throw new Error('User progress not found');
     }
-    
+
     return {
       level: userProgress.level,
       points: userProgress.points,
@@ -28,10 +28,10 @@ export async function getUserProgress(userId: string) {
 export async function addActivity(userId: string, activityType: string, points: number, details: string = '') {
   try {
     await connectToDatabase();
-    
+
     // Find user progress
     let userProgress = await UserProgress.findOne({ userId });
-    
+
     if (!userProgress) {
       // Create new progress record if it doesn't exist
       userProgress = await UserProgress.create({
@@ -39,16 +39,16 @@ export async function addActivity(userId: string, activityType: string, points: 
         activities: [],
       });
     }
-    
+
     // Add points and activity
     userProgress.addPoints(points, activityType, details);
-    
+
     // Update streak if it's a new day
     userProgress.updateStreak();
-    
+
     // Save changes
     await userProgress.save();
-    
+
     return {
       level: userProgress.level,
       points: userProgress.points,
@@ -63,10 +63,10 @@ export async function addActivity(userId: string, activityType: string, points: 
 export async function updateCompletedSections(userId: string, section: 'autism' | 'adhd' | 'dyslexia', increment: number = 1) {
   try {
     await connectToDatabase();
-    
+
     // Find user progress
     let userProgress = await UserProgress.findOne({ userId });
-    
+
     if (!userProgress) {
       // Create new progress record if it doesn't exist
       userProgress = await UserProgress.create({
@@ -74,16 +74,16 @@ export async function updateCompletedSections(userId: string, section: 'autism' 
         activities: [],
       });
     }
-    
+
     // Update completed sections
     userProgress.completedSections[section] += increment;
-    
+
     // Add points for section completion
     userProgress.addPoints(15, 'resource_accessed', `Completed ${section} section`);
-    
+
     // Save changes
     await userProgress.save();
-    
+
     return userProgress.completedSections;
   } catch (error) {
     console.error('Error updating completed sections:', error);
@@ -94,10 +94,10 @@ export async function updateCompletedSections(userId: string, section: 'autism' 
 export async function addBadge(userId: string, badgeName: string, badgeDescription: string, icon: string = 'trophy') {
   try {
     await connectToDatabase();
-    
+
     // Find user progress
     let userProgress = await UserProgress.findOne({ userId });
-    
+
     if (!userProgress) {
       // Create new progress record if it doesn't exist
       userProgress = await UserProgress.create({
@@ -105,10 +105,10 @@ export async function addBadge(userId: string, badgeName: string, badgeDescripti
         activities: [],
       });
     }
-    
+
     // Check if badge already exists
-    const badgeExists = userProgress.badges.some(badge => badge.name === badgeName);
-    
+    const badgeExists = userProgress.badges.some((badge: any) => badge.name === badgeName);
+
     if (!badgeExists) {
       // Add new badge
       userProgress.badges.push({
@@ -117,14 +117,14 @@ export async function addBadge(userId: string, badgeName: string, badgeDescripti
         earnedAt: new Date(),
         icon,
       });
-      
+
       // Add points for earning a badge
       userProgress.addPoints(25, 'badge_earned', `Earned badge: ${badgeName}`);
-      
+
       // Save changes
       await userProgress.save();
     }
-    
+
     return userProgress.badges;
   } catch (error) {
     console.error('Error adding badge:', error);
@@ -135,7 +135,7 @@ export async function addBadge(userId: string, badgeName: string, badgeDescripti
 export async function getLeaderboard(limit: number = 10) {
   try {
     await connectToDatabase();
-    
+
     const leaderboard = await UserProgress.aggregate([
       { $sort: { points: -1 } },
       { $limit: limit },
@@ -160,7 +160,7 @@ export async function getLeaderboard(limit: number = 10) {
         }
       }
     ]);
-    
+
     return leaderboard;
   } catch (error) {
     console.error('Error fetching leaderboard:', error);

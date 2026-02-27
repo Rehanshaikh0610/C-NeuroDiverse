@@ -25,7 +25,7 @@ export default function ChatbotPage() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [speakFunction, setSpeakFunction] = useState<((text: string) => Promise<void>) | null>(null);
+  const [botResponse, setBotResponse] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,17 +62,19 @@ export default function ChatbotPage() {
     }
   }, [inputValue]);
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = async (overrideText?: string) => {
+    const messageText = overrideText || inputValue.trim();
+    if (!messageText) return;
 
     const userMessage: Message = {
-      text: inputValue.trim(),
+      text: messageText,
       sender: 'user',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setBotResponse(''); // Clear previous response
     setIsTyping(true);
 
     try {
@@ -81,7 +83,7 @@ export default function ChatbotPage() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: userMessage.text })
+        body: JSON.stringify({ message: messageText })
       });
 
       const data = await response.json();
@@ -95,8 +97,8 @@ export default function ChatbotPage() {
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           setMessages(prev => [...prev, botMessage]);
-          // Speak the bot's response
-          handleSpeechOutput(data.response);
+          // Set the bot response to trigger VoiceBot speech
+          setBotResponse(data.response);
         } else if (data.error) {
           const errorMessage: Message = {
             text: `Sorry, I encountered an error: ${data.error}`,
@@ -129,20 +131,7 @@ export default function ChatbotPage() {
   };
 
   const handleSpeechInput = (text: string) => {
-    setInputValue(text);
-    handleSendMessage();
-  };
-
-  const handleSpeechOutput = async (text: string | ((text: string) => Promise<void>)) => {
-    if (typeof text === 'function') {
-      // Store the speech function
-      setSpeakFunction(() => text);
-    } else {
-      // Use the stored speech function to speak the text
-      if (speakFunction) {
-        await speakFunction(text);
-      }
-    }
+    handleSendMessage(text);
   };
 
   if (loading) {
@@ -179,17 +168,15 @@ export default function ChatbotPage() {
                   className={`mb-4 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}
                 >
                   <div
-                    className={`inline-block px-4 py-2 rounded-lg ${
-                      msg.sender === 'user'
-                        ? 'bg-purple-600 text-white rounded-tr-none'
-                        : 'bg-gray-200 text-gray-800 rounded-tl-none'
-                    }`}
+                    className={`inline-block px-4 py-2 rounded-lg ${msg.sender === 'user'
+                      ? 'bg-purple-600 text-white rounded-tr-none'
+                      : 'bg-gray-200 text-gray-800 rounded-tl-none'
+                      }`}
                   >
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                     <span
-                      className={`text-xs block mt-1 ${
-                        msg.sender === 'user' ? 'text-purple-200' : 'text-gray-500'
-                      }`}
+                      className={`text-xs block mt-1 ${msg.sender === 'user' ? 'text-purple-200' : 'text-gray-500'
+                        }`}
                     >
                       {msg.timestamp}
                     </span>
@@ -225,7 +212,7 @@ export default function ChatbotPage() {
                   rows={1}
                 />
                 <button
-                  onClick={handleSendMessage}
+                  onClick={() => handleSendMessage()}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center justify-center"
                 >
                   <i className="fas fa-paper-plane mr-2"></i>
@@ -238,12 +225,10 @@ export default function ChatbotPage() {
 
         {/* Voice Bot */}
         <VoiceBot
-          onSpeechInput={handleSpeechInput}
-          onSpeechOutput={handleSpeechOutput}
-          isListening={isListening}
-          setIsListening={setIsListening}
+          onSpeechResult={handleSpeechInput}
+          botResponse={botResponse}
         />
       </div>
     </div>
   );
-} 
+}

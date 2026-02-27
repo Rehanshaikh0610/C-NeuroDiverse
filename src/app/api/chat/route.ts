@@ -1,25 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from 'openai';
 import { saveChatMessage } from '@/services/chatService';
 import { v4 as uuidv4 } from 'uuid';
 import connectToDatabase from '@/lib/mongodb';
 
-// Initialize Gemini AI
-const apiKey = process.env.GEMINI_API_KEY;
-
-// System prompt for the chatbot
-const systemPrompt = `You are MindMitra, a highly empathetic, soothing, and gentle companion bot designed specifically for neurodivergent individuals (Autism, ADHD, Dyslexia).
-
-Guidelines:
-1. Keep your responses short, clear, and easy to read.
-2. Be exceedingly patient, warm, and validating.
-3. After validating feelings, gently ask exactly ONE open-ended follow-up question to learn about their state of mind or hobbies.
-4. Avoid metaphors or sarcasm. Be literal.
-5. Use simple and relatable words.
-6. Make the user feel comfortable and heard.
-
-If after 3-4 exchanges you detect signs of conditions like Autism, ADHD, or Dyslexia, mention it sensitively:
-"Based on what you've shared, I notice some patterns that might be related to [DISORDER]. It's important to remember that only a professional can diagnose this, but I can share helpful resources."`;
+// Initialize OpenAI compatible client
+const apiKey = process.env.GROQ_API_KEY || "";
+const openai = new OpenAI({
+  apiKey: apiKey,
+  baseURL: "https://api.groq.com/openai/v1", // Restore Groq base URL
+});
 
 // Helper function to get user ID from session
 async function getUserId(req: NextRequest) {
@@ -40,18 +30,10 @@ async function getUserId(req: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, sessionId } = await request.json();
+    const { message, sessionId, botName = "MindMitra" } = await request.json();
 
     if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
-    }
-
-    if (!apiKey) {
-      console.error('GEMINI_API_KEY is not configured in environment variables');
-      return NextResponse.json({
-        error: 'API key is not configured. Please set GEMINI_API_KEY environment variable.',
-        response: 'I am having trouble connecting right now. Please contact the administrator to check the API configuration.'
-      }, { status: 500 });
     }
 
     // Connect to MongoDB database
@@ -78,33 +60,58 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to save chat message to database:', saveError);
     }
 
-    // Initialize Gemini AI with proper system instruction
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-pro",
-      systemInstruction: systemPrompt,
-    });
+    // System prompt for the chatbot
+    const systemPrompt = `You are \${botName}, a highly empathetic, soothing, and gentle companion bot designed specifically for neurodivergent individuals (Autism, ADHD, Dyslexia).
 
-    const generationConfig = {
-      temperature: 1,
-      topP: 0.95,
-      topK: 40,
-      maxOutputTokens: 8192,
-    };
+Guidelines:
+1. Always respond in the same language the user uses (Multilingual Support).
+2. Keep your responses short, clear, and easy to read.
+3. Be exceedingly patient, warm, positive, and validating. Always give genuine yet positive replies.
+4. Always act as a supportive friend to boost their confidence.
+5. After validating feelings, gently ask exactly ONE open-ended follow-up question to learn about their state of mind or hobbies.
+6. Avoid metaphors or sarcasm. Be literal.
+7. Use simple and relatable words.
+8. Make the user feel comfortable, heard, and appreciated.
 
-    // Start a new chat session with proper history format
-    const chatSession = model.startChat({
-      generationConfig,
-      history: [], // Start fresh - no pre-populated history
-    });
+If after 3-4 exchanges you detect signs of conditions like Autism, ADHD, or Dyslexia, mention it sensitively and supportive.
+REPORT COMMAND: If the user asks to generate a detailed progress report, output a structured, bulleted report covering: Emotional State, Interests & Hobbies, Strengths Identified, and Potential Career/Path Suggestions based on their chats.`;
 
-    const result = await chatSession.sendMessage(message);
-    const response = result.response.text();
+    let responseText = "I encountered an issue generating a response.";
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "openai/gpt-oss-120b", // The user specifically requested this model
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: message }
+        ],
+        temperature: 0.7,
+      });
+
+      responseText = completion.choices[0]?.message?.content || responseText;
+    } catch (aiError: any) {
+      console.error('AI Completion Error:', aiError?.message || aiError);
+      // Fallback if the specific model fails (e.g., Groq rejecting the model name)
+      // Let's try with a default Groq model if the first one fails
+      try {
+        const fallbackCompletion = await openai.chat.completions.create({
+          model: "llama3-70b-8192",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: message }
+          ],
+          temperature: 0.7,
+        });
+        responseText = fallbackCompletion.choices[0]?.message?.content || responseText;
+      } catch (fallbackError: any) {
+        console.error('Fallback AI Completion Error:', fallbackError?.message || fallbackError);
+        throw fallbackError;
+      }
+    }
 
     // Try to save bot response to database
     try {
       await saveChatMessage(userId, {
-        text: response,
+        text: responseText,
         sender: 'bot',
         timestamp: new Date(),
       }, chatSessionId);
@@ -112,7 +119,7 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to save bot response to database:', saveError);
     }
 
-    return NextResponse.json({ response, sessionId: chatSessionId });
+    return NextResponse.json({ response: responseText, sessionId: chatSessionId });
   } catch (error: any) {
     console.error('Chat API Error:', error?.message || error);
 

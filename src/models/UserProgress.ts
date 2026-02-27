@@ -88,7 +88,7 @@ const userProgressSchema = new mongoose.Schema({
 });
 
 // Helper method to calculate level based on points
-userProgressSchema.methods.calculateLevel = function() {
+userProgressSchema.methods.calculateLevel = function () {
   // Simple level calculation: level = 1 + Math.floor(points / 100)
   // This means every 100 points, the user gains a level
   this.level = 1 + Math.floor(this.points / 100);
@@ -96,7 +96,7 @@ userProgressSchema.methods.calculateLevel = function() {
 };
 
 // Helper method to add points and update level
-userProgressSchema.methods.addPoints = function(points, activityType, details = '') {
+userProgressSchema.methods.addPoints = function (points: number, activityType: string, details: string = '') {
   this.points += points;
   this.activities.push({
     type: activityType,
@@ -110,13 +110,13 @@ userProgressSchema.methods.addPoints = function(points, activityType, details = 
 };
 
 // Helper method to update streak
-userProgressSchema.methods.updateStreak = function() {
+userProgressSchema.methods.updateStreak = function () {
   const now = new Date();
   const lastActive = this.lastActive;
-  
+
   // Calculate days between last activity and now
-  const dayDifference = Math.floor((now - lastActive) / (1000 * 60 * 60 * 24));
-  
+  const dayDifference = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
+
   if (dayDifference === 1) {
     // User was active yesterday, increment streak
     this.streakDays += 1;
@@ -125,7 +125,7 @@ userProgressSchema.methods.updateStreak = function() {
     this.streakDays = 1;
   }
   // If dayDifference is 0, user was already active today, don't change streak
-  
+
   this.lastActive = now;
   return this.streakDays;
 };
