@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sustained Attention Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .target {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(76, 175, 80, 0.8);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            user-select: none;
+        }
+        .target:hover {
+            transform: scale(1.05);
+        }
+        .distractor {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(244, 67, 54, 0.8);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            user-select: none;
+        }
+        .distractor:hover {
+            transform: scale(1.05);
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        .target-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Sustained Attention Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Track and click on the green target as it moves around the screen. Avoid clicking on red distractors. Stay focused for the entire duration!</div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Targets Hit</div>
+                <div class="stat-value" id="targets-hit">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Distractors Clicked</div>
+                <div class="stat-value" id="distractors-clicked">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Targets Missed</div>
+                <div class="stat-value" id="targets-missed">0</div>
+            </div>
+        </div>
+        
+        <div class="target-info" id="target-info">Current Target: <span id="current-target">●</span></div>
+        
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">Time: 60s</div>
+        </div>
+        
+        <div class="game-area" id="game-area">
+            <!-- Targets will be generated here -->
+        </div>
+        
+        <button class="button start" id="start-button">Start Game</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let gameActive = false;
+        let targetsHit = 0;
+        let distractorsClicked = 0;
+        let targetsMissed = 0;
+        let currentTargets = [];
+        let currentDistractors = [];
+        let moveInterval;
+        let spawnInterval;
+        let targetSymbol = '●';
+        let lastTargetTime = 0;
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('targets-hit').textContent = targetsHit;
+            document.getElementById('distractors-clicked').textContent = distractorsClicked;
+            document.getElementById('targets-missed').textContent = targetsMissed;
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // Function to create a target
+        function createTarget() {
+            const gameArea = document.getElementById('game-area');
+            const target = document.createElement('div');
+            target.className = 'target';
+            
+            // Random position within game area
+            const maxX = gameArea.clientWidth - 50;
+            const maxY = gameArea.clientHeight - 50;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            target.style.left = `${randomX}px`;
+            target.style.top = `${randomY}px`;
+            target.textContent = targetSymbol;
+            
+            target.addEventListener('click', handleTargetClick);
+            
+            gameArea.appendChild(target);
+            currentTargets.push(target);
+            lastTargetTime = Date.now();
+            
+            // Set timeout to remove target if not clicked
+            setTimeout(() => {
+                if (currentTargets.includes(target)) {
+                    target.remove();
+                    currentTargets = currentTargets.filter(t => t !== target);
+                    targetsMissed++;
+                    updateGameInfo();
+                    showFeedback('Target missed!', false);
+                }
+            }, 2000 - (level * 100)); // Targets disappear faster at higher levels
+            
+            return target;
+        }
+        
+        // Function to create a distractor
+        function createDistractor() {
+            if (!gameActive) return;
+            
+            const gameArea = document.getElementById('game-area');
+            const distractor = document.createElement('div');
+            distractor.className = 'distractor';
+            
+            // Random position within game area
+            const maxX = gameArea.clientWidth - 50;
+            const maxY = gameArea.clientHeight - 50;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            distractor.style.left = `${randomX}px`;
+            distractor.style.top = `${randomY}px`;
+            distractor.textContent = '✖';
+            
+            distractor.addEventListener('click', handleDistractorClick);
+            
+            gameArea.appendChild(distractor);
+            currentDistractors.push(distractor);
+            
+            // Set timeout to remove distractor
+            setTimeout(() => {
+                if (currentDistractors.includes(distractor)) {
+                    distractor.remove();
+                    currentDistractors = currentDistractors.filter(d => d !== distractor);
+                }
+            }, 3000);
+            
+            return distractor;
+        }
+        
+        // Function to handle target click
+        function handleTargetClick() {
+            if (!gameActive) return;
+            
+            // Calculate reaction time
+            const reactionTime = (Date.now() - lastTargetTime) / 1000;
+            
+            // Remove target
+            this.remove();
+            currentTargets = currentTargets.filter(t => t !== this);
+            
+            // Update stats
+            targetsHit++;
+            
+            // Calculate points based on reaction time
+            const pointsEarned = Math.max(5, Math.floor(20 - reactionTime * 10));
+            score += pointsEarned;
+            
+            showFeedback(`Target hit! +${pointsEarned} points`, true);
+            updateGameInfo();
+        }
+        
+        // Function to handle distractor click
+        function handleDistractorClick() {
+            if (!gameActive) return;
+            
+            // Remove distractor
+            this.remove();
+            currentDistractors = currentDistractors.filter(d => d !== this);
+            
+            // Update stats
+            distractorsClicked++;
+            score = Math.max(0, score - 10);
+            
+            showFeedback('Oops! That was a distractor. -10 points', false);
+            updateGameInfo();
+        }
+        
+        // Function to move targets and distractors
+        function moveObjects() {
+            const gameArea = document.getElementById('game-area');
+            const maxX = gameArea.clientWidth - 50;
+            const maxY = gameArea.clientHeight - 50;
+            
+            // Move targets
+            currentTargets.forEach(target => {
+                const currentX = parseInt(target.style.left);
+                const currentY = parseInt(target.style.top);
+                
+                // Random movement
+                const moveX = Math.random() * 10 * (Math.random() > 0.5 ? 1 : -1);
+                const moveY = Math.random() * 10 * (Math.random() > 0.5 ? 1 : -1);
+                
+                // Ensure target stays within bounds
+                const newX = Math.max(0, Math.min(maxX, currentX + moveX));
+                const newY = Math.max(0, Math.min(maxY, currentY + moveY));
+                
+                target.style.left = `${newX}px`;
+                target.style.top = `${newY}px`;
+            });
+            
+            // Move distractors
+            currentDistractors.forEach(distractor => {
+                const currentX = parseInt(distractor.style.left);
+                const currentY = parseInt(distractor.style.top);
+                
+                // Random movement
+                const moveX = Math.random() * 15 * (Math.random() > 0.5 ? 1 : -1);
+                const moveY = Math.random() * 15 * (Math.random() > 0.5 ? 1 : -1);
+                
+                // Ensure distractor stays within bounds
+                const newX = Math.max(0, Math.min(maxX, currentX + moveX));
+                const newY = Math.max(0, Math.min(maxY, currentY + moveY));
+                
+                distractor.style.left = `${newX}px`;
+                distractor.style.top = `${newY}px`;
+            });
+        }
+        
+        // Function to show feedback
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 1000);
+        }
+        
+        // Function to start game
+        function startGame() {
+            // Reset game state
+            level = 1;
+            score = 0;
+            targetsHit = 0;
+            distractorsClicked = 0;
+            targetsMissed = 0;
+            gameActive = true;
+            
+            // Clear any existing intervals
+            clearInterval(timerInterval);
+            clearInterval(moveInterval);
+            clearInterval(spawnInterval);
+            
+            // Clear any existing targets and distractors
+            currentTargets.forEach(target => target.remove());
+            currentDistractors.forEach(distractor => distractor.remove());
+            currentTargets = [];
+            currentDistractors = [];
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'none';
+            
+            // Update instructions based on level
+            updateInstructions();
+            
+            // Start the timer
+            startTimer();
+            
+            // Update game info
+            updateGameInfo();
+            
+            // Start spawning targets and distractors
+            spawnInterval = setInterval(() => {
+                if (gameActive) {
+                    if (currentTargets.length < 1) {
+                        createTarget();
+                    }
+                    
+                    // Add distractors based on level
+                    if (level > 3 && Math.random() < 0.3 + (level * 0.05)) {
+                        createDistractor();
+                    }
+                }
+            }, 2000 - (level * 100)); // Spawn faster at higher levels
+            
+            // Start moving objects
+            moveInterval = setInterval(moveObjects, 100);
+        }
+        
+        // Function to update instructions
+        function updateInstructions() {
+            const instructions = document.getElementById('instructions');
+            
+            if (level <= 3) {
+                instructions.textContent = 'Track and click on the green target as it moves around the screen. Stay focused!';
+                document.getElementById('current-target').textContent = '●';
+                targetSymbol = '●';
+            } else if (level <= 6) {
+                instructions.textContent = 'The game is getting harder! Track the target and avoid distractors. Maintain your focus.';
+                document.getElementById('current-target').textContent = '★';
+                targetSymbol = '★';
+            } else {
+                instructions.textContent = 'Expert level! Multiple targets and distractors moving quickly. Keep your attention sharp!';
+                document.getElementById('current-target').textContent = '◆';
+                targetSymbol = '◆';
+            }
+        }
+        
+        // Function to end game
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearInterval(moveInterval);
+            clearInterval(spawnInterval);
+            
+            // Clear any existing targets and distractors
+            currentTargets.forEach(target => target.remove());
+            currentDistractors.forEach(distractor => distractor.remove());
+            currentTargets = [];
+            currentDistractors = [];
+            
+            // Calculate final score with bonuses
+            const totalTargets = targetsHit + targetsMissed;
+            const hitRatio = totalTargets > 0 ? targetsHit / totalTargets : 0;
+            const distractorPenalty = distractorsClicked * 5;
+            const attentionBonus = Math.floor(hitRatio * 100) - distractorPenalty;
+            
+            score += attentionBonus;
+            
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            feedback.innerHTML = `Game Over!<br>Final Score: ${score}<br>Attention Bonus: +${attentionBonus}<br><br>`;
+            
+            if (hitRatio > 0.8 && distractorsClicked < 3) {
+                feedback.innerHTML += 'Excellent sustained attention! You maintained focus throughout the task.';
+            } else if (hitRatio > 0.6 && distractorsClicked < 5) {
+                feedback.innerHTML += 'Good job! Your attention was mostly sustained, with some room for improvement.';
+            } else {
+                feedback.innerHTML += 'Your sustained attention needs practice. Try to stay focused for longer periods.';
+            }
+            
+            feedback.className = 'feedback correct';
+            feedback.style.display = 'block';
+            
+            // Show restart button
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Play Again';
+            document.getElementById('start-button').onclick = startGame;
+            
+            // Level up if score is good enough
+            if (hitRatio > 0.7 && distractorsClicked < level * 2 && level < 10) {
+                level++;
+                updateInstructions();
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', startGame);
+        
+        // Initialize game (show start button)
+        document.getElementById('start-button').style.display = 'block';
+        updateGameInfo();
+    </script>
+</body>
+</html>

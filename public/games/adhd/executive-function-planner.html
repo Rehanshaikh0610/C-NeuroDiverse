@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Function Planner</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .scenario-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .scenario-title {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .scenario-description {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .task-item {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        .task-item.dragging {
+            opacity: 0.5;
+            background: rgba(76, 175, 80, 0.3);
+        }
+        .task-item .task-handle {
+            margin-right: 10px;
+            font-size: 1.2em;
+            cursor: grab;
+        }
+        .task-item .task-text {
+            flex-grow: 1;
+        }
+        .task-item .task-time {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            min-width: 60px;
+            text-align: center;
+        }
+        .planner-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .planner-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .planner-section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 5px;
+        }
+        .planner-dropzone {
+            min-height: 100px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            transition: all 0.3s ease;
+        }
+        .planner-dropzone.highlight {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Executive Function Planner</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Organize the tasks in the most efficient order to complete the scenario successfully. Drag and drop tasks to plan your day!</div>
+        
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">Time: 60s</div>
+        </div>
+        
+        <div class="scenario-container" id="scenario-container">
+            <div class="scenario-title" id="scenario-title">Loading scenario...</div>
+            <div class="scenario-description" id="scenario-description"></div>
+            
+            <ul class="task-list" id="task-list">
+                <!-- Tasks will be generated here -->
+            </ul>
+        </div>
+        
+        <div class="planner-container" id="planner-container">
+            <div class="planner-section">
+                <div class="planner-section-title">Morning</div>
+                <div class="planner-dropzone" id="morning-dropzone" data-section="morning"></div>
+            </div>
+            <div class="planner-section">
+                <div class="planner-section-title">Afternoon</div>
+                <div class="planner-dropzone" id="afternoon-dropzone" data-section="afternoon"></div>
+            </div>
+            <div class="planner-section">
+                <div class="planner-section-title">Evening</div>
+                <div class="planner-dropzone" id="evening-dropzone" data-section="evening"></div>
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Efficiency</div>
+                <div class="stat-value" id="efficiency">0%</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Tasks Placed</div>
+                <div class="stat-value" id="tasks-placed">0/0</div>
+            </div>
+        </div>
+        
+        <button class="button start" id="start-button">Start Game</button>
+        <button class="button" id="submit-button" style="display: none;">Submit Plan</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let gameActive = false;
+        let currentScenario = null;
+        let tasksPlaced = 0;
+        let totalTasks = 0;
+        
+        // Scenarios database
+        const scenarios = [
+            {
+                title: "School Day Preparation",
+                description: "You need to get ready for school and make sure you have everything you need for the day.",
+                tasks: [
+                    { text: "Eat breakfast", time: "15 min", section: "morning", priority: 2 },
+                    { text: "Pack lunch", time: "10 min", section: "morning", priority: 3 },
+                    { text: "Take a shower", time: "15 min", section: "morning", priority: 1 },
+                    { text: "Get dressed", time: "10 min", section: "morning", priority: 4 },
+                    { text: "Pack backpack with homework", time: "5 min", section: "morning", priority: 5 },
+                    { text: "Brush teeth", time: "5 min", section: "morning", priority: 6 }
+                ]
+            },
+            {
+                title: "Homework Management",
+                description: "You have several assignments due tomorrow and need to organize your study time effectively.",
+                tasks: [
+                    { text: "Math homework", time: "30 min", section: "afternoon", priority: 1 },
+                    { text: "Science project", time: "45 min", section: "afternoon", priority: 2 },
+                    { text: "English essay", time: "40 min", section: "evening", priority: 3 },
+                    { text: "History reading", time: "20 min", section: "evening", priority: 4 },
+                    { text: "Take short breaks between subjects", time: "5 min each", section: "both", priority: 5 },
+                    { text: "Prepare materials for tomorrow", time: "10 min", section: "evening", priority: 6 }
+                ]
+            },
+            {
+                title: "Weekend Chores",
+                description: "You need to complete several chores around the house while still having time for fun activities.",
+                tasks: [
+                    { text: "Clean your room", time: "30 min", section: "morning", priority: 1 },
+                    { text: "Do laundry", time: "45 min", section: "morning", priority: 2 },
+                    { text: "Help with grocery shopping", time: "60 min", section: "afternoon", priority: 3 },
+                    { text: "Walk the dog", time: "20 min", section: "afternoon", priority: 4 },
+                    { text: "Free time for video games", time: "60 min", section: "evening", priority: 6 },
+                    { text: "Help prepare dinner", time: "30 min", section: "evening", priority: 5 }
+                ]
+            },
+            {
+                title: "Project Planning",
+                description: "You have a big school project due in a week and need to plan out the steps to complete it on time.",
+                tasks: [
+                    { text: "Research topic online", time: "45 min", section: "morning", priority: 1 },
+                    { text: "Create outline", time: "30 min", section: "afternoon", priority: 2 },
+                    { text: "Gather materials", time: "20 min", section: "afternoon", priority: 3 },
+                    { text: "Start first draft", time: "60 min", section: "evening", priority: 4 },
+                    { text: "Create visual aids", time: "40 min", section: "evening", priority: 5 },
+                    { text: "Schedule review time for tomorrow", time: "5 min", section: "evening", priority: 6 }
+                ]
+            },
+            {
+                title: "Morning Routine Optimization",
+                description: "You often run late in the mornings. Create an efficient morning routine to get to school on time.",
+                tasks: [
+                    { text: "Set out clothes the night before", time: "5 min", section: "evening", priority: 1 },
+                    { text: "Wake up with first alarm", time: "1 min", section: "morning", priority: 2 },
+                    { text: "Quick shower", time: "10 min", section: "morning", priority: 3 },
+                    { text: "Eat simple breakfast", time: "10 min", section: "morning", priority: 4 },
+                    { text: "Brush teeth and hair", time: "5 min", section: "morning", priority: 5 },
+                    { text: "Double-check backpack", time: "2 min", section: "morning", priority: 6 },
+                    { text: "Leave with 5 minutes extra", time: "0 min", section: "morning", priority: 7 }
+                ]
+            },
+            {
+                title: "Study Session Planning",
+                description: "You have a big test coming up and need to organize an effective study session.",
+                tasks: [
+                    { text: "Remove distractions (phone, TV)", time: "5 min", section: "afternoon", priority: 1 },
+                    { text: "Gather all study materials", time: "10 min", section: "afternoon", priority: 2 },
+                    { text: "Review class notes", time: "30 min", section: "afternoon", priority: 3 },
+                    { text: "Complete practice problems", time: "45 min", section: "evening", priority: 4 },
+                    { text: "Take a break and have a snack", time: "15 min", section: "evening", priority: 5 },
+                    { text: "Create summary notes", time: "30 min", section: "evening", priority: 6 },
+                    { text: "Self-quiz on key concepts", time: "20 min", section: "evening", priority: 7 }
+                ]
+            },
+            {
+                title: "Party Planning",
+                description: "You're organizing a small party for your friends this weekend and need to plan everything.",
+                tasks: [
+                    { text: "Create guest list", time: "10 min", section: "morning", priority: 1 },
+                    { text: "Send invitations", time: "15 min", section: "morning", priority: 2 },
+                    { text: "Plan activities/games", time: "30 min", section: "afternoon", priority: 3 },
+                    { text: "Create shopping list", time: "15 min", section: "afternoon", priority: 4 },
+                    { text: "Buy food and supplies", time: "60 min", section: "afternoon", priority: 5 },
+                    { text: "Clean and decorate space", time: "45 min", section: "evening", priority: 6 },
+                    { text: "Prepare some food ahead", time: "30 min", section: "evening", priority: 7 }
+                ]
+            },
+            {
+                title: "Balancing Homework and Activities",
+                description: "You have homework and extracurricular activities today. Plan your schedule to fit everything in.",
+                tasks: [
+                    { text: "Soccer practice", time: "90 min", section: "afternoon", priority: 3 },
+                    { text: "Math homework", time: "30 min", section: "evening", priority: 1 },
+                    { text: "Science reading", time: "20 min", section: "evening", priority: 2 },
+                    { text: "Shower after practice", time: "15 min", section: "evening", priority: 4 },
+                    { text: "Dinner with family", time: "45 min", section: "evening", priority: 5 },
+                    { text: "Prepare backpack for tomorrow", time: "10 min", section: "evening", priority: 6 }
+                ]
+            },
+            {
+                title: "Managing a Busy Day",
+                description: "You have multiple appointments and tasks today. Create a plan that allows you to complete everything.",
+                tasks: [
+                    { text: "Doctor appointment", time: "60 min", section: "morning", priority: 1 },
+                    { text: "School project meeting", time: "45 min", section: "afternoon", priority: 2 },
+                    { text: "Pick up prescription", time: "20 min", section: "afternoon", priority: 3 },
+                    { text: "Complete math assignment", time: "30 min", section: "evening", priority: 4 },
+                    { text: "Call grandparents", time: "15 min", section: "evening", priority: 5 },
+                    { text: "Pack gym bag for tomorrow", time: "10 min", section: "evening", priority: 6 },
+                    { text: "Set alarm for early wake-up", time: "2 min", section: "evening", priority: 7 }
+                ]
+            },
+            {
+                title: "Exam Week Planning",
+                description: "You have multiple exams next week and need to create a study schedule that covers all subjects.",
+                tasks: [
+                    { text: "Create study schedule for all subjects", time: "20 min", section: "morning", priority: 1 },
+                    { text: "Math review - practice problems", time: "45 min", section: "morning", priority: 2 },
+                    { text: "Science - review lab notes", time: "40 min", section: "afternoon", priority: 3 },
+                    { text: "History - create timeline cards", time: "30 min", section: "afternoon", priority: 4 },
+                    { text: "English - review literature themes", time: "35 min", section: "evening", priority: 5 },
+                    { text: "Take breaks between subjects", time: "10 min each", section: "all", priority: 6 },
+                    { text: "Get at least 8 hours of sleep", time: "8 hours", section: "evening", priority: 7 },
+                    { text: "Prepare healthy snacks for study sessions", time: "15 min", section: "morning", priority: 8 }
+                ]
+            }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('tasks-placed').textContent = `${tasksPlaced}/${totalTasks}`;
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to load a scenario
+        function loadScenario() {
+            // Select a scenario based on level
+            const scenarioIndex = (level - 1) % scenarios.length;
+            currentScenario = scenarios[scenarioIndex];
+            
+            // Display scenario
+            document.getElementById('scenario-title').textContent = currentScenario.title;
+            document.getElementById('scenario-description').textContent = currentScenario.description;
+            
+            // Shuffle tasks
+            const shuffledTasks = shuffleArray(currentScenario.tasks);
+            totalTasks = shuffledTasks.length;
+            tasksPlaced = 0;
+            
+            // Display tasks
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            shuffledTasks.forEach((task, index) => {
+                const taskItem = document.createElement('li');
+                taskItem.className = 'task-item';
+                taskItem.draggable = true;
+                taskItem.dataset.index = index;
+                taskItem.dataset.priority = task.priority;
+                taskItem.dataset.section = task.section;
+                
+                taskItem.innerHTML = `
+                    <div class="task-handle">☰</div>
+                    <div class="task-text">${task.text}</div>
+                    <div class="task-time">${task.time}</div>
+                `;
+                
+                // Add drag events
+                taskItem.addEventListener('dragstart', dragStart);
+                taskItem.addEventListener('dragend', dragEnd);
+                
+                taskList.appendChild(taskItem);
+            });
+            
+            // Clear dropzones
+            document.querySelectorAll('.planner-dropzone').forEach(dropzone => {
+                dropzone.innerHTML = '';
+                dropzone.addEventListener('dragover', dragOver);
+                dropzone.addEventListener('dragenter', dragEnter);
+                dropzone.addEventListener('dragleave', dragLeave);
+                dropzone.addEventListener('drop', drop);
+            });
+            
+            // Show submit button
+            document.getElementById('submit-button').style.display = 'block';
+            document.getElementById('efficiency').textContent = '0%';
+            updateGameInfo();
+        }
+        
+        // Drag and Drop Functions
+        function dragStart(e) {
+            if (!gameActive) return;
+            
+            e.dataTransfer.setData('text/plain', e.target.dataset.index);
+            setTimeout(() => {
+                e.target.classList.add('dragging');
+            }, 0);
+        }
+        
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        function dragOver(e) {
+            e.preventDefault();
+        }
+        
+        function dragEnter(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('planner-dropzone')) {
+                e.target.classList.add('highlight');
+            }
+        }
+        
+        function dragLeave(e) {
+            if (e.target.classList.contains('planner-dropzone')) {
+                e.target.classList.remove('highlight');
+            }
+        }
+        
+        function drop(e) {
+            e.preventDefault();
+            
+            const dropzone = e.target.closest('.planner-dropzone');
+            if (!dropzone) return;
+            
+            dropzone.classList.remove('highlight');
+            
+            const taskIndex = e.dataTransfer.getData('text/plain');
+            const taskItem = document.querySelector(`.task-item[data-index="${taskIndex}"]`);
+            
+            if (taskItem) {
+                // Check if task is already in a dropzone
+                const currentDropzone = taskItem.closest('.planner-dropzone');
+                if (currentDropzone) {
+                    // If moving from one dropzone to another, don't increment tasksPlaced
+                } else {
+                    // If coming from the task list, increment tasksPlaced
+                    tasksPlaced++;
+                    updateGameInfo();
+                }
+                
+                dropzone.appendChild(taskItem);
+                calculateEfficiency();
+            }
+        }
+        
+        // Function to calculate planning efficiency
+        function calculateEfficiency() {
+            let correctPlacements = 0;
+            let totalPlacements = 0;
+            
+            document.querySelectorAll('.planner-dropzone').forEach(dropzone => {
+                const section = dropzone.dataset.section;
+                const tasks = dropzone.querySelectorAll('.task-item');
+                
+                tasks.forEach(task => {
+                    totalPlacements++;
+                    const taskSection = task.dataset.section;
+                    
+                    // Check if task is in correct section
+                    if (taskSection === section || taskSection === 'both' || taskSection === 'all') {
+                        correctPlacements++;
+                    }
+                });
+            });
+            
+            // Calculate efficiency percentage
+            const efficiency = totalPlacements > 0 ? Math.round((correctPlacements / totalPlacements) * 100) : 0;
+            document.getElementById('efficiency').textContent = `${efficiency}%`;
+            
+            return efficiency;
+        }
+        
+        // Function to submit plan
+        function submitPlan() {
+            if (!gameActive) return;
+            
+            // Check if all tasks are placed
+            if (tasksPlaced < totalTasks) {
+                const feedbackElement = document.getElementById('feedback');
+                feedbackElement.textContent = `You still have ${totalTasks - tasksPlaced} tasks that need to be placed in your plan!`;
+                feedbackElement.className = 'feedback incorrect';
+                feedbackElement.style.display = 'block';
+                return;
+            }
+            
+            // Calculate final efficiency
+            const efficiency = calculateEfficiency();
+            
+            // Calculate score based on efficiency and time left
+            const timeBonus = Math.round(timeLeft / 3);
+            const efficiencyPoints = Math.round(efficiency * level / 5);
+            const roundScore = efficiencyPoints + timeBonus;
+            
+            score += roundScore;
+            
+            // Display feedback
+            const feedbackElement = document.getElementById('feedback');
+            
+            if (efficiency >= 80) {
+                feedbackElement.textContent = `Excellent planning! Your plan is ${efficiency}% efficient. You earned ${efficiencyPoints} points for efficiency and ${timeBonus} bonus points for quick planning!`;
+                feedbackElement.className = 'feedback correct';
+                
+                // Advance to next level
+                if (level < 10) level++;
+            } else if (efficiency >= 60) {
+                feedbackElement.textContent = `Good planning! Your plan is ${efficiency}% efficient. You earned ${efficiencyPoints} points for efficiency and ${timeBonus} bonus points for time left.`;
+                feedbackElement.className = 'feedback correct';
+                
+                // Advance to next level with 70% chance
+                if (level < 10 && Math.random() < 0.7) level++;
+            } else {
+                feedbackElement.textContent = `Your plan needs improvement. It's only ${efficiency}% efficient. Try to place tasks in their optimal time periods.`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            
+            // End round
+            clearInterval(timerInterval);
+            gameActive = false;
+            document.getElementById('start-button').textContent = 'Next Scenario';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('submit-button').style.display = 'none';
+            
+            updateGameInfo();
+        }
+        
+        // Function to end game
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const efficiency = calculateEfficiency();
+            
+            const feedbackElement = document.getElementById('feedback');
+            feedbackElement.textContent = `Time's up! Your plan was ${efficiency}% efficient.`;
+            feedbackElement.className = 'feedback';
+            feedbackElement.style.display = 'block';
+            
+            document.getElementById('start-button').textContent = 'Try Again';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('submit-button').style.display = 'none';
+        }
+        
+        // Function to start a round
+        function startRound() {
+            gameActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            loadScenario();
+            startTimer();
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 
+                    'Organize the tasks in the most efficient order to complete the scenario successfully. Drag and drop tasks to plan your day!';
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 
+                    'Create an efficient plan by organizing tasks in their optimal time periods. Consider task priorities and time constraints!';
+            } else {
+                document.getElementById('instructions').textContent = 
+                    'Expert planning challenge! Organize complex tasks efficiently while considering dependencies, priorities, and time constraints.';
+            }
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Start Game';
+            document.getElementById('submit-button').style.display = 'none';
+            
+            // Add event listeners
+            document.getElementById('start-button').addEventListener('click', startRound);
+            document.getElementById('submit-button').addEventListener('click', submitPlan);
+        }
+        
+        // Initialize the game when the page loads
+        window.onload = startGame;

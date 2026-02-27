@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Tracking Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .text-display {
+            font-size: 1.8em;
+            line-height: 1.6;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-wrap;
+        }
+        .highlight {
+            background-color: rgba(255, 215, 0, 0.7);
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+        .target-letter {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: inline-block;
+            min-width: 80px;
+        }
+        .counter {
+            font-size: 1.5em;
+            margin: 20px 0;
+        }
+        .timer {
+            font-size: 1.5em;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Letter Tracking Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Find and count all occurrences of the target letter in the text. Click the text when you're ready!</div>
+        <div class="target-letter" id="target-letter">A</div>
+        <div class="counter">Count: <span id="count">0</span></div>
+        <div class="timer" id="timer">Time: 30s</div>
+        <div class="text-display" id="text-display">Click Start to begin the challenge!</div>
+        <button class="button start" id="start-button">Start</button>
+        <button class="button" id="submit-button" disabled>Submit Answer</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let targetLetter = '';
+        let correctCount = 0;
+        let userCount = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        let gameActive = false;
+        
+        // Text passages with varying difficulty
+        const passages = [
+            // Level 1-3: Simple passages with common letters
+            "The cat sat on the mat. It was a sunny day and the birds were singing in the trees. A dog ran by, chasing a ball that a child had thrown.",
+            "My friend has a big house with a red door. She likes to plant flowers in her garden. Every morning, she waters them and watches them grow.",
+            "We went to the park yesterday. There were many children playing on the swings and slides. Some people were walking their dogs on the grass.",
+            
+            // Level 4-6: Medium passages with more complex words
+            "The ancient castle stood on the hill, overlooking the small village below. Tourists often visited to explore its mysterious corridors and climb the winding staircase to the tower.",
+            "Scientists have discovered a new species of butterfly in the Amazon rainforest. Its wings display an unusual pattern of colors that help it blend with the surrounding vegetation.",
+            "The orchestra performed a beautiful symphony that filled the concert hall with melodious sounds. The audience applauded enthusiastically when the performance ended.",
+            
+            // Level 7-10: Complex passages with advanced vocabulary
+            "The archaeological excavation revealed artifacts dating back to the Bronze Age, providing valuable insights into the civilization that once flourished in this region. Researchers meticulously documented each finding.",
+            "Quantum physics challenges our fundamental understanding of reality, suggesting that particles can exist in multiple states simultaneously until observed. This phenomenon, known as superposition, defies classical physics.",
+            "The biodiversity of coral reef ecosystems is threatened by rising ocean temperatures and acidification. Conservation efforts focus on establishing protected marine areas and reducing carbon emissions globally.",
+            "Neuroscientists are investigating the complex mechanisms of memory formation and retrieval in the human brain. Their research may lead to breakthroughs in treating cognitive disorders and enhancing learning capabilities."
+        ];
+        
+        // Target letters for each level (increasing difficulty)
+        const levelLetters = [
+            'a', 't', 'e', 's', 'i', 'o', 'r', 'n', 'c', 'l'
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endRound();
+                }
+            }, 1000);
+        }
+        
+        // Function to count occurrences of a letter in text
+        function countLetterOccurrences(text, letter) {
+            const regex = new RegExp(letter, 'gi');
+            const matches = text.match(regex);
+            return matches ? matches.length : 0;
+        }
+        
+        // Function to set up the current level
+        function setupLevel() {
+            // Get passage based on level
+            const passageIndex = Math.min(Math.floor((level - 1) / 3), passages.length - 1);
+            const passage = passages[passageIndex];
+            
+            // Set target letter
+            targetLetter = levelLetters[level - 1];
+            document.getElementById('target-letter').textContent = targetLetter.toUpperCase();
+            
+            // Calculate correct count
+            correctCount = countLetterOccurrences(passage, targetLetter);
+            
+            // Display passage
+            document.getElementById('text-display').textContent = passage;
+            document.getElementById('count').textContent = '0';
+            userCount = 0;
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('submit-button').disabled = true;
+            document.getElementById('start-button').disabled = false;
+            document.getElementById('start-button').style.display = 'block';
+            
+            // Update instructions
+            document.getElementById('instructions').textContent = 
+                `Find and count all occurrences of the letter '${targetLetter.toUpperCase()}' in the text. Click Start when you're ready!`;
+        }
+        
+        // Function to start the round
+        function startRound() {
+            gameActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('submit-button').disabled = false;
+            startTimer();
+            
+            // Enable clicking on text to increment counter
+            const textDisplay = document.getElementById('text-display');
+            textDisplay.style.cursor = 'pointer';
+            textDisplay.onclick = function(e) {
+                if (!gameActive) return;
+                
+                // Get the clicked position and check if it's the target letter
+                const text = textDisplay.textContent;
+                const rect = textDisplay.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // This is a simplified approach - in a real implementation, you would
+                // need more sophisticated text position calculation
+                userCount++;
+                document.getElementById('count').textContent = userCount;
+            };
+        }
+        
+        // Function to end the round
+        function endRound() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const feedbackElement = document.getElementById('feedback');
+            const textDisplay = document.getElementById('text-display');
+            textDisplay.style.cursor = 'default';
+            textDisplay.onclick = null;
+            
+            // Highlight all occurrences of the target letter
+            const text = textDisplay.textContent;
+            const highlightedText = text.replace(new RegExp(targetLetter, 'gi'), 
+                match => `<span class="highlight">${match}</span>`);
+            textDisplay.innerHTML = highlightedText;
+            
+            // Check answer
+            if (userCount === correctCount) {
+                feedbackElement.textContent = `Correct! There ${correctCount === 1 ? 'is' : 'are'} ${correctCount} occurrence${correctCount !== 1 ? 's' : ''} of the letter '${targetLetter.toUpperCase()}'.`;
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+            } else {
+                feedbackElement.textContent = `Not quite. There ${correctCount === 1 ? 'is' : 'are'} ${correctCount} occurrence${correctCount !== 1 ? 's' : ''} of the letter '${targetLetter.toUpperCase()}'. You counted ${userCount}.`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            document.getElementById('submit-button').textContent = 'Next Level';
+            document.getElementById('submit-button').onclick = nextLevel;
+            
+            updateGameInfo();
+        }
+        
+        // Function to move to next level
+        function nextLevel() {
+            if (level < 10) {
+                level++;
+                setupLevel();
+                document.getElementById('submit-button').textContent = 'Submit Answer';
+                document.getElementById('submit-button').onclick = function() {
+                    endRound();
+                };
+            } else {
+                // Game completed
+                document.getElementById('text-display').textContent = 'GAME COMPLETED!';
+                document.getElementById('target-letter').textContent = '🏆';
+                document.getElementById('instructions').textContent = `Congratulations! You've completed all levels. Final score: ${score}`;
+                document.getElementById('submit-button').style.display = 'none';
+                document.getElementById('timer').style.display = 'none';
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setupLevel();
+            document.getElementById('submit-button').textContent = 'Submit Answer';
+            document.getElementById('submit-button').onclick = function() {
+                endRound();
+            };
+            document.getElementById('timer').style.display = 'block';
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', startRound);
+        document.getElementById('submit-button').addEventListener('click', function() {
+            endRound();
+        });
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+/* Neon Border Frame */
+.neonFrame {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+  z-index: 100;
+  border-radius: 12px;
+  pointer-events: none;
+  /* Use border-image for moving colors instead of rotating the entire frame */
+  border: 3px solid transparent;
+  /* Cool aesthetic color palette with pink, blue, cyan, purple */
+  border-image: linear-gradient(90deg, 
+    rgba(255, 105, 180, 0.7), /* Hot Pink */
+    rgba(111, 97, 211, 0.7), /* Purple */
+    rgba(10, 189, 227, 0.7), /* Cyan */
+    rgba(162, 155, 254, 0.7), /* Lavender */
+    rgba(255, 105, 180, 0.7)  /* Back to Hot Pink */
+  ) 1;
+  border-image-slice: 1;
+  /* Add glow effect */
+  box-shadow: 0 0 12px rgba(255, 105, 180, 0.3);
+  /* Combined animations */
+  animation: moveColors 12s linear infinite, glowColors 12s linear infinite;
+  /* Add backdrop filter for better visibility */
+  backdrop-filter: blur(1px);
+}
+
+/* Color Movement Animation */
+@keyframes moveColors {
+  0% {
+    border-image: linear-gradient(90deg, 
+      rgba(255, 105, 180, 0.7), /* Hot Pink */
+      rgba(111, 97, 211, 0.7), /* Purple */
+      rgba(10, 189, 227, 0.7), /* Cyan */
+      rgba(162, 155, 254, 0.7), /* Lavender */
+      rgba(255, 105, 180, 0.7)  /* Back to Hot Pink */
+    ) 1;
+  }
+  25% {
+    border-image: linear-gradient(180deg, 
+      rgba(255, 105, 180, 0.7),
+      rgba(111, 97, 211, 0.7),
+      rgba(10, 189, 227, 0.7),
+      rgba(162, 155, 254, 0.7),
+      rgba(255, 105, 180, 0.7)
+    ) 1;
+  }
+  50% {
+    border-image: linear-gradient(270deg, 
+      rgba(255, 105, 180, 0.7),
+      rgba(111, 97, 211, 0.7),
+      rgba(10, 189, 227, 0.7),
+      rgba(162, 155, 254, 0.7),
+      rgba(255, 105, 180, 0.7)
+    ) 1;
+  }
+  75% {
+    border-image: linear-gradient(360deg, 
+      rgba(255, 105, 180, 0.7),
+      rgba(111, 97, 211, 0.7),
+      rgba(10, 189, 227, 0.7),
+      rgba(162, 155, 254, 0.7),
+      rgba(255, 105, 180, 0.7)
+    ) 1;
+  }
+  100% {
+    border-image: linear-gradient(90deg, 
+      rgba(255, 105, 180, 0.7),
+      rgba(111, 97, 211, 0.7),
+      rgba(10, 189, 227, 0.7),
+      rgba(162, 155, 254, 0.7),
+      rgba(255, 105, 180, 0.7)
+    ) 1;
+  }
+}
+
+/* Glow Color Animation */
+@keyframes glowColors {
+  0% { 
+    box-shadow: 0 0 12px rgba(255, 105, 180, 0.3), 0 0 24px rgba(255, 105, 180, 0.1); 
+  }
+  25% { 
+    box-shadow: 0 0 12px rgba(111, 97, 211, 0.3), 0 0 24px rgba(111, 97, 211, 0.1); 
+  }
+  50% { 
+    box-shadow: 0 0 12px rgba(10, 189, 227, 0.3), 0 0 24px rgba(10, 189, 227, 0.1); 
+  }
+  75% { 
+    box-shadow: 0 0 12px rgba(162, 155, 254, 0.3), 0 0 24px rgba(162, 155, 254, 0.1); 
+  }
+  100% { 
+    box-shadow: 0 0 12px rgba(255, 105, 180, 0.3), 0 0 24px rgba(255, 105, 180, 0.1); 
+  }
+} 

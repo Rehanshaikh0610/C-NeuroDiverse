@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Scramble Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .scrambled-word {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 30px 0;
+            letter-spacing: 5px;
+        }
+        .hint-container {
+            margin: 20px 0;
+        }
+        .hint-button {
+            padding: 10px 20px;
+            background: rgba(33, 150, 243, 0.7);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .hint-button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .hint-text {
+            margin-top: 10px;
+            font-style: italic;
+            display: none;
+        }
+        .answer-container {
+            margin: 20px 0;
+        }
+        .answer-input {
+            padding: 12px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 25px;
+            width: 60%;
+            max-width: 300px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            color: inherit;
+        }
+        .answer-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .submit-button {
+            margin-top: 15px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .submit-button:hover {
+            background: #388E3C;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .image-container {
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Word Scramble Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Unscramble the letters to form a word. Type your answer below!</div>
+        <div class="image-container" id="image-container"></div>
+        <div class="scrambled-word" id="scrambled-word"></div>
+        <div class="hint-container">
+            <button class="hint-button" id="hint-button">Show Hint</button>
+            <div class="hint-text" id="hint-text"></div>
+        </div>
+        <div class="answer-container">
+            <input type="text" class="answer-input" id="answer-input" placeholder="Your answer...">
+            <button class="submit-button" id="submit-button">Submit</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Word</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentWord = '';
+        let currentScrambledWord = '';
+        let currentHint = '';
+        let currentImage = '';
+        let attempts = 0;
+        let maxAttempts = 3;
+        let wordAnswered = false;
+        
+        // Word data with hints and image representations (emojis for simplicity)
+        const wordData = [
+            // Level 1-3: Simple 3-4 letter words
+            { word: 'cat', hint: 'A furry pet that meows', image: '🐱' },
+            { word: 'dog', hint: 'A loyal pet that barks', image: '🐶' },
+            { word: 'sun', hint: 'It shines during the day', image: '☀️' },
+            { word: 'hat', hint: 'You wear it on your head', image: '🧢' },
+            { word: 'bed', hint: 'You sleep on it', image: '🛏️' },
+            { word: 'fish', hint: 'It swims in water', image: '🐟' },
+            { word: 'ball', hint: 'A round toy you can throw', image: '⚽' },
+            
+            // Level 4-6: Medium 4-5 letter words
+            { word: 'apple', hint: 'A fruit that keeps the doctor away', image: '🍎' },
+            { word: 'house', hint: 'A place where people live', image: '🏠' },
+            { word: 'train', hint: 'It runs on tracks', image: '🚂' },
+            { word: 'snake', hint: 'A reptile that slithers', image: '🐍' },
+            { word: 'cloud', hint: 'White fluffy thing in the sky', image: '☁️' },
+            { word: 'bread', hint: 'A food made from flour', image: '🍞' },
+            { word: 'clock', hint: 'It tells the time', image: '🕰️' },
+            
+            // Level 7-10: Harder 5-7 letter words
+            { word: 'banana', hint: 'A yellow fruit with a peel', image: '🍌' },
+            { word: 'pencil', hint: 'You write with it', image: '✏️' },
+            { word: 'school', hint: 'A place where children learn', image: '🏫' },
+            { word: 'flower', hint: 'It grows in gardens and has petals', image: '🌸' },
+            { word: 'rabbit', hint: 'A furry animal with long ears', image: '🐰' },
+            { word: 'planet', hint: 'Earth is one of these', image: '🌍' },
+            { word: 'guitar', hint: 'A musical instrument with strings', image: '🎸' },
+            { word: 'rainbow', hint: 'Colorful arc in the sky after rain', image: '🌈' },
+            { word: 'elephant', hint: 'Large gray animal with a trunk', image: '🐘' },
+            { word: 'computer', hint: 'Electronic device you use to browse the internet', image: '💻' }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to scramble a word
+        function scrambleWord(word) {
+            let scrambled = word.split('');
+            // Keep shuffling until the scrambled word is different from the original
+            do {
+                scrambled = shuffleArray(scrambled);
+            } while (scrambled.join('') === word);
+            return scrambled.join('');
+        }
+        
+        // Function to select a word appropriate for the current level
+        function selectWord() {
+            let availableWords = [];
+            
+            if (level <= 3) {
+                // Simple 3-4 letter words
+                availableWords = wordData.filter(item => item.word.length <= 4);
+            } else if (level <= 6) {
+                // Medium 4-5 letter words
+                availableWords = wordData.filter(item => item.word.length >= 4 && item.word.length <= 5);
+            } else {
+                // Harder 5-7+ letter words
+                availableWords = wordData.filter(item => item.word.length >= 5);
+            }
+            
+            // Select a random word from available words
+            return availableWords[Math.floor(Math.random() * availableWords.length)];
+        }
+        
+        // Function to set up word challenge
+        function setupWordChallenge() {
+            // Select a word appropriate for the level
+            const wordInfo = selectWord();
+            currentWord = wordInfo.word;
+            currentHint = wordInfo.hint;
+            currentImage = wordInfo.image;
+            
+            // Scramble the word
+            currentScrambledWord = scrambleWord(currentWord);
+            
+            // Set up scrambled word display
+            document.getElementById('scrambled-word').textContent = currentScrambledWord.toUpperCase();
+            
+            // Set up hint
+            document.getElementById('hint-text').textContent = currentHint;
+            document.getElementById('hint-text').style.display = 'none';
+            
+            // Hide image initially
+            document.getElementById('image-container').textContent = '';
+            
+            // Reset input and feedback
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').disabled = false;
+            document.getElementById('submit-button').disabled = false;
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            // Reset attempts and word answered flag
+            attempts = 0;
+            wordAnswered = false;
+        }
+        
+        // Function to show hint
+        function showHint() {
+            document.getElementById('hint-text').style.display = 'block';
+        }
+        
+        // Function to check answer
+        function checkAnswer() {
+            if (wordAnswered) return;
+            
+            const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase();
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            const imageContainer = document.getElementById('image-container');
+            
+            if (userAnswer === '') {
+                feedbackElement.textContent = 'Please enter your answer!';
+                feedbackElement.className = 'feedback incorrect';
+                feedbackElement.style.display = 'block';
+                return;
+            }
+            
+            attempts++;
+            
+            if (userAnswer === currentWord) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! You unscrambled the word perfectly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level * (maxAttempts - attempts + 1); // More points for fewer attempts
+                imageContainer.textContent = currentImage;
+                document.getElementById('answer-input').disabled = true;
+                document.getElementById('submit-button').disabled = true;
+                nextButton.style.display = 'block';
+                wordAnswered = true;
+            } else if (attempts >= maxAttempts) {
+                // Out of attempts
+                feedbackElement.textContent = `Out of attempts! The word was "${currentWord}".`;
+                feedbackElement.className = 'feedback incorrect';
+                imageContainer.textContent = currentImage;
+                document.getElementById('answer-input').disabled = true;
+                document.getElementById('submit-button').disabled = true;
+                nextButton.style.display = 'block';
+                wordAnswered = true;
+            } else {
+                // Incorrect answer, still have attempts
+                feedbackElement.textContent = `Not quite! Try again. Attempts left: ${maxAttempts - attempts}`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            updateGameInfo();
+        }
+        
+        // Function to move to next word
+        function nextWord() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            if (level < 10) {
+                level++;
+                setupWordChallenge();
+            } else {
+                // Game completed
+                document.getElementById('scrambled-word').textContent = 'COMPLETED!';
+                document.getElementById('image-container').textContent = '🏆';
+                document.getElementById('hint-container').style.display = 'none';
+                document.getElementById('answer-container').style.display = 'none';
+                document.getElementById('instructions').textContent = `Game completed! Final score: ${score}`;
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to handle enter key press in input
+        function handleEnterKey(event) {
+            if (event.key === 'Enter') {
+                checkAnswer();
+            }
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            document.getElementById('hint-container').style.display = 'block';
+            document.getElementById('answer-container').style.display = 'block';
+            document.getElementById('instructions').textContent = 'Unscramble the letters to form a word. Type your answer below!';
+            setupWordChallenge();
+        }
+        
+        // Event listeners
+        document.getElementById('hint-button').addEventListener('click', showHint);
+        document.getElementById('submit-button').addEventListener('click', checkAnswer);
+        document.getElementById('answer-input').addEventListener('keypress', handleEnterKey);
+        document.getElementById('next-button').addEventListener('click', nextWord);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

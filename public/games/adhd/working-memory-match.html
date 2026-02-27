@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Working Memory Match Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .sequence-display {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .sequence-item {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .sequence-item.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        .sequence-item.correct {
+            background: rgba(76, 175, 80, 0.5);
+        }
+        .sequence-item.incorrect {
+            background: rgba(244, 67, 54, 0.5);
+        }
+        .user-input {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .input-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .input-item:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .timer {
+            font-size: 1.5em;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Working Memory Match Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Watch the sequence carefully, then repeat it in the correct order!</div>
+        <div class="timer" id="timer">Get Ready!</div>
+        <div class="sequence-display" id="sequence-display">
+            <!-- Sequence items will be generated here -->
+        </div>
+        <div class="user-input" id="user-input" style="display: none;">
+            <!-- Input options will be generated here -->
+        </div>
+        <button class="button start" id="start-button">Start</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentSequence = [];
+        let userSequence = [];
+        let sequenceLength = 3; // Starting sequence length
+        let showingSequence = false;
+        let gameActive = false;
+        let timeoutIds = [];
+        
+        // Possible items for sequences
+        const sequenceOptions = [
+            { symbol: '🔴', color: '#ff5252' },
+            { symbol: '🔵', color: '#448aff' },
+            { symbol: '🟢', color: '#4caf50' },
+            { symbol: '🟡', color: '#ffeb3b' },
+            { symbol: '🟣', color: '#9c27b0' },
+            { symbol: '⚪', color: '#e0e0e0' },
+            { symbol: '🟠', color: '#ff9800' },
+            { symbol: '🟤', color: '#795548' }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to generate a random sequence
+        function generateSequence() {
+            currentSequence = [];
+            // Determine sequence length based on level
+            sequenceLength = Math.min(3 + Math.floor((level - 1) / 2), 8);
+            
+            for (let i = 0; i < sequenceLength; i++) {
+                const randomIndex = Math.floor(Math.random() * sequenceOptions.length);
+                currentSequence.push(randomIndex);
+            }
+            
+            return currentSequence;
+        }
+        
+        // Function to display the sequence
+        function displaySequence() {
+            showingSequence = true;
+            const sequenceDisplay = document.getElementById('sequence-display');
+            sequenceDisplay.innerHTML = '';
+            
+            // Create sequence items
+            for (let i = 0; i < sequenceLength; i++) {
+                const item = document.createElement('div');
+                item.className = 'sequence-item';
+                item.dataset.index = i;
+                sequenceDisplay.appendChild(item);
+            }
+            
+            // Show sequence with delay
+            let delay = 1000;
+            document.getElementById('timer').textContent = 'Watch carefully!';
+            
+            currentSequence.forEach((optionIndex, sequenceIndex) => {
+                const timeoutId = setTimeout(() => {
+                    const items = document.querySelectorAll('.sequence-item');
+                    const option = sequenceOptions[optionIndex];
+                    
+                    // Highlight current item
+                    items[sequenceIndex].textContent = option.symbol;
+                    items[sequenceIndex].style.backgroundColor = option.color;
+                    items[sequenceIndex].classList.add('active');
+                    
+                    // Remove highlight after a delay
+                    setTimeout(() => {
+                        items[sequenceIndex].classList.remove('active');
+                        items[sequenceIndex].textContent = '';
+                        items[sequenceIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                        
+                        // If this is the last item, allow user input
+                        if (sequenceIndex === currentSequence.length - 1) {
+                            setTimeout(() => {
+                                showingSequence = false;
+                                setupUserInput();
+                            }, 500);
+                        }
+                    }, 800);
+                }, delay);
+                
+                timeoutIds.push(timeoutId);
+                delay += 1200; // Increase delay for next item
+            });
+        }
+        
+        // Function to set up user input
+        function setupUserInput() {
+            if (!gameActive) return;
+            
+            const userInputContainer = document.getElementById('user-input');
+            userInputContainer.innerHTML = '';
+            userInputContainer.style.display = 'flex';
+            
+            document.getElementById('timer').textContent = 'Your turn!';
+            
+            // Create input options
+            sequenceOptions.forEach((option, index) => {
+                const item = document.createElement('div');
+                item.className = 'input-item';
+                item.textContent = option.symbol;
+                item.style.backgroundColor = option.color;
+                item.dataset.index = index;
+                
+                item.addEventListener('click', () => {
+                    if (showingSequence || !gameActive) return;
+                    handleUserInput(index);
+                });
+                
+                userInputContainer.appendChild(item);
+            });
+            
+            // Reset user sequence
+            userSequence = [];
+            
+            // Clear sequence display
+            const sequenceDisplay = document.getElementById('sequence-display');
+            sequenceDisplay.innerHTML = '';
+            
+            // Create empty slots for user input
+            for (let i = 0; i < sequenceLength; i++) {
+                const item = document.createElement('div');
+                item.className = 'sequence-item';
+                item.dataset.position = i;
+                sequenceDisplay.appendChild(item);
+            }
+        }
+        
+        // Function to handle user input
+        function handleUserInput(optionIndex) {
+            userSequence.push(optionIndex);
+            const currentPosition = userSequence.length - 1;
+            
+            // Update display
+            const sequenceItems = document.querySelectorAll('.sequence-item');
+            const option = sequenceOptions[optionIndex];
+            sequenceItems[currentPosition].textContent = option.symbol;
+            sequenceItems[currentPosition].style.backgroundColor = option.color;
+            
+            // Check if the input is correct
+            if (optionIndex !== currentSequence[currentPosition]) {
+                sequenceItems[currentPosition].classList.add('incorrect');
+                setTimeout(() => {
+                    endRound(false);
+                }, 500);
+                return;
+            } else {
+                sequenceItems[currentPosition].classList.add('correct');
+            }
+            
+            // Check if sequence is complete
+            if (userSequence.length === currentSequence.length) {
+                setTimeout(() => {
+                    endRound(true);
+                }, 500);
+            }
+        }
+        
+        // Function to end the round
+        function endRound(success) {
+            const feedbackElement = document.getElementById('feedback');
+            document.getElementById('user-input').style.display = 'none';
+            
+            if (success) {
+                feedbackElement.textContent = 'Correct! You remembered the sequence perfectly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+                
+                if (level < 10) {
+                    level++;
+                    feedbackElement.textContent += ' Moving to the next level!';
+                } else {
+                    feedbackElement.textContent += ' You completed all levels!';
+                }
+            } else {
+                feedbackElement.textContent = 'Not quite. Try to remember the sequence more carefully.';
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = level > 10 ? 'Play Again' : 'Next Round';
+            
+            updateGameInfo();
+            
+            if (level > 10) {
+                // Game completed
+                document.getElementById('instructions').textContent = `Congratulations! You've completed all levels. Final score: ${score}`;
+                level = 10; // Cap at level 10 for display
+            }
+        }
+        
+        // Function to start a round
+        function startRound() {
+            if (showingSequence) return;
+            
+            gameActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            // Clear any existing timeouts
+            timeoutIds.forEach(id => clearTimeout(id));
+            timeoutIds = [];
+            
+            // Generate and display sequence
+            generateSequence();
+            displaySequence();
+            
+            // Update instructions
+            document.getElementById('instructions').textContent = 
+                `Watch the sequence of ${sequenceLength} items, then repeat it in the correct order!`;
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('user-input').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Start';
+            document.getElementById('timer').textContent = 'Get Ready!';
+            document.getElementById('sequence-display').innerHTML = '';
+            
+            // Update instructions
+            document.getElementById('instructions').textContent = 'Watch the sequence carefully, then repeat it in the correct order!';
+            
+            // Clear any existing timeouts
+            timeoutIds.forEach(id => clearTimeout(id));
+            timeoutIds = [];
+            
+            gameActive = false;
+            showingSequence = false;
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', startRound);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

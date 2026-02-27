@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Cues Matching Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .card {
+            width: 150px;
+            height: 150px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .card-front {
+            background: linear-gradient(45deg, #6a11cb, #2575fc);
+        }
+        .card-back {
+            background: white;
+            color: #333;
+            transform: rotateY(180deg);
+            font-size: 18px;
+            padding: 10px;
+            text-align: center;
+        }
+        .card-back img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        #message {
+            font-size: 1.5em;
+            margin-top: 20px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .scenario {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            max-width: 80%;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Social Cues Matching Game</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/5 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="scenario" id="scenario">Match the facial expressions with the correct emotions!</div>
+        <div class="card-grid" id="card-grid"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <div id="message"></div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let totalPairs = 0;
+        let canFlip = true;
+        
+        // Game content for different levels
+        const levels = [
+            // Level 1: Basic emotions
+            {
+                scenario: "Match the facial expressions with the correct emotions!",
+                pairs: [
+                    { emotion: "Happy", image: "😀" },
+                    { emotion: "Sad", image: "😢" },
+                    { emotion: "Angry", image: "😠" },
+                    { emotion: "Surprised", image: "😮" }
+                ]
+            },
+            // Level 2: More complex emotions
+            {
+                scenario: "Can you match these more subtle emotions?",
+                pairs: [
+                    { emotion: "Confused", image: "🤔" },
+                    { emotion: "Nervous", image: "😰" },
+                    { emotion: "Proud", image: "😊" },
+                    { emotion: "Bored", image: "😒" },
+                    { emotion: "Excited", image: "🤩" }
+                ]
+            },
+            // Level 3: Social situations
+            {
+                scenario: "Match the social situation with the appropriate response!",
+                pairs: [
+                    { emotion: "Someone says hello", image: "Wave and say hi" },
+                    { emotion: "Someone looks sad", image: "Ask if they're okay" },
+                    { emotion: "Someone gives you a gift", image: "Say thank you" },
+                    { emotion: "Someone is talking", image: "Listen attentively" },
+                    { emotion: "Someone needs help", image: "Offer assistance" }
+                ]
+            },
+            // Level 4: Body language
+            {
+                scenario: "Match the body language with what it might mean!",
+                pairs: [
+                    { emotion: "Arms crossed", image: "Defensive or closed off" },
+                    { emotion: "Leaning forward", image: "Interested or engaged" },
+                    { emotion: "Looking away", image: "Distracted or uncomfortable" },
+                    { emotion: "Tapping foot", image: "Impatient or anxious" },
+                    { emotion: "Smiling with eye contact", image: "Friendly and attentive" },
+                    { emotion: "Fidgeting", image: "Nervous or bored" }
+                ]
+            },
+            // Level 5: Complex social scenarios
+            {
+                scenario: "Match these complex social scenarios with appropriate responses!",
+                pairs: [
+                    { emotion: "Friend seems upset but says they're fine", image: "Give space but check in later" },
+                    { emotion: "Group is laughing at an inside joke", image: "Smile and ask to be included" },
+                    { emotion: "Someone interrupts you", image: "Wait for a pause to continue" },
+                    { emotion: "Meeting someone new", image: "Introduce yourself and ask questions" },
+                    { emotion: "Someone disagrees with you", image: "Listen to their perspective" },
+                    { emotion: "Someone gives you a compliment", image: "Say thank you and maybe return one" }
+                ]
+            }
+        ];
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(matchedPairs / totalPairs) * 100}%`;
+        }
+
+        function createCard(content, type, index) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
+            card.dataset.type = type;
+            
+            const cardInner = document.createElement('div');
+            cardInner.className = 'card-inner';
+            
+            const cardFront = document.createElement('div');
+            cardFront.className = 'card-front';
+            cardFront.textContent = '?';
+            
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card-back';
+            cardBack.textContent = content;
+            
+            cardInner.appendChild(cardFront);
+            cardInner.appendChild(cardBack);
+            card.appendChild(cardInner);
+            
+            card.addEventListener('click', () => flipCard(card));
+            
+            return card;
+        }
+
+        function flipCard(card) {
+            if (!canFlip || card.classList.contains('flipped') || flippedCards.length >= 2) return;
+            
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            
+            if (flippedCards.length === 2) {
+                canFlip = false;
+                checkForMatch();
+            }
+        }
+
+        function checkForMatch() {
+            const [card1, card2] = flippedCards;
+            const isMatch = card1.dataset.index === card2.dataset.index;
+            
+            setTimeout(() => {
+                if (isMatch) {
+                    card1.style.visibility = 'hidden';
+                    card2.style.visibility = 'hidden';
+                    matchedPairs++;
+                    score += 10;
+                    updateGameInfo();
+                    
+                    if (matchedPairs === totalPairs) {
+                        setTimeout(() => levelComplete(), 500);
+                    }
+                } else {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                }
+                
+                flippedCards = [];
+                canFlip = true;
+            }, 1000);
+        }
+
+        function levelComplete() {
+            const message = document.getElementById('message');
+            if (level < levels.length) {
+                message.textContent = `Level ${level} complete! Moving to next level...`;
+                level++;
+                setTimeout(() => setupLevel(), 2000);
+            } else {
+                message.textContent = `Congratulations! You've completed all levels with a score of ${score}!`;
+                document.getElementById('restart').style.display = 'inline-block';
+            }
+        }
+
+        function setupLevel() {
+            const currentLevel = levels[level - 1];
+            const cardGrid = document.getElementById('card-grid');
+            const scenario = document.getElementById('scenario');
+            const message = document.getElementById('message');
+            
+            // Reset game state
+            cardGrid.innerHTML = '';
+            message.textContent = '';
+            matchedPairs = 0;
+            flippedCards = [];
+            canFlip = true;
+            
+            // Update scenario
+            scenario.textContent = currentLevel.scenario;
+            
+            // Create pairs of cards
+            const pairs = currentLevel.pairs;
+            totalPairs = pairs.length;
+            
+            // Create array with emotions and images
+            let cards = [];
+            pairs.forEach((pair, index) => {
+                cards.push({ content: pair.emotion, type: 'emotion', index });
+                cards.push({ content: pair.image, type: 'image', index });
+            });
+            
+            // Shuffle cards
+            cards = shuffleArray(cards);
+            
+            // Set grid columns based on number of cards
+            const columns = Math.min(4, Math.ceil(Math.sqrt(cards.length)));
+            cardGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            
+            // Add cards to grid
+            cards.forEach(card => {
+                cardGrid.appendChild(createCard(card.content, card.type, card.index));
+            });
+            
+            updateGameInfo();
+        }
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function startGame() {
+            level = 1;
+            score = 0;
+            document.getElementById('restart').style.display = 'none';
+            setupLevel();
+        }
+
+        // Start the game when page loads
+        window.onload = startGame;
+    </script>
+</body>
+</html>

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Story Sequencer</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .scenario-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .scenario-title {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .scenario-description {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .story-cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .story-card {
+            width: 180px;
+            height: 220px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px;
+            cursor: grab;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .story-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .story-card.dragging {
+            opacity: 0.5;
+            background: rgba(76, 175, 80, 0.3);
+        }
+        .story-card-image {
+            height: 120px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .story-card-text {
+            font-size: 0.9em;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5px;
+        }
+        .story-card-number {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 25px;
+            height: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.8em;
+        }
+        .sequence-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            min-height: 150px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+        .sequence-slot {
+            width: 150px;
+            height: 180px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .sequence-slot.filled {
+            background: none;
+            color: white;
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Social Story Sequencer</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Arrange the story cards in the correct sequence to show the appropriate social interaction.</div>
+        
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">Time: 60s</div>
+        </div>
+        
+        <div class="scenario-container" id="scenario-container">
+            <div class="scenario-title" id="scenario-title">Loading scenario...</div>
+            <div class="scenario-description" id="scenario-description"></div>
+        </div>
+        
+        <div class="sequence-container" id="sequence-container">
+            <!-- Sequence slots will be generated here -->
+        </div>
+        
+        <div class="story-cards-container" id="story-cards-container">
+            <!-- Story cards will be generated here -->
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Stories Completed</div>
+                <div class="stat-value" id="stories-completed">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+        
+        <button class="button start" id="start-button">Start Game</button>
+        <button class="button" id="submit-button" style="display: none;">Submit Sequence</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let gameActive = false;
+        let currentScenario = null;
+        let currentSequence = [];
+        let storiesCompleted = 0;
+        let totalAttempts = 0;
+        let correctAttempts = 0;
+        
+        // Social scenarios database
+        const scenarios = [
+            {
+                title: "Meeting a New Friend",
+                description: "You're at the playground and want to make a new friend. Arrange the cards to show the appropriate steps.",
+                cards: [
+                    { text: "Approach the other child with a smile", image: "linear-gradient(135deg, #FFD700, #FFA500)" },
+                    { text: "Introduce yourself: 'Hi, I'm [name]. What's your name?'", image: "linear-gradient(135deg, #FF6347, #FF4500)" },
+                    { text: "Ask if they want to play together", image: "linear-gradient(135deg, #3CB371, #2E8B57)" },
+                    { text: "Listen to their response and respect their answer", image: "linear-gradient(135deg, #1E90FF, #0000CD)" }
+                ]
+            },
+            {
+                title: "Asking for Help",
+                description: "You need help with a difficult homework problem. Arrange the cards to show how to appropriately ask for help.",
+                cards: [
+                    { text: "Wait for an appropriate time when the teacher isn't busy", image: "linear-gradient(135deg, #9370DB, #8A2BE2)" },
+                    { text: "Raise your hand or approach the teacher", image: "linear-gradient(135deg, #20B2AA, #008B8B)" },
+                    { text: "Explain what you've tried and what you don't understand", image: "linear-gradient(135deg, #FF69B4, #C71585)" },
+                    { text: "Thank the teacher for their help", image: "linear-gradient(135deg, #32CD32, #228B22)" }
+                ]
+            },
+            {
+                title: "Joining a Group Activity",
+                description: "You want to join a group of kids playing a game. Arrange the cards to show the appropriate way to join in.",
+                cards: [
+                    { text: "Watch the game for a moment to understand what they're playing", image: "linear-gradient(135deg, #FF7F50, #FF6347)" },
+                    { text: "Approach the group during a break in the action", image: "linear-gradient(135deg, #6A5ACD, #483D8B)" },
+                    { text: "Ask politely: 'That looks fun. Can I play too?'", image: "linear-gradient(135deg, #00CED1, #5F9EA0)" },
+                    { text: "Accept their answer, whether yes or no", image: "linear-gradient(135deg, #FFA07A, #FA8072)" }
+                ]
+            },
+            {
+                title: "Handling Disappointment",
+                description: "You didn't get the part you wanted in the school play. Arrange the cards to show healthy ways to handle disappointment.",
+                cards: [
+                    { text: "Recognize your feelings of disappointment", image: "linear-gradient(135deg, #BA55D3, #9932CC)" },
+                    { text: "Take deep breaths to calm down", image: "linear-gradient(135deg, #4682B4, #1E90FF)" },
+                    { text: "Talk to a trusted adult about how you feel", image: "linear-gradient(135deg, #2E8B57, #3CB371)" },
+                    { text: "Find something positive about the situation", image: "linear-gradient(135deg, #DAA520, #B8860B)" }
+                ]
+            },
+            {
+                title: "Apologizing for a Mistake",
+                description: "You accidentally broke your friend's toy. Arrange the cards to show the appropriate way to apologize.",
+                cards: [
+                    { text: "Acknowledge what you did wrong", image: "linear-gradient(135deg, #CD5C5C, #B22222)" },
+                    { text: "Express sincere regret: 'I'm really sorry I broke your toy'", image: "linear-gradient(135deg, #FF8C00, #FF7F50)" },
+                    { text: "Offer to make it right: 'Can I help fix it or replace it?'", image: "linear-gradient(135deg, #6B8E23, #556B2F)" },
+                    { text: "Promise to be more careful in the future", image: "linear-gradient(135deg, #8FBC8F, #2E8B57)" }
+                ]
+            },
+            {
+                title: "Waiting Your Turn",
+                description: "You're at the water fountain and there's a line. Arrange the cards to show the appropriate way to wait your turn.",
+                cards: [
+                    { text: "Notice there's a line and go to the end", image: "linear-gradient(135deg, #9ACD32, #6B8E23)" },
+                    { text: "Stand quietly without pushing or complaining", image: "linear-gradient(135deg, #40E0D0, #20B2AA)" },
+                    { text: "Wait until it's your turn", image: "linear-gradient(135deg, #F08080, #CD5C5C)" },
+                    { text: "Take a quick drink and thank the person who waited", image: "linear-gradient(135deg, #7B68EE, #6A5ACD)" }
+                ]
+            },
+            {
+                title: "Sharing with Others",
+                description: "You have a new toy that your friend wants to play with. Arrange the cards to show how to share appropriately.",
+                cards: [
+                    { text: "Recognize your friend's interest in your toy", image: "linear-gradient(135deg, #FF69B4, #FF1493)" },
+                    { text: "Decide if you're willing to share", image: "linear-gradient(135deg, #FFA500, #FF8C00)" },
+                    { text: "Explain any rules for using your toy", image: "linear-gradient(135deg, #32CD32, #228B22)" },
+                    { text: "Take turns playing with the toy", image: "linear-gradient(135deg, #1E90FF, #4169E1)" }
+                ]
+            },
+            {
+                title: "Responding to Teasing",
+                description: "Someone at school is teasing you about your new haircut. Arrange the cards to show appropriate ways to respond.",
+                cards: [
+                    { text: "Stay calm and take deep breaths", image: "linear-gradient(135deg, #48D1CC, #00CED1)" },
+                    { text: "Use a confident voice to say 'Please stop, I don't like that'", image: "linear-gradient(135deg, #FF6347, #FF4500)" },
+                    { text: "Walk away if they continue", image: "linear-gradient(135deg, #9370DB, #8A2BE2)" },
+                    { text: "Tell a trusted adult if the teasing doesn't stop", image: "linear-gradient(135deg, #3CB371, #2E8B57)" }
+                ]
+            },
+            {
+                title: "Starting a Conversation",
+                description: "You want to talk to a classmate during lunch. Arrange the cards to show how to start and maintain a conversation.",
+                cards: [
+                    { text: "Choose an appropriate time when they're not busy", image: "linear-gradient(135deg, #FF7F50, #FF6347)" },
+                    { text: "Greet them and ask an open-ended question", image: "linear-gradient(135deg, #20B2AA, #008B8B)" },
+                    { text: "Listen to their response and show interest", image: "linear-gradient(135deg, #BA55D3, #9932CC)" },
+                    { text: "Share something related to keep the conversation going", image: "linear-gradient(135deg, #32CD32, #228B22)" }
+                ]
+            },
+            {
+                title: "Accepting 'No' for an Answer",
+                description: "You asked to use your sibling's tablet but they said no. Arrange the cards to show appropriate ways to accept 'no'.",
+                cards: [
+                    { text: "Listen to the reason why they said no", image: "linear-gradient(135deg, #FF8C00, #FF7F50)" },
+                    { text: "Control your disappointment without arguing", image: "linear-gradient(135deg, #4682B4, #1E90FF)" },
+                    { text: "Respond with 'Okay, I understand'", image: "linear-gradient(135deg, #2E8B57, #3CB371)" },
+                    { text: "Find something else to do instead", image: "linear-gradient(135deg, #9370DB, #8A2BE2)" }
+                ]
+            }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('stories-completed').textContent = storiesCompleted;
+            document.getElementById('accuracy').textContent = totalAttempts > 0 ? 
+                Math.round((correctAttempts / totalAttempts) * 100) + '%' : '0%';
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endRound(false);
+                }
+            }, 1000);
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to load a scenario
+        function loadScenario() {
+            // Select a scenario based on level
+            const scenarioIndex = (level - 1) % scenarios.length;
+            currentScenario = scenarios[scenarioIndex];
+            
+            // Display scenario
+            document.getElementById('scenario-title').textContent = currentScenario.title;
+            document.getElementById('scenario-description').textContent = currentScenario.description;
+            
+            // Create sequence slots
+            const sequenceContainer = document.getElementById('sequence-container');
+            sequenceContainer.innerHTML = '';
+            
+            for (let i = 0; i < currentScenario.cards.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'sequence-slot';
+                slot.dataset.index = i;
+                slot.textContent = (i + 1);
+                
+                // Add drop event listeners
+                slot.addEventListener('dragover', dragOver);
+                slot.addEventListener('dragenter', dragEnter);
+                slot.addEventListener('dragleave', dragLeave);
+                slot.addEventListener('drop', drop);
+                
+                sequenceContainer.appendChild(slot);
+            }
+            
+            // Create story cards
+            const cardsContainer = document.getElementById('story-cards-container');
+            cardsContainer.innerHTML = '';
+            
+            // Shuffle cards
+            const shuffledCards = shuffleArray(currentScenario.cards);
+            
+            shuffledCards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'story-card';
+                cardElement.draggable = true;
+                cardElement.dataset.index = index;
+                cardElement.dataset.originalIndex = currentScenario.cards.indexOf(card);
+                
+                cardElement.innerHTML = `
+                    <div class="story-card-image" style="background-image: ${card.image}"></div>
+                    <div class="story-card-text">${card.text}</div>
+                `;
+                
+                // Add drag events
+                cardElement.addEventListener('dragstart', dragStart);
+                cardElement.addEventListener('dragend', dragEnd);
+                
+                cardsContainer.appendChild(cardElement);
+            });
+            
+            // Reset current sequence
+            currentSequence = new Array(currentScenario.cards.length).fill(null);
+            
+            // Show submit button
+            document.getElementById('submit-button').style.display = 'block';
+        }
+        
+        // Drag and Drop Functions
+        function dragStart(e) {
+            if (!gameActive) return;
+            
+            e.dataTransfer.setData('text/plain', e.target.dataset.index);
+            setTimeout(() => {
+                e.target.classList.add('dragging');
+            }, 0);
+        }
+        
+        function dragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        function dragOver(e) {
+            e.preventDefault();
+        }
+        
+        function dragEnter(e) {
+            e.preventDefault();
+            if (e.target.classList.contains('sequence-slot')) {
+                e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+            }
+        }
+        
+        function dragLeave(e) {
+            if (e.target.classList.contains('sequence-slot')) {
+                e.target.style.background = '';
+            }
+        }
+        
+        function drop(e) {
+            e.preventDefault();
+            
+            const slot = e.target.closest('.sequence-slot');
+            if (!slot) return;
+            
+            slot.style.background = '';
+            
+            const cardIndex = e.dataTransfer.getData('text/plain');
+            const card = document.querySelector(`.story-card[data-index="${cardIndex}"]`);
+            
+            if (card) {
+                // Check if card is already in a slot
+                const currentSlot = card.parentElement.classList.contains('sequence-slot') ? 
+                    card.parentElement : null;
+                
+                // Check if slot already has a card
+                if (slot.children.length > 0) {
+                    // If slot has a card, swap them
+                    const slotCard = slot.children[0];
+                    
+                    if (currentSlot) {
+                        // Move slot's card to the other card's slot
+                        currentSlot.appendChild(slotCard);
+                        currentSlot.classList.add('filled');
+                        currentSequence[parseInt(currentSlot.dataset.index)] = parseInt(slotCard.dataset.originalIndex);
+                    } else {
+                        // Move slot's card back to the container
+                        document.getElementById('story-cards-container').appendChild(slotCard);
+                        currentSequence[parseInt(slot.dataset.index)] = null;
+                    }
+                } else if (currentSlot) {
+                    // If card is in a slot and new slot is empty, remove from sequence
+                    currentSequence[parseInt(currentSlot.dataset.index)] = null;
+                    currentSlot.classList.remove('filled');
+                }
+                
+                // Move card to the slot
+                slot.appendChild(card);
+                slot.classList.add('filled');
+                
+                // Update sequence
+                const slotIndex = parseInt(slot.dataset.index);
+                const originalIndex = parseInt(card.dataset.originalIndex);
+                currentSequence[slotIndex] = originalIndex;
+            }
+        }
+        
+        // Function to check sequence
+        function checkSequence() {
+            // Check if all slots are filled
+            if (currentSequence.includes(null)) {
+                const feedbackElement = document.getElementById('feedback');
+                feedbackElement.textContent = 'Please place all cards in sequence before submitting.';
+                feedbackElement.className = 'feedback incorrect';
+                feedbackElement.style.display = 'block';
+                return;
+            }
+            
+            totalAttempts++;
+            
+            // Check if sequence is correct (should be 0, 1, 2, 3...)
+            const isCorrect = currentSequence.every((value, index) => value === index);
+            
+            const feedbackElement = document.getElementById('feedback');
+            
+            if (isCorrect) {
+                // Correct sequence
+                correctAttempts++;
+                storiesCompleted++;
+                
+                // Calculate score based on level and time left
+                const timeBonus = Math.ceil(timeLeft / 3);
+                const sequenceScore = (level * 10) + timeBonus;
+                
+                score += sequenceScore;
+                
+                feedbackElement.textContent = `Correct! You arranged the social story in the right order and earned ${sequenceScore} points!`;
+                feedbackElement.className = 'feedback correct';
+                feedbackElement.style.display = 'block';
+                
+                // Advance to next level after 3 stories
+                if (storiesCompleted % 3 === 0 && level < 10) {
+                    level++;
+                }
+                
+                // Move to next scenario after a delay
+                setTimeout(() => {
+                    loadScenario();
+                    feedbackElement.style.display = 'none';
+                }, 2000);
+            } else {
+                // Incorrect sequence
+                feedbackElement.textContent = 'Not quite right. Try rearranging the cards to show the appropriate sequence of actions.';
+                feedbackElement.className = 'feedback incorrect';
+                feedbackElement.style.display = 'block';
+                
+                // Highlight the correct sequence after a delay in higher levels
+                if (level > 5) {
+                    setTimeout(() => {
+                        feedbackElement.textContent = 'Here\'s the correct sequence. Pay attention to the social cues and appropriate responses.';
+                        
+                        // Visually indicate correct sequence
+                        const slots = document.querySelectorAll('.sequence-slot');
+                        slots.forEach((slot, index) => {
+                            const cardInSlot = slot.children[0];
+                            if (cardInSlot) {
+                                const originalIndex = parseInt(cardInSlot.dataset.originalIndex);
+                                if (originalIndex !== index) {
+                                    cardInSlot.style.border = '2px solid rgba(244, 67, 54, 0.7)';
+                                } else {
+                                    cardInSlot.style.border = '2px solid rgba(76, 175, 80, 0.7)';
+                                }
+                            }
+                        });
+                    }, 1500);
+                }
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to end the round
+        function endRound(completed) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const feedbackElement = document.getElementById('feedback');
+            
+            if (completed) {
+                feedbackElement.textContent = `Great job! You completed ${storiesCompleted} social stories with a score of ${score}!`;
+                feedbackElement.className = 'feedback correct';
+            } else {
+                feedbackElement.textContent = `Time's up! You completed ${storiesCompleted} social stories with a score of ${score}.`;
+                feedbackElement.className = 'feedback';
+            }
+            
+            feedbackElement.style.display = 'block';
+            document.getElementById('start-button').textContent = 'Play Again';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('submit-button').style.display = 'none';
+        }
+        
+        // Function to start a round
+        function startRound() {
+            gameActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            loadScenario();
+            startTimer();
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 
+                    'Arrange the story cards in the correct sequence to show the appropriate social interaction.';
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 
+                    'Order the cards to show the most appropriate sequence of actions in this social situation.';
+            } else {
+                document.getElementById('instructions').textContent = 
+                    'Expert level! Arrange the cards to demonstrate the most socially appropriate sequence of behaviors.';
+            }
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            storiesCompleted = 0;
+            totalAttempts = 0;
+            correctAttempts = 0;
+            updateGameInfo();
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Start Game';
+            document.getElementById('submit-button').style.display = 'none';
+            
+            // Add event listeners
+            document.getElementById('start-button').addEventListener('click', startRound);
+            document.getElementById('submit-button').addEventListener('click', checkSequence);
+        }
+        
+        // Initialize the game when the page loads
+        window.onload = startGame;
+    </script>
+</body>
+</html>

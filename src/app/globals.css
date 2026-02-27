@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-rgb: 31, 41, 55;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom component styles */
+@layer components {
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 transition-colors duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-300;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md transition-colors duration-300;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-300;
+  }
+}
+
+/* Soft UI Components */
+.soft-card {
+  @apply bg-white/80 dark:bg-indigo-900/80 
+         backdrop-blur-sm 
+         border border-indigo-100 dark:border-indigo-700 
+         shadow-lg shadow-indigo-100 dark:shadow-indigo-900/30 
+         rounded-xl;
+}
+
+.soft-button {
+  @apply bg-gradient-to-br from-blue-400/80 to-indigo-400/80 
+         hover:from-blue-500/80 hover:to-indigo-500/80
+         text-white font-medium
+         shadow-md shadow-blue-200 dark:shadow-blue-900/20
+         rounded-lg transition-all duration-200
+         hover:shadow-lg hover:scale-[1.02];
+}
+
+.soft-input {
+  @apply bg-white/70 dark:bg-indigo-900/70
+         border border-indigo-100 dark:border-indigo-700
+         focus:border-blue-400 dark:focus:border-blue-400
+         focus:ring-2 focus:ring-blue-400/20
+         rounded-lg
+         placeholder-indigo-300 dark:placeholder-indigo-500;
+}
+
+/* Add custom styles for dyslexic mode */
+[data-theme='dyslexic'] {
+  font-family: 'OpenDyslexic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+} 
+
+/* Animations for enhanced UI */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 2000px;
+  }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-slideDown {
+  animation: slideDown 0.5s ease-in-out;
+  overflow: hidden;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.5s ease-in-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Hover effects for ADHD-friendly UI */
+.hover-scale-102 {
+  transition: transform 0.2s ease-in-out;
+}
+
+.hover-scale-102:hover {
+  transform: scale(1.02);
+}
+
+/* Accessibility improvements */
+.focus-visible:focus-visible {
+  outline: 2px solid #4f46e5;
+  outline-offset: 2px;
+} 

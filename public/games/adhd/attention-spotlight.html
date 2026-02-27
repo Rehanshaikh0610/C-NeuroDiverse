@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Spotlight Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+            position: relative;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .game-cell {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            user-select: none;
+        }
+        .game-cell:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .game-cell.target {
+            background: rgba(76, 175, 80, 0.5);
+        }
+        .game-cell.distractor {
+            background: rgba(244, 67, 54, 0.5);
+        }
+        .game-cell.highlighted {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+            transform: scale(1.1);
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.1em;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .target-display {
+            font-size: 2em;
+            margin: 20px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Attention Spotlight Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Focus on finding the target symbol among distractors. Click on all instances of the target as quickly as you can!</div>
+        <div class="target-display" id="target-display">🎯</div>
+        <div class="stats">
+            <div class="stat-item">Found: <span id="found-count">0</span>/<span id="total-targets">0</span></div>
+            <div class="stat-item">Accuracy: <span id="accuracy">100</span>%</div>
+        </div>
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">30s</div>
+        </div>
+        <div class="game-board" id="game-board">
+            <!-- Game cells will be generated here -->
+        </div>
+        <button class="button start" id="start-button">Start</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        let gameActive = false;
+        let targetSymbol = '';
+        let distractorSymbols = [];
+        let boardSize = 5; // 5x5 grid
+        let targetCount = 0;
+        let foundCount = 0;
+        let clickCount = 0;
+        let accuracy = 100;
+        
+        // Symbols for the game
+        const symbols = [
+            '🎯', '⭐', '🔴', '🔵', '🟢', '🟡', '🟣', '⚪', '🟠', '🟤',
+            '🎮', '🎲', '🎪', '🎭', '🎨', '🎬', '🎤', '🎧', '🎸', '🎹',
+            '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚚'
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            document.getElementById('timer-text').textContent = `${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 30) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endRound();
+                }
+            }, 1000);
+        }
+        
+        // Function to set up the game board
+        function setupGameBoard() {
+            // Determine board size based on level
+            boardSize = Math.min(5 + Math.floor((level - 1) / 2), 10);
+            
+            // Select target and distractor symbols
+            const shuffledSymbols = shuffleArray(symbols);
+            targetSymbol = shuffledSymbols[0];
+            distractorSymbols = shuffledSymbols.slice(1, 4); // Use 3 distractor symbols
+            
+            // Display target
+            document.getElementById('target-display').textContent = targetSymbol;
+            
+            // Create board layout
+            const gameBoard = document.getElementById('game-board');
+            gameBoard.innerHTML = '';
+            gameBoard.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+            
+            // Determine number of targets based on level
+            targetCount = Math.max(3, Math.min(Math.floor(level * 1.5), 15));
+            foundCount = 0;
+            clickCount = 0;
+            accuracy = 100;
+            
+            // Update stats display
+            document.getElementById('found-count').textContent = foundCount;
+            document.getElementById('total-targets').textContent = targetCount;
+            document.getElementById('accuracy').textContent = accuracy;
+            
+            // Create cells array with targets and distractors
+            const totalCells = boardSize * boardSize;
+            const cells = [];
+            
+            // Add target symbols
+            for (let i = 0; i < targetCount; i++) {
+                cells.push(targetSymbol);
+            }
+            
+            // Fill the rest with distractors
+            for (let i = cells.length; i < totalCells; i++) {
+                const randomDistractor = distractorSymbols[Math.floor(Math.random() * distractorSymbols.length)];
+                cells.push(randomDistractor);
+            }
+            
+            // Shuffle the cells
+            const shuffledCells = shuffleArray(cells);
+            
+            // Create the board
+            shuffledCells.forEach((symbol, index) => {
+                const cell = document.createElement('div');
+                cell.className = 'game-cell';
+                cell.textContent = symbol;
+                cell.dataset.index = index;
+                
+                cell.addEventListener('click', () => {
+                    if (!gameActive) return;
+                    handleCellClick(cell, symbol);
+                });
+                
+                gameBoard.appendChild(cell);
+            });
+        }
+        
+        // Function to handle cell clicks
+        function handleCellClick(cell, symbol) {
+            if (cell.classList.contains('clicked')) return; // Already clicked
+            
+            cell.classList.add('clicked');
+            clickCount++;
+            
+            if (symbol === targetSymbol) {
+                // Correct target
+                cell.classList.add('target');
+                foundCount++;
+                document.getElementById('found-count').textContent = foundCount;
+                
+                // Update score
+                score += Math.ceil(10 * (level / 2));
+                updateGameInfo();
+                
+                // Check if all targets found
+                if (foundCount === targetCount) {
+                    // Add time bonus
+                    const timeBonus = timeLeft * level;
+                    score += timeBonus;
+                    clearInterval(timerInterval);
+                    
+                    setTimeout(() => {
+                        const feedbackElement = document.getElementById('feedback');
+                        feedbackElement.textContent = `Great job! You found all targets with ${accuracy}% accuracy. Time bonus: +${timeBonus} points!`;
+                        feedbackElement.className = 'feedback correct';
+                        feedbackElement.style.display = 'block';
+                        
+                        document.getElementById('start-button').textContent = 'Next Level';
+                        document.getElementById('start-button').style.display = 'block';
+                        gameActive = false;
+                        
+                        if (level < 10) level++;
+                        updateGameInfo();
+                    }, 500);
+                }
+            } else {
+                // Incorrect - clicked a distractor
+                cell.classList.add('distractor');
+                
+                // Penalty
+                score = Math.max(0, score - 5);
+                updateGameInfo();
+            }
+            
+            // Update accuracy
+            accuracy = Math.round((foundCount / clickCount) * 100);
+            document.getElementById('accuracy').textContent = accuracy;
+        }
+        
+        // Function to end the round
+        function endRound() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const feedbackElement = document.getElementById('feedback');
+            if (foundCount === targetCount) {
+                feedbackElement.textContent = `Great job! You found all targets with ${accuracy}% accuracy.`;
+                feedbackElement.className = 'feedback correct';
+            } else {
+                feedbackElement.textContent = `Time's up! You found ${foundCount} out of ${targetCount} targets with ${accuracy}% accuracy.`;
+                feedbackElement.className = 'feedback incorrect';
+                
+                // Highlight missed targets
+                const cells = document.querySelectorAll('.game-cell');
+                cells.forEach(cell => {
+                    if (cell.textContent === targetSymbol && !cell.classList.contains('clicked')) {
+                        cell.classList.add('highlighted');
+                    }
+                });
+            }
+            
+            feedbackElement.style.display = 'block';
+            document.getElementById('start-button').textContent = level >= 10 ? 'Play Again' : 'Next Level';
+            document.getElementById('start-button').style.display = 'block';
+            
+            if (level < 10 && foundCount >= targetCount * 0.7) {
+                // Advance to next level if at least 70% of targets were found
+                level++;
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start a round
+        function startRound() {
+            gameActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            setupGameBoard();
+            startTimer();
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 
+                    `Find all ${targetCount} instances of ${targetSymbol} as quickly as you can!`;
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 
+                    `Stay focused! Find all ${targetCount} instances of ${targetSymbol} among the distractors.`;
+            } else {
+                document.getElementById('instructions').textContent = 
+                    `Maximum concentration needed! Find all ${targetCount} instances of ${targetSymbol} in this challenging grid.`;
+            }
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Start';
+            document.getElementById('game-board').innerHTML = '';
+            
+            // Update instructions
+            document.getElementById('instructions').textContent = 'Focus on finding the target symbol among distractors. Click on all instances of the target as quickly as you can!';
+            
+            // Clear any existing timer
+            clearInterval(timerInterval);
+            document.getElementById('timer-text').textContent = '30s';
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            gameActive = false;
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', startRound);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joint Attention Training</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .scene-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+        .scene {
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            position: relative;
+        }
+        .character {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 150px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: bottom center;
+            transition: all 0.3s ease;
+        }
+        .character-eyes {
+            position: absolute;
+            width: 40px;
+            height: 10px;
+            background-color: white;
+            border-radius: 5px;
+            top: 50px;
+            left: 30px;
+            transition: transform 0.5s ease;
+        }
+        .target {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.8;
+        }
+        .target:hover {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        .target.highlighted {
+            animation: pulse 1s infinite alternate;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+            to { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Joint Attention Training</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Follow the character's gaze to find what they're looking at. Click on the object they are focusing on!</div>
+        
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">Time: 30s</div>
+        </div>
+        
+        <div class="scene-container">
+            <div class="scene" id="scene">
+                <div class="character" id="character">
+                    <div class="character-eyes" id="character-eyes"></div>
+                </div>
+                <!-- Targets will be added dynamically -->
+            </div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Correct</div>
+                <div class="stat-value" id="correct-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Attempts</div>
+                <div class="stat-value" id="attempts-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+        
+        <button class="button start" id="start-button">Start Game</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 30;
+        let timerInterval;
+        let gameActive = false;
+        let correctCount = 0;
+        let attemptsCount = 0;
+        let currentTargetIndex = -1;
+        
+        // Scene backgrounds
+        const sceneBackgrounds = [
+            'linear-gradient(135deg, #3498db, #2c3e50)', // Blue gradient
+            'linear-gradient(135deg, #2ecc71, #27ae60)', // Green gradient
+            'linear-gradient(135deg, #e74c3c, #c0392b)', // Red gradient
+            'linear-gradient(135deg, #9b59b6, #8e44ad)', // Purple gradient
+            'linear-gradient(135deg, #f1c40f, #f39c12)', // Yellow gradient
+            'linear-gradient(135deg, #1abc9c, #16a085)', // Teal gradient
+            'linear-gradient(135deg, #e67e22, #d35400)', // Orange gradient
+            'linear-gradient(135deg, #34495e, #2c3e50)', // Dark blue gradient
+            'linear-gradient(135deg, #95a5a6, #7f8c8d)', // Gray gradient
+            'linear-gradient(135deg, #ecf0f1, #bdc3c7)'  // Light gray gradient
+        ];
+        
+        // Target objects
+        const targetObjects = [
+            { emoji: '🎈', name: 'balloon' },
+            { emoji: '🚗', name: 'car' },
+            { emoji: '🐶', name: 'dog' },
+            { emoji: '🌟', name: 'star' },
+            { emoji: '🎁', name: 'gift' },
+            { emoji: '🏀', name: 'basketball' },
+            { emoji: '🍎', name: 'apple' },
+            { emoji: '🦋', name: 'butterfly' },
+            { emoji: '🚂', name: 'train' },
+            { emoji: '🌈', name: 'rainbow' },
+            { emoji: '🐱', name: 'cat' },
+            { emoji: '🐘', name: 'elephant' },
+            { emoji: '🦁', name: 'lion' },
+            { emoji: '🦒', name: 'giraffe' },
+            { emoji: '🐢', name: 'turtle' }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('attempts-count').textContent = attemptsCount;
+            document.getElementById('accuracy').textContent = attemptsCount > 0 ? 
+                Math.round((correctCount / attemptsCount) * 100) + '%' : '0%';
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 30) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endRound();
+                }
+            }, 1000);
+        }
+        
+        // Function to set up the scene
+        function setupScene() {
+            const scene = document.getElementById('scene');
+            const character = document.getElementById('character');
+            const characterEyes = document.getElementById('character-eyes');
+            
+            // Set scene background
+            const backgroundIndex = (level - 1) % sceneBackgrounds.length;
+            scene.style.background = sceneBackgrounds[backgroundIndex];
+            
+            // Clear previous targets
+            const oldTargets = document.querySelectorAll('.target');
+            oldTargets.forEach(target => target.remove());
+            
+            // Determine number of targets based on level
+            const numTargets = Math.min(3 + Math.floor(level / 2), 8);
+            
+            // Create targets at random positions
+            const usedTargets = [];
+            const targetPositions = [];
+            
+            for (let i = 0; i < numTargets; i++) {
+                // Select a random target that hasn't been used yet
+                let targetIndex;
+                do {
+                    targetIndex = Math.floor(Math.random() * targetObjects.length);
+                } while (usedTargets.includes(targetIndex) && usedTargets.length < targetObjects.length);
+                
+                usedTargets.push(targetIndex);
+                const targetObject = targetObjects[targetIndex];
+                
+                // Create target element
+                const target = document.createElement('div');
+                target.className = 'target';
+                target.textContent = targetObject.emoji;
+                target.dataset.name = targetObject.name;
+                target.dataset.index = i;
+                
+                // Position target randomly (avoiding overlaps)
+                let left, top;
+                let validPosition = false;
+                
+                while (!validPosition) {
+                    // Keep targets away from the edges and the character
+                    left = Math.random() * 70 + 15; // 15% to 85% of width
+                    top = Math.random() * 60 + 10;  // 10% to 70% of height
+                    
+                    // Check if position overlaps with existing targets
+                    validPosition = true;
+                    for (const pos of targetPositions) {
+                        const distance = Math.sqrt(
+                            Math.pow(left - pos.left, 2) + 
+                            Math.pow(top - pos.top, 2)
+                        );
+                        if (distance < 20) { // Minimum distance between targets
+                            validPosition = false;
+                            break;
+                        }
+                    }
+                }
+                
+                targetPositions.push({ left, top });
+                
+                target.style.left = `${left}%`;
+                target.style.top = `${top}%`;
+                
+                // Add click event
+                target.addEventListener('click', () => {
+                    if (!gameActive) return;
+                    handleTargetClick(i);
+                });
+                
+                scene.appendChild(target);
+            }
+            
+            // Select a random target for the character to look at
+            currentTargetIndex = Math.floor(Math.random() * numTargets);
+            const targetPosition = targetPositions[currentTargetIndex];
+            
+            // Calculate angle for character to look at target
+            const characterLeft = 50; // Character is at 50% horizontally
+            const characterTop = 80;  // Character is at bottom (80%)
+            
+            const deltaX = targetPosition.left - characterLeft;
+            const deltaY = targetPosition.top - characterTop;
+            const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+            
+            // Rotate character eyes to look at target
+            characterEyes.style.transform = `rotate(${angle}deg) translateX(10px)`;
+        }
+        
+        // Function to handle target clicks
+        function handleTargetClick(targetIndex) {
+            attemptsCount++;
+            
+            if (targetIndex === currentTargetIndex) {
+                // Correct target
+                correctCount++;
+                score += 10 * level;
+                
+                const feedbackElement = document.getElementById('feedback');
+                feedbackElement.textContent = 'Great job! You correctly identified where the character was looking!';
+                feedbackElement.className = 'feedback correct';
+                feedbackElement.style.display = 'block';
+                
+                // Highlight the correct target
+                const targets = document.querySelectorAll('.target');
+                targets[targetIndex].classList.add('highlighted');
+                
+                // Move to next round after a short delay
+                setTimeout(() => {
+                    if (correctCount >= 5) {
+                        // Advance to next level after 5 correct answers
+                        if (level < 10) {
+                            level++;
+                        }
+                        correctCount = 0;
+                        attemptsCount = 0;
+                    }
+                    
+                    updateGameInfo();
+                    setupScene();
+                    feedbackElement.style.display = 'none';
+                }, 1500);
+            } else {
+                // Incorrect target
+                const feedbackElement = document.getElementById('feedback');
+                feedbackElement.textContent = 'Not quite! Try to follow the character\'s gaze more carefully.';
+                feedbackElement.className = 'feedback incorrect';
+                feedbackElement.style.display = 'block';
+                
+                // Briefly show the correct target
+                const targets = document.querySelectorAll('.target');
+                targets[currentTargetIndex].classList.add('highlighted');
+                
+                setTimeout(() => {
+                    feedbackElement.style.display = 'none';
+                    targets[currentTargetIndex].classList.remove('highlighted');
+                    setupScene();
+                }, 2000);
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to end the round
+        function endRound() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const feedbackElement = document.getElementById('feedback');
+            const accuracy = attemptsCount > 0 ? Math.round((correctCount / attemptsCount) * 100) : 0;
+            
+            feedbackElement.textContent = `Time's up! You correctly identified ${correctCount} targets with ${accuracy}% accuracy.`;
+            feedbackElement.className = 'feedback';
+            feedbackElement.style.display = 'block';
+            
+            document.getElementById('start-button').textContent = 'Play Again';
+            document.getElementById('start-button').style.display = 'block';
+        }
+        
+        // Function to start a round
+        function startRound() {
+            gameActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            setupScene();
+            startTimer();
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 
+                    'Follow the character\'s gaze and click on what they\'re looking at!';
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 
+                    'Pay close attention to where the character is looking and identify the target quickly!';
+            } else {
+                document.getElementById('instructions').textContent = 
+                    'Expert level! Quickly identify where the character is looking among multiple objects!';
+            }
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            correctCount = 0;
+            attemptsCount = 0;
+            updateGameInfo();
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Start Game';
+            
+            // Set up initial scene
+            setupScene();
+            
+            // Add start button event listener
+            document.getElementById('start-button').addEventListener('click', startRound);
+        }
+        
+        // Initialize the game when the page loads
+        window.onload = startGame;
+    </script>
+</body>
+</html>

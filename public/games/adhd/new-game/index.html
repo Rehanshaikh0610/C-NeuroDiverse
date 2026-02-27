@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epic Odd One Out Marathon</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            display: grid;
+            gap: 4px;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .emoji {
+            font-size: 36px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        body.dark .emoji {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        body.light .emoji {
+            border: 2px solid rgba(0, 0, 0, 0.2);
+        }
+        .emoji:hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+        }
+        body.dark .emoji:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        body.light .emoji:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        #message {
+            font-size: 1.5em;
+            margin-top: 20px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Epic Odd One Out Marathon</h1>
+    <div id="game-info">
+        Round: <span id="round">1</span>/15 | Points: <span id="points">0</span> | Time: <span id="timer">30</span>s
+    </div>
+    <div id="game-container"></div>
+    <div id="message"></div>
+    <button id="restart" onclick="startGame(true)">Restart Marathon</button>
+
+    <script>
+        const commonEmoji = '😆';
+        const oddEmoji = '😓';
+        const totalRounds = 15;
+        let round = 1;
+        let points = 0;
+        let timeLeft = 30;
+        let oddPosition;
+        let timerInterval;
+
+        const levelSizes = [
+            { rows: 4, cols: 4, rounds: 2 },   // Rounds 1-2
+            { rows: 5, cols: 6, rounds: 2 },   // Rounds 3-4
+            { rows: 6, cols: 8, rounds: 3 },   // Rounds 5-7
+            { rows: 7, cols: 10, rounds: 3 },  // Rounds 8-10
+            { rows: 8, cols: 10, rounds: 2 },  // Rounds 11-12
+            { rows: 9, cols: 12, rounds: 2 },  // Rounds 13-14
+            { rows: 10, cols: 12, rounds: 1 }  // Round 15
+        ];
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+
+        function getLevelForRound(roundNum) {
+            let cumulativeRounds = 0;
+            for (const level of levelSizes) {
+                cumulativeRounds += level.rounds;
+                if (roundNum <= cumulativeRounds) {
+                    return level;
+                }
+            }
+            return levelSizes[levelSizes.length - 1];
+        }
+
+        function updateGameInfo() {
+            document.getElementById('round').textContent = round;
+            document.getElementById('points').textContent = points;
+            document.getElementById('timer').textContent = timeLeft;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateGameInfo();
+                if (timeLeft <= 0) {
+                    endRound(false);
+                }
+            }, 1000);
+        }
+
+        function startRound() {
+            const gameContainer = document.getElementById('game-container');
+            const message = document.getElementById('message');
+            const restartButton = document.getElementById('restart');
+
+            gameContainer.innerHTML = '';
+            message.innerHTML = '';
+            restartButton.style.display = 'none';
+
+            const { rows, cols } = getLevelForRound(round);
+            gameContainer.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+
+            const totalCells = rows * cols;
+            const oddIndex = Math.floor(Math.random() * totalCells);
+            oddPosition = { row: Math.floor(oddIndex / cols), col: oddIndex % cols };
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const emojiDiv = document.createElement('div');
+                    emojiDiv.className = 'emoji';
+                    emojiDiv.textContent = (i === oddPosition.row && j === oddPosition.col) ? oddEmoji : commonEmoji;
+                    emojiDiv.dataset.row = i;
+                    emojiDiv.dataset.col = j;
+                    emojiDiv.onclick = () => checkAnswer(i, j);
+                    gameContainer.appendChild(emojiDiv);
+                }
+            }
+
+            message.textContent = `Round ${round}/15: Find the odd one out! (${rows}x${cols})`;
+            timeLeft = 30;
+            updateGameInfo();
+            startTimer();
+        }
+
+        function checkAnswer(row, col) {
+            const message = document.getElementById('message');
+            const emojis = document.querySelectorAll('.emoji');
+
+            emojis.forEach(emoji => emoji.onclick = null);
+
+            if (row === oddPosition.row && col === oddPosition.col) {
+                const timeBonus = Math.max(0, timeLeft * 5);
+                const basePoints = 50 + (round * 10);
+                points += basePoints + timeBonus;
+                message.innerHTML = `SMASHED IT! 🎉 Found ${oddEmoji}! <br>
+                                     +${basePoints} base + ${timeBonus} bonus = ${points} total!`;
+                emojis.forEach(emoji => {
+                    if (emoji.dataset.row == row && emoji.dataset.col == col) {
+                        emoji.style.background = '#ffd700';
+                        emoji.style.borderColor = '#ff4444';
+                    }
+                });
+                setTimeout(() => nextRound(), 1500);
+            } else {
+                message.innerHTML = `Dang! The odd one was at row ${oddPosition.row + 1}, col ${oddPosition.col + 1}: ${oddEmoji}. <br>
+                                     Keep rocking it!`;
+                endRound(false);
+            }
+        }
+
+        function nextRound() {
+            round++;
+            if (round > totalRounds) {
+                endGame();
+            } else {
+                startRound();
+            }
+        }
+
+        function endRound(success) {
+            clearInterval(timerInterval);
+            const message = document.getElementById('message');
+            if (!success) {
+                document.getElementById('restart').style.display = 'block';
+            }
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            const message = document.getElementById('message');
+            message.innerHTML = `MARATHON COMPLETE! 🏆 15/15 Rounds Conquered! <br>
+                                 Final Score: ${points} points! You’re an ABSOLUTE LEGEND! 🔥`;
+            document.getElementById('restart').style.display = 'block';
+        }
+
+        function startGame(restart = false) {
+            if (restart) {
+                round = 1;
+                points = 0;
+            }
+            startRound();
+        }
+
+        window.onload = () => startGame();
+    </script>
+</body>
+</html>

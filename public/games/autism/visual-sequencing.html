@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Sequencing Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .sequence-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .sequence-item {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .sequence-item.empty {
+            border: 2px dashed rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .option {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 35px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .option:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .option.selected {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        #message {
+            font-size: 1.5em;
+            margin-top: 20px;
+            min-height: 40px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .check-button {
+            margin-top: 20px;
+            padding: 10px 25px;
+            font-size: 1.1em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .check-button:hover {
+            background: #388E3C;
+        }
+        .next-button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            font-size: 1.1em;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #1976D2;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Visual Sequencing Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Complete the sequence by selecting the missing items in the correct order!</div>
+        <div class="sequence-container" id="sequence-container"></div>
+        <div class="options-container" id="options-container"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="check-button" id="check-button">Check Sequence</button>
+        <button class="next-button" id="next-button">Next Level</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <div id="message"></div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentSequence = [];
+        let userSequence = [];
+        let missingPositions = [];
+        let selectedOptions = [];
+        
+        // Sequence types
+        const sequenceTypes = [
+            'emoji',       // Simple emoji sequences
+            'number',      // Number sequences
+            'color',       // Color patterns
+            'shape',       // Shape patterns
+            'size',        // Size patterns
+            'complex'      // Complex patterns (combinations)
+        ];
+        
+        // Emojis for sequences
+        const emojis = [
+            '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼',
+            '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓',
+            '🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑',
+            '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉'
+        ];
+        
+        // Colors for sequences
+        const colors = [
+            '#FF5252', '#4CAF50', '#2196F3', '#FFC107', '#9C27B0', '#FF9800', '#00BCD4', '#795548'
+        ];
+        
+        // Shapes for sequences (using emoji for simplicity)
+        const shapes = ['●', '■', '▲', '★', '♦', '◆', '○', '□'];
+        
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+
+        function generateEmojiSequence(length) {
+            // Select a subset of emojis to use
+            const shuffled = [...emojis].sort(() => 0.5 - Math.random());
+            const selectedEmojis = shuffled.slice(0, Math.min(8, length));
+            
+            // Create sequence based on level
+            let sequence = [];
+            
+            if (level <= 3) {
+                // Simple repeating pattern
+                const patternLength = Math.min(3, level);
+                const pattern = selectedEmojis.slice(0, patternLength);
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(pattern[i % pattern.length]);
+                }
+            } else if (level <= 6) {
+                // Alternating pattern
+                const pattern1 = selectedEmojis.slice(0, 2);
+                const pattern2 = selectedEmojis.slice(2, 4);
+                
+                for (let i = 0; i < length; i++) {
+                    if (i % 2 === 0) {
+                        sequence.push(pattern1[Math.floor(i/2) % pattern1.length]);
+                    } else {
+                        sequence.push(pattern2[Math.floor(i/2) % pattern2.length]);
+                    }
+                }
+            } else {
+                // More complex pattern
+                const patternLength = Math.min(4, level - 3);
+                const pattern = [];
+                
+                // Create a more complex pattern
+                for (let i = 0; i < patternLength; i++) {
+                    pattern.push(selectedEmojis[i % selectedEmojis.length]);
+                }
+                
+                // Fill sequence with pattern
+                for (let i = 0; i < length; i++) {
+                    sequence.push(pattern[i % pattern.length]);
+                }
+                
+                // Add some variations for higher levels
+                if (level >= 8) {
+                    // Swap some elements to make it more challenging
+                    const swapPositions = Math.floor(length / 3);
+                    for (let i = 0; i < swapPositions; i++) {
+                        const pos = Math.floor(Math.random() * (length - 1));
+                        [sequence[pos], sequence[pos + 1]] = [sequence[pos + 1], sequence[pos]];
+                    }
+                }
+            }
+            
+            return sequence;
+        }
+
+        function generateNumberSequence(length) {
+            let sequence = [];
+            
+            if (level <= 3) {
+                // Simple counting
+                const start = Math.floor(Math.random() * 5) + 1;
+                for (let i = 0; i < length; i++) {
+                    sequence.push(start + i);
+                }
+            } else if (level <= 6) {
+                // Skip counting or simple arithmetic progression
+                const start = Math.floor(Math.random() * 5) + 1;
+                const step = Math.floor(Math.random() * 3) + 1;
+                for (let i = 0; i < length; i++) {
+                    sequence.push(start + (i * step));
+                }
+            } else if (level <= 8) {
+                // More complex patterns like Fibonacci-style
+                let a = Math.floor(Math.random() * 3) + 1;
+                let b = Math.floor(Math.random() * 5) + 2;
+                sequence.push(a);
+                sequence.push(b);
+                for (let i = 2; i < length; i++) {
+                    const next = a + b;
+                    sequence.push(next);
+                    a = b;
+                    b = next;
+                }
+            } else {
+                // Very complex patterns
+                const start = Math.floor(Math.random() * 5) + 1;
+                for (let i = 0; i < length; i++) {
+                    // Quadratic sequence: an = n² + start
+                    sequence.push((i+1)*(i+1) + start);
+                }
+            }
+            
+            return sequence;
+        }
+
+        function generateColorSequence(length) {
+            let sequence = [];
+            
+            if (level <= 3) {
+                // Simple alternating colors
+                const color1 = colors[Math.floor(Math.random() * colors.length)];
+                const color2 = colors[(colors.indexOf(color1) + 1) % colors.length];
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(i % 2 === 0 ? color1 : color2);
+                }
+            } else if (level <= 6) {
+                // Pattern with 3-4 colors
+                const numColors = Math.min(4, level - 1);
+                const selectedColors = [];
+                
+                for (let i = 0; i < numColors; i++) {
+                    selectedColors.push(colors[i % colors.length]);
+                }
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(selectedColors[i % selectedColors.length]);
+                }
+            } else {
+                // More complex color patterns
+                const shuffled = [...colors].sort(() => 0.5 - Math.random());
+                const selectedColors = shuffled.slice(0, Math.min(6, level - 2));
+                
+                // Create a more complex pattern
+                const patternLength = Math.min(5, level - 5);
+                const pattern = [];
+                
+                for (let i = 0; i < patternLength; i++) {
+                    pattern.push(selectedColors[i % selectedColors.length]);
+                }
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(pattern[i % pattern.length]);
+                }
+            }
+            
+            return sequence;
+        }
+
+        function generateShapeSequence(length) {
+            let sequence = [];
+            
+            if (level <= 3) {
+                // Simple alternating shapes
+                const shape1 = shapes[Math.floor(Math.random() * shapes.length)];
+                const shape2 = shapes[(shapes.indexOf(shape1) + 1) % shapes.length];
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(i % 2 === 0 ? shape1 : shape2);
+                }
+            } else if (level <= 6) {
+                // Pattern with 3-4 shapes
+                const numShapes = Math.min(4, level - 1);
+                const selectedShapes = [];
+                
+                for (let i = 0; i < numShapes; i++) {
+                    selectedShapes.push(shapes[i % shapes.length]);
+                }
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(selectedShapes[i % selectedShapes.length]);
+                }
+            } else {
+                // More complex shape patterns
+                const shuffled = [...shapes].sort(() => 0.5 - Math.random());
+                const selectedShapes = shuffled.slice(0, Math.min(6, level - 2));
+                
+                // Create a more complex pattern
+                const patternLength = Math.min(5, level - 5);
+                const pattern = [];
+                
+                for (let i = 0; i < patternLength; i++) {
+                    pattern.push(selectedShapes[i % selectedShapes.length]);
+                }
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push(pattern[i % pattern.length]);
+                }
+            }
+            
+            return sequence;
+        }
+
+        function generateSizeSequence(length) {
+            let sequence = [];
+            const baseShape = shapes[Math.floor(Math.random() * shapes.length)];
+            
+            if (level <= 3) {
+                // Simple growing or shrinking
+                const growing = Math.random() > 0.5;
+                
+                for (let i = 0; i < length; i++) {
+                    const size = growing ? i + 1 : length - i;
+                    sequence.push({ shape: baseShape, size: size });
+                }
+            } else if (level <= 6) {
+                // Alternating sizes
+                for (let i = 0; i < length; i++) {
+                    const size = (i % 2 === 0) ? 1 : 2;
+                    sequence.push({ shape: baseShape, size: size });
+                }
+            } else {
+                // More complex size patterns
+                const pattern = [1, 2, 3, 2];
+                
+                for (let i = 0; i < length; i++) {
+                    sequence.push({ shape: baseShape, size: pattern[i % pattern.length] });
+                }
+            }
+            
+            return sequence;
+        }
+
+        function generateComplexSequence(length) {
+            let sequence = [];
+            
+            // Combine multiple sequence types
+            const baseShape = shapes[Math.floor(Math.random() * shapes.length)];
+            const baseColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            if (level <= 7) {
+                // Shape + Color combination
+                for (let i = 0; i < length; i++) {
+                    const shape = shapes[i % shapes.length];
+                    const color = colors[(i + 1) % colors.length];
+                    sequence.push({ shape: shape, color: color });
+                }
+            } else {
+                // Shape + Color + Size combination
+                for (let i = 0; i < length; i++) {
+                    const shape = shapes[i % shapes.length];
+                    const color = colors[(i + 1) % colors.length];
+                    const size = (i % 3) + 1;
+                    sequence.push({ shape: shape, color: color, size: size });
+                }
+            }
+            
+            return sequence;
+        }
+
+        function generateSequence() {
+            // Determine sequence length based on level
+            const length = Math.min(10, 5 + Math.floor(level / 2));
+            
+            // Choose sequence type based on level
+            const availableTypes = sequenceTypes.slice(0, Math.min(level, sequenceTypes.length));
+            const sequenceType = availableTypes[Math.floor(Math.random() * availableTypes.length)];
+            
+            let sequence;
+            switch (sequenceType) {
+                case 'emoji':
+                    sequence = generateEmojiSequence(length);
+                    break;
+                case 'number':
+                    sequence = generateNumberSequence(length);
+                    break;
+                case 'color':
+                    sequence = generateColorSequence(length);
+                    break;
+                case 'shape':
+                    sequence = generateShapeSequence(length);
+                    break;
+                case 'size':
+                    sequence = generateSizeSequence(length);
+                    break;
+                case 'complex':
+                    sequence = generateComplexSequence(length);
+                    break;
+                default:
+                    sequence = generateEmojiSequence(length);
+            }
+            
+            // Determine number of missing items based on level
+            const numMissing = Math.min(Math.floor(length / 2), Math.floor(level / 2) + 1);
+            
+            // Randomly select positions to hide
+            missingPositions = [];
+            while (missingPositions.length < numMissing) {
+                const pos = Math.floor(Math.random() * length);
+                if (!missingPositions.includes(pos)) {
+                    missingPositions.push(pos);
+                }
+            }
+            
+            // Sort positions for consistent display
+            missingPositions.sort((a, b) => a - b);
+            
+            // Initialize user sequence with nulls for missing positions
+            userSequence = [...sequence];
+            missingPositions.forEach(pos => {
+                userSequence[pos] = null;
+            });
+            
+            // Store the complete sequence
+            currentSequence = sequence;
+            
+            return sequenceType;
+        }
+
+        function renderSequence(sequenceType) {
+            const sequenceContainer = document.getElementById('sequence-container');
+            sequenceContainer.innerHTML = '';
+            
+            // Render each item in the sequence
+            userSequence.forEach((item, index) => {
+                const sequenceItem = document.createElement('div');
+                sequenceItem.className = 'sequence-item';
+                
+                if (item === null) {
+                    // This is a missing item
+                    sequenceItem.classList.add('empty');
+                    sequenceItem.dataset.position = index;
+                    sequenceItem.textContent = '?';
+                } else {
+                    // Render based on item type
+                    if (typeof item === 'object') {
+                        if (item.color) sequenceItem.style.backgroundColor = item.color;
+                        if (item.shape) {
+                            if (item.size) {
+                                // Adjust font size based on size property
+                                const fontSize = 20 + (item.size * 10);
+                                sequenceItem.style.fontSize = `${fontSize}px`;
+                            }
+                            sequenceItem.textContent = item.shape;
+                        }
+                    } else if (typeof item === 'string') {
+                        if (item.startsWith('#')) {
+                            sequenceItem.style.backgroundColor = item;
+                        } else {
+                            sequenceItem.textContent = item;
+                        }
+                    } else if (typeof item === 'number') {
+                        sequenceItem.textContent = item;
+                    }
+                }
+                
+                sequenceContainer.appendChild(sequenceItem);
+            });
+            
+            // Generate options
+            generateOptions(sequenceType);
+        }
+
+        function generateOptions(sequenceType) {
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            selectedOptions = [];
+            
+            // Create array with missing items
+            const missingItems = missingPositions.map(pos => currentSequence[pos]);
+            
+            // Add some distractors based on level
+            let options = [...missingItems];
+            const numDistractors = Math.min(4, level);
+            
+            for (let i = 0; i < numDistractors; i++) {
+                let distractor;
+                
+                if (typeof missingItems[0] === 'object') {
+                    // Complex object distractor
+                    const baseItem = {...missingItems[0]};
+                    
+                    if (baseItem.color) {
+                        baseItem.color = colors[Math.floor(Math.random() * colors.length)];
+                    }
+                    if (baseItem.shape) {
+                        baseItem.shape = shapes[Math.floor(Math.random() * shapes.length)];
+                    }
+                    if (baseItem.size) {
+                        baseItem.size = (Math.floor(Math.random() * 3) + 1);
+                    }
+                    
+                    distractor = baseItem;
+                } else if (typeof missingItems[0] === 'string') {
+                    if (missingItems[0].startsWith('#')) {
+                        // Color distractor
+                        distractor = colors[Math.floor(Math.random() * colors.length)];
+                    } else {
+                        // Emoji or shape distractor
+                        if (sequenceType === 'emoji') {
+                            distractor = emojis[Math.floor(Math.random() * emojis.length)];
+                        } else {
+                            distractor = shapes[Math.floor(Math.random() * shapes.length)];
+                        }
+                    }
+                } else if (typeof missingItems[0] === 'number') {
+                    // Number distractor
+                    const max = Math.max(...missingItems) + 5;
+                    const min = Math.max(1, Math.min(...missingItems) - 5);
+                    distractor = Math.floor(Math.random() * (max - min + 1)) + min;
+                }
+                
+                // Ensure distractor is not already in options
+                while (options.includes(distractor) || missingItems.includes(distractor)) {
+                    if (typeof distractor === 'number') {
+                        distractor += 1;
+                    } else if (typeof distractor === 'string' && distractor.startsWith('#')) {
+                        distractor = colors[Math.floor(Math.random() * colors.length)];
+                    } else if (typeof distractor === 'object') {
+                        if (distractor.color) {
+                            distractor.color = colors[Math.floor(Math.random() * colors.length)];
+                        }
+                        if (distractor.shape) {
+                            distractor.shape = shapes[Math.floor(Math.random() * shapes.length)];
+                        }
+                    } else {
+                        if (sequenceType === 'emoji') {
+                            distractor = emojis[Math.floor(Math.random() * emojis.length)];
+                        } else {
+                            distractor = shapes[Math.floor(Math.random() * shapes.length)];
+                        }
+                    }
+                }
+                
+                options.push(distractor);
+            }
+            
+            // Shuffle options
+            options = shuffleArray(options);
+            
+            // Render options
+            options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.dataset.index = index;
+                
+                if (typeof option === 'object') {
+                    if (option.color) optionElement.style.backgroundColor = option.color;
+                    if (option.shape) {
+                        if (option.size) {
+                            // Adjust font size based on size property
+                            const fontSize = 15 + (option.size * 8);
+                            optionElement.style.fontSize = `${fontSize}px`;
+                        }
+                        optionElement.textContent = option.shape;
+                    }
+                } else if (typeof option === 'string') {
+                    if (option.startsWith('#')) {
+                        optionElement.style.backgroundColor = option;
+                    } else {
+                        optionElement.textContent = option;
+                    }
+                } else if (typeof option === 'number') {
+                    optionElement.textContent = option;
+                }
+                
+                optionElement.addEventListener('click', () => selectOption(option, optionElement));
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+
+        function selectOption(option, optionElement) {
+            // Find the first empty position
+            const emptyItems = document.querySelectorAll('.sequence-item.empty');
+            if (emptyItems.length === 0 || selectedOptions.length >= missingPositions.length) return;
+            
+            const firstEmpty = emptyItems[0];
+            const position = parseInt(firstEmpty.dataset.position);
+            
+            // Update the empty item with the selected option
+            if (typeof option === 'object') {
+                if (option.color) firstEmpty.style.backgroundColor = option.color;
+                if (option.shape) {
+                    if (option.size) {
+                        // Adjust font size based on size property
+                        const fontSize = 20 + (option.size * 10);
+                        firstEmpty.style.fontSize = `${fontSize}px`;
+                    }
+                    firstEmpty.textContent = option.shape;
+                }
+            } else if (typeof option ==='string') {
+                if (option.startsWith('#')) {
+                    firstEmpty.style.backgroundColor = option; 
+                } 
+            }
+        }

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Syllable Counter Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .word-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            font-size: 3em;
+            font-weight: bold;
+            height: 100px;
+        }
+        .image-container {
+            width: 150px;
+            height: 150px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+        .play-sound {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: rgba(33, 150, 243, 0.7);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .play-sound:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .option {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 50px;
+        }
+        .option:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .syllable-visual {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            height: 40px;
+        }
+        .syllable-block {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Syllable Counter Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">How many syllables are in this word? Listen to the word and select the correct number!</div>
+        <div class="image-container" id="image-container"></div>
+        <div class="word-display" id="word-display"></div>
+        <button class="play-sound" id="play-word">Play Word</button>
+        <div class="syllable-visual" id="syllable-visual">
+            <div class="syllable-block"></div>
+            <div class="syllable-block"></div>
+            <div class="syllable-block"></div>
+            <div class="syllable-block"></div>
+            <div class="syllable-block"></div>
+        </div>
+        <div class="options-container" id="options-container">
+            <div class="option" id="option-1">1</div>
+            <div class="option" id="option-2">2</div>
+            <div class="option" id="option-3">3</div>
+            <div class="option" id="option-4">4</div>
+            <div class="option" id="option-5">5</div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Word</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentWord = '';
+        let currentSyllables = 0;
+        let currentImage = '';
+        let wordAnswered = false;
+        
+        // Word data with syllable counts and image representations (emojis for simplicity)
+        const wordData = [
+            // Level 1-3: Simple 1-2 syllable words
+            { word: 'cat', syllables: 1, image: '🐱' },
+            { word: 'dog', syllables: 1, image: '🐶' },
+            { word: 'sun', syllables: 1, image: '☀️' },
+            { word: 'apple', syllables: 2, image: '🍎' },
+            { word: 'pencil', syllables: 2, image: '✏️' },
+            { word: 'table', syllables: 2, image: '🪑' },
+            { word: 'water', syllables: 2, image: '💧' },
+            { word: 'tiger', syllables: 2, image: '🐯' },
+            
+            // Level 4-6: Medium 2-3 syllable words
+            { word: 'banana', syllables: 3, image: '🍌' },
+            { word: 'computer', syllables: 3, image: '💻' },
+            { word: 'elephant', syllables: 3, image: '🐘' },
+            { word: 'dinosaur', syllables: 3, image: '🦖' },
+            { word: 'butterfly', syllables: 3, image: '🦋' },
+            { word: 'telephone', syllables: 3, image: '📞' },
+            { word: 'umbrella', syllables: 3, image: '☂️' },
+            { word: 'kangaroo', syllables: 3, image: '🦘' },
+            
+            // Level 7-10: More challenging 3-5 syllable words
+            { word: 'alligator', syllables: 4, image: '🐊' },
+            { word: 'calculator', syllables: 4, image: '🧮' },
+            { word: 'helicopter', syllables: 4, image: '🚁' },
+            { word: 'watermelon', syllables: 4, image: '🍉' },
+            { word: 'refrigerator', syllables: 5, image: '🧊' },
+            { word: 'university', syllables: 5, image: '🏫' },
+            { word: 'vocabulary', syllables: 5, image: '📚' },
+            { word: 'imagination', syllables: 5, image: '🧠' }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to speak text using Web Speech API
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8; // Slightly slower for clarity
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Function to select a word appropriate for the current level
+        function selectWord() {
+            let availableWords = [];
+            
+            if (level <= 3) {
+                // Simple 1-2 syllable words
+                availableWords = wordData.filter(item => item.syllables <= 2);
+            } else if (level <= 6) {
+                // Medium 2-3 syllable words
+                availableWords = wordData.filter(item => item.syllables >= 2 && item.syllables <= 3);
+            } else {
+                // More challenging 3-5 syllable words
+                availableWords = wordData.filter(item => item.syllables >= 3);
+            }
+            
+            // Select a random word from available words
+            return availableWords[Math.floor(Math.random() * availableWords.length)];
+        }
+        
+        // Function to set up word challenge
+        function setupWordChallenge() {
+            // Select a word appropriate for the level
+            const wordInfo = selectWord();
+            currentWord = wordInfo.word;
+            currentSyllables = wordInfo.syllables;
+            currentImage = wordInfo.image;
+            
+            // Set up word display
+            document.getElementById('word-display').textContent = currentWord;
+            document.getElementById('image-container').textContent = '';
+            
+            // Reset syllable visual
+            const syllableBlocks = document.querySelectorAll('.syllable-block');
+            syllableBlocks.forEach(block => {
+                block.style.display = 'none';
+            });
+            
+            // Reset feedback and next button
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            // Reset word answered flag
+            wordAnswered = false;
+            
+            // Enable options
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.style.pointerEvents = 'auto';
+                option.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            });
+        }
+        
+        // Function to play word sound
+        function playWord() {
+            speakText(currentWord);
+        }
+        
+        // Function to check answer
+        function checkAnswer(selectedSyllables) {
+            if (wordAnswered) return;
+            
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            const imageContainer = document.getElementById('image-container');
+            
+            // Disable options
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            
+            // Highlight correct answer
+            document.getElementById(`option-${currentSyllables}`).style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+            
+            // Show syllable blocks
+            const syllableBlocks = document.querySelectorAll('.syllable-block');
+            for (let i = 0; i < currentSyllables; i++) {
+                syllableBlocks[i].style.display = 'block';
+            }
+            
+            if (parseInt(selectedSyllables) === currentSyllables) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! You counted the syllables perfectly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+            } else {
+                // Incorrect answer
+                feedbackElement.textContent = `Not quite. The word "${currentWord}" has ${currentSyllables} syllable${currentSyllables !== 1 ? 's' : ''}.`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            // Show image
+            imageContainer.textContent = currentImage;
+            
+            feedbackElement.style.display = 'block';
+            nextButton.style.display = 'block';
+            wordAnswered = true;
+            updateGameInfo();
+        }
+        
+        // Function to move to next word
+        function nextWord() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            if (level < 10) {
+                level++;
+                setupWordChallenge();
+            } else {
+                // Game completed
+                document.getElementById('word-display').textContent = 'COMPLETED!';
+                document.getElementById('image-container').textContent = '🏆';
+                document.getElementById('play-word').style.display = 'none';
+                document.getElementById('syllable-visual').style.display = 'none';
+                document.getElementById('options-container').style.display = 'none';
+                document.getElementById('instructions').textContent = `Game completed! Final score: ${score}`;
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            document.getElementById('play-word').style.display = 'block';
+            document.getElementById('syllable-visual').style.display = 'flex';
+            document.getElementById('options-container').style.display = 'flex';
+            document.getElementById('instructions').textContent = 'How many syllables are in this word? Listen to the word and select the correct number!';
+            setupWordChallenge();
+        }
+        
+        // Event listeners
+        document.getElementById('play-word').addEventListener('click', playWord);
+        document.getElementById('option-1').addEventListener('click', () => checkAnswer('1'));
+        document.getElementById('option-2').addEventListener('click', () => checkAnswer('2'));
+        document.getElementById('option-3').addEventListener('click', () => checkAnswer('3'));
+        document.getElementById('option-4').addEventListener('click', () => checkAnswer('4'));
+        document.getElementById('option-5').addEventListener('click', () => checkAnswer('5'));
+        document.getElementById('next-button').addEventListener('click', nextWord);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

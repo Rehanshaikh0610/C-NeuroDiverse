@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Matching Marathon</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        body.dark {
+            background: #1a1a1a;
+            color: white;
+        }
+        body.light {
+            background: #d9e2ec;
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px auto;
+            max-width: 900px;
+        }
+        #target-grid, .option-grid {
+            display: grid;
+            gap: 2px;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #target-grid, body.dark .option-grid {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #target-grid, body.light .option-grid {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .cell {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .option-grid {
+            cursor: pointer;
+        }
+        .option-grid:hover {
+            transform: scale(1.05);
+            border: 2px solid #ffd700;
+        }
+        #message {
+            font-size: 1.5em;
+            margin-top: 20px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Pattern Matching Marathon</h1>
+    <div id="game-info">
+        Level: <span id="round">1</span>/10 | Points: <span id="points">0</span>
+    </div>
+    <div id="game-container">
+        <div id="target-grid"></div>
+        <div id="options-container"></div>
+    </div>
+    <div id="message"></div>
+    <button id="restart" onclick="startGame(true)">Restart Marathon</button>
+
+    <script>
+        const totalRounds = 10;
+        let round = 1;
+        let points = 0;
+        let targetPattern; // Store the target pattern for accurate comparison
+        const shapes = ['circle', 'square', 'triangle'];
+        const colors = ['#ff4444', '#44ff44', '#4444ff'];
+
+        const levelSizes = [
+            { size: 2, options: 3 }, // Level 1
+            { size: 2, options: 3 }, // Level 2
+            { size: 3, options: 3 }, // Level 3
+            { size: 3, options: 4 }, // Level 4
+            { size: 4, options: 4 }, // Level 5
+            { size: 4, options: 4 }, // Level 6
+            { size: 5, options: 5 }, // Level 7
+            { size: 5, options: 5 }, // Level 8
+            { size: 5, options: 5 }, // Level 9
+            { size: 5, options: 6 }  // Level 10
+        ];
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+
+        function generatePattern(size) {
+            const pattern = [];
+            for (let i = 0; i < size; i++) {
+                const row = [];
+                for (let j = 0; j < size; j++) {
+                    row.push({
+                        shape: shapes[Math.floor(Math.random() * shapes.length)],
+                        color: colors[Math.floor(Math.random() * colors.length)]
+                    });
+                }
+                pattern.push(row);
+            }
+            return pattern;
+        }
+
+        function renderGrid(container, pattern, size, clickable = false) {
+            container.style.gridTemplateColumns = `repeat(${size}, 50px)`;
+            container.innerHTML = '';
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.style.backgroundColor = pattern[i][j].color;
+                    cell.style.clipPath = getClipPath(pattern[i][j].shape);
+                    if (clickable) {
+                        cell.parentElement = container; // For reference in checkAnswer
+                        container.onclick = () => checkAnswer(pattern);
+                    }
+                    container.appendChild(cell);
+                }
+            }
+        }
+
+        function getClipPath(shape) {
+            switch (shape) {
+                case 'circle': return 'circle(50% at 50% 50%)';
+                case 'square': return 'polygon(0 0, 100% 0, 100% 100%, 0 100%)';
+                case 'triangle': return 'polygon(50% 0, 100% 100%, 0 100%)';
+            }
+        }
+
+        function startRound() {
+            const targetGrid = document.getElementById('target-grid');
+            const optionsContainer = document.getElementById('options-container');
+            const message = document.getElementById('message');
+            const restartButton = document.getElementById('restart');
+
+            optionsContainer.innerHTML = '';
+            message.innerHTML = '';
+            restartButton.style.display = 'none';
+
+            const { size, options } = levelSizes[round - 1];
+            targetPattern = generatePattern(size); // Store the target pattern
+            renderGrid(targetGrid, targetPattern, size);
+
+            const patterns = [targetPattern];
+            while (patterns.length < options) {
+                const newPattern = generatePattern(size);
+                if (!patterns.some(p => JSON.stringify(p) === JSON.stringify(newPattern))) {
+                    patterns.push(newPattern);
+                }
+            }
+            shuffle(patterns);
+
+            patterns.forEach(pattern => {
+                const optionGrid = document.createElement('div');
+                optionGrid.className = 'option-grid';
+                renderGrid(optionGrid, pattern, size, true);
+                optionsContainer.appendChild(optionGrid);
+            });
+
+            message.textContent = `Level ${round}/10: Match the pattern!`;
+            updateGameInfo();
+        }
+
+        function checkAnswer(selectedPattern) {
+            const options = document.querySelectorAll('.option-grid');
+            const message = document.getElementById('message');
+
+            options.forEach(option => option.onclick = null); // Disable further clicks
+
+            if (JSON.stringify(selectedPattern) === JSON.stringify(targetPattern)) {
+                const basePoints = 50 + (round * 20);
+                points += basePoints;
+                message.innerHTML = `SPOT ON! 🎉 Pattern matched! <br> +${basePoints} points = ${points} total!`;
+                setTimeout(() => nextRound(), 1500);
+            } else {
+                message.innerHTML = `Oops! That’s not it. Try again next time!`;
+                endRound(false);
+            }
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function updateGameInfo() {
+            document.getElementById('round').textContent = round;
+            document.getElementById('points').textContent = points;
+        }
+
+        function nextRound() {
+            round++;
+            if (round > totalRounds) {
+                endGame();
+            } else {
+                startRound();
+            }
+        }
+
+        function endRound(success) {
+            const restartButton = document.getElementById('restart');
+            if (!success) {
+                restartButton.style.display = 'inline';
+            }
+        }
+
+        function endGame() {
+            const message = document.getElementById('message');
+            message.innerHTML = `MARATHON COMPLETE! 🏆 10/10 Levels Mastered! <br>
+                                 Final Score: ${points} points! You’re a PATTERN PRO! 🔥`;
+            document.getElementById('restart').style.display = 'inline';
+        }
+
+        function startGame(restart = false) {
+            if (restart) {
+                round = 1;
+                points = 0;
+            }
+            startRound();
+        }
+
+        window.onload = () => startGame();
+    </script>
+</body>
+</html>

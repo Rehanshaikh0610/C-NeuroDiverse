@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensory Detective</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .scenario {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            line-height: 1.5;
+        }
+        .scenario-image {
+            width: 200px;
+            height: 200px;
+            margin: 15px auto;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .option {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+        }
+        .option:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+        }
+        #message {
+            font-size: 1.5em;
+            margin-top: 20px;
+            min-height: 40px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .feedback {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        .next-button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            font-size: 1.1em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        .sensory-meter {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .meter-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .meter {
+            width: 80%;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            width: 50%;
+            transition: width 0.3s ease;
+        }
+        .meter-marker {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background-color: #ff4444;
+            left: 50%;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Sensory Detective</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="scenario" id="scenario">
+            <div id="scenario-text">Welcome to Sensory Detective! You'll explore different sensory experiences and learn strategies to manage them.</div>
+            <div class="scenario-image" id="scenario-image">🔍</div>
+        </div>
+        
+        <div class="sensory-meter" id="sensory-meter" style="display: none;">
+            <div>
+                <div class="meter-label">How does this feel?</div>
+                <div class="meter" id="sensory-level-meter">
+                    <div class="meter-fill" id="meter-fill"></div>
+                    <div class="meter-marker"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="options-container" id="options-container"></div>
+        
+        <div class="feedback" id="feedback">
+            <div id="feedback-text"></div>
+            <button class="next-button" id="next-button">Next Challenge</button>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <div id="message"></div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentScenario = null;
+        
+        // Game scenarios
+        const scenarios = [
+            // Level 1: Basic sensory identification
+            {
+                text: "You hear a loud, unexpected fire alarm at school. How does this make your ears feel?",
+                image: "🔊",
+                options: [
+                    { text: "It hurts my ears and makes me want to cover them", correct: true, feedback: "That's right! Loud, unexpected sounds can be painful for many people, especially those with sensory sensitivities." },
+                    { text: "It doesn't bother me at all", correct: false, feedback: "For many people with sensory sensitivities, loud unexpected sounds can be painful or overwhelming." },
+                    { text: "It's annoying but not a big deal", correct: false, feedback: "For many people with sensory sensitivities, loud unexpected sounds can be much more than annoying - they can be painful." },
+                    { text: "I like the excitement of the loud noise", correct: false, feedback: "While some people might find loud noises exciting, many people with sensory sensitivities find them painful or overwhelming." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 2: Sensory coping strategy
+            {
+                text: "The fire alarm is still ringing. What could you do to help manage the loud sound?",
+                image: "🙉",
+                options: [
+                    { text: "Cover your ears with your hands or noise-canceling headphones", correct: true, feedback: "Great choice! Covering your ears or using noise-canceling headphones can reduce the sensory input and make it more manageable." },
+                    { text: "Scream louder than the alarm", correct: false, feedback: "Screaming would actually add more noise and potentially increase your stress and sensory overload." },
+                    { text: "Run around the room", correct: false, feedback: "Running around might increase your stress level and wouldn't help reduce the sensory input from the alarm." },
+                    { text: "Ignore it completely", correct: false, feedback: "For many people with sensory sensitivities, ignoring intense sensory input like a loud alarm isn't possible - the body's response is automatic." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 3: Visual sensory input
+            {
+                text: "You're in a classroom with bright fluorescent lights that flicker sometimes. How might this affect someone with visual sensory sensitivity?",
+                image: "💡",
+                options: [
+                    { text: "It might give them a headache or make it hard to focus", correct: true, feedback: "Correct! Flickering lights can cause headaches, eye strain, and make it difficult to concentrate for people with visual sensory sensitivities." },
+                    { text: "It would make them see better", correct: false, feedback: "Bright, flickering lights often make vision more difficult for people with sensory sensitivities, not better." },
+                    { text: "It would have no effect at all", correct: false, feedback: "Bright, flickering lights can have significant effects on people with visual sensory sensitivities." },
+                    { text: "It would improve their mood", correct: false, feedback: "Bright, flickering lights typically cause discomfort rather than mood improvement for those with sensory sensitivities." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 4: Visual coping strategy
+            {
+                text: "What might help someone who is bothered by bright, flickering lights?",
+                image: "🕶️",
+                options: [
+                    { text: "Wearing sunglasses or a hat with a brim", correct: true, feedback: "Excellent! Sunglasses or a hat can reduce the amount of light reaching the eyes and minimize the effect of flickering." },
+                    { text: "Looking directly at the lights", correct: false, feedback: "Looking directly at bright, flickering lights would increase discomfort for someone with visual sensory sensitivity." },
+                    { text: "Turning on more lights", correct: false, feedback: "Adding more light would likely increase rather than decrease the sensory discomfort." },
+                    { text: "Spinning around in circles", correct: false, feedback: "Spinning would add vestibular (balance) sensory input and wouldn't help with visual sensitivity to lights." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 5: Tactile sensitivity
+            {
+                text: "You're wearing a new shirt with a scratchy tag that keeps rubbing against your neck. Rate how uncomfortable this feels:",
+                image: "👕",
+                type: "sensory-meter",
+                correctRange: [60, 100], // Percentage range that's considered correct
+                feedback: {
+                    correct: "Yes! Scratchy tags can be extremely uncomfortable for people with tactile sensitivity. It's not 'just a tag' - it can feel like sandpaper constantly rubbing against your skin.",
+                    tooLow: "For many people with tactile sensitivity, a scratchy tag isn't just a minor annoyance - it can feel extremely uncomfortable, like sandpaper constantly rubbing against your skin.",
+                    tooHigh: "You've recognized this can be very uncomfortable! For people with tactile sensitivity, even small sensations like tags can feel overwhelming."
+                }
+            },
+            // Level 6: Tactile coping strategy
+            {
+                text: "What could you do about the uncomfortable shirt tag?",
+                image: "✂️",
+                options: [
+                    { text: "Carefully cut off the tag or ask for a tagless shirt", correct: true, feedback: "Perfect solution! Removing the source of discomfort is often the most effective strategy for tactile sensitivities." },
+                    { text: "Ignore it and eventually you'll stop noticing", correct: false, feedback: "For people with significant tactile sensitivity, it's often not possible to 'get used to' uncomfortable sensations - they continue to be distracting and uncomfortable." },
+                    { text: "Scratch your neck until it hurts more than the tag", correct: false, feedback: "Creating a different pain or discomfort isn't a healthy coping strategy and could lead to skin damage." },
+                    { text: "Wear three more shirts on top", correct: false, feedback: "Adding more layers might make you too hot and wouldn't necessarily stop the tag from being felt." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 7: Proprioceptive input (body awareness)
+            {
+                text: "You're feeling restless and having trouble sitting still during class. What sensory-friendly strategy might help?",
+                image: "🪑",
+                options: [
+                    { text: "Using a wiggle cushion or bouncing your legs gently", correct: true, feedback: "Great choice! Movement and proprioceptive input (body awareness) can help regulate the sensory system and make sitting easier." },
+                    { text: "Forcing yourself to sit completely still", correct: false, feedback: "Forcing complete stillness when your body needs movement can increase discomfort and make it harder to focus." },
+                    { text: "Getting up and running around the classroom", correct: false, feedback: "While movement is helpful, running around would disrupt the class. Small, non-disruptive movements are better options." },
+                    { text: "Pinching yourself to stay focused", correct: false, feedback: "Self-harm is never a good coping strategy. There are many healthy ways to get sensory input." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 8: Olfactory (smell) sensitivity
+            {
+                text: "Someone in class is wearing strong perfume that smells overwhelming to you. Rate how this affects your ability to concentrate:",
+                image: "👃",
+                type: "sensory-meter",
+                correctRange: [70, 100],
+                feedback: {
+                    correct: "That's right! Strong smells can be extremely distracting or even nauseating for people with olfactory sensitivity, making it very difficult to focus on anything else.",
+                    tooLow: "For people with olfactory (smell) sensitivity, strong scents can be overwhelming and make it nearly impossible to focus on anything else.",
+                    tooHigh: "You've recognized how disruptive strong scents can be! For people with olfactory sensitivity, it can completely prevent concentration."
+                }
+            },
+            // Level 9: Multisensory environment
+            {
+                text: "You're in a busy cafeteria with bright lights, loud voices echoing, food smells, and people bumping into you. How might someone with sensory sensitivities feel?",
+                image: "🏫",
+                options: [
+                    { text: "Overwhelmed and needing to leave or find a quieter space", correct: true, feedback: "Exactly right! Multiple sensory inputs at once can cause sensory overload, making it necessary to find a calmer environment." },
+                    { text: "Excited and energized by all the activity", correct: false, feedback: "While some people might enjoy busy environments, those with sensory sensitivities often find multiple simultaneous inputs overwhelming rather than energizing." },
+                    { text: "Completely unaffected", correct: false, feedback: "Environments with multiple intense sensory inputs typically affect everyone to some degree, but especially impact those with sensory sensitivities." },
+                    { text: "Slightly annoyed but fine", correct: false, feedback: "For many with sensory sensitivities, busy environments with multiple sensory inputs can cause much more than slight annoyance - they can cause genuine distress and physical discomfort." }
+                ],
+                type: "multiple-choice"
+            },
+            // Level 10: Creating a sensory toolkit
+            {
+                text: "You're creating a personal sensory toolkit to help manage different sensory challenges. Which combination would be most helpful?",
+                image: "🧰",
+                options: [
+                    { text: "Noise-canceling headphones, sunglasses, fidget toy, and a card explaining your needs", correct: true, feedback: "Perfect toolkit! These items address different sensory needs and include a communication tool to help others understand." },
+                    { text: "Just a note saying 'I have sensory issues'", correct: false, feedback: "While communication is important, a complete toolkit should include actual tools to help manage different types of sensory input." },
+                    { text: "A loud whistle to distract yourself", correct: false, feedback: "A loud whistle would add more sensory input rather than helping manage existing sensory challenges." },
+                    { text: "Nothing - you should just learn to cope with everything", correct: false, feedback: "Using appropriate tools and accommodations is a smart strategy, not a weakness. Even people without sensory sensitivities use tools like sunglasses or earplugs in intense environments." }
+                ],
+                type: "multiple-choice"
+            }
+        ];
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / scenarios.length) * 100}%`;
+        }
+
+        function setupSensoryMeter() {
+            const sensoryMeter = document.getElementById('sensory-meter');
+            const meterFill = document.getElementById('meter-fill');
+            sensoryMeter.style.display = 'flex';
+            
+            // Reset meter position
+            meterFill.style.width = '50%';
+            
+            // Make meter interactive
+            const meter = document.getElementById('sensory-level-meter');
+            
+            meter.addEventListener('click', function(e) {
+                const rect = meter.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const percentageWidth = (x / rect.width) * 100;
+                meterFill.style.width = `${percentageWidth}%`;
+            });
+            
+            meter.addEventListener('mousemove', function(e) {
+                if (e.buttons === 1) { // Mouse is being pressed
+                    const rect = meter.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percentageWidth = (x / rect.width) * 100;
+                    meterFill.style.width = `${percentageWidth}%`;
+                }
+            });
+        }
+
+        function checkMeterAnswer() {
+            const meterFill = document.getElementById('meter-fill');
+            const width = parseFloat(meterFill.style.width);
+            const scenario = currentScenario;
+            const feedback = document.getElementById('feedback');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextButton = document.getElementById('next-button');
+            
+            feedback.style.display = 'block';
+            nextButton.style.display = 'inline-block';
+            
+            if (width >= scenario.correctRange[0] && width <= scenario.correctRange[1]) {
+                feedbackText.textContent = scenario.feedback.correct;
+                score += 10;
+                feedbackText.style.color = '#4CAF50';
+            } else if (width < scenario.correctRange[0]) {
+                feedbackText.textContent = scenario.feedback.tooLow;
+                feedbackText.style.color = '#FF9800';
+            } else {
+                feedbackText.textContent = scenario.feedback.tooHigh;
+                feedbackText.style.color = '#2196F3';
+            }
+            
+            updateGameInfo();
+            
+            // Disable further interaction with meter
+            const meter = document.getElementById('sensory-level-meter');
+            meter.style.pointerEvents = 'none';
+        }
+
+        function setupLevel() {
+            const scenarioText = document.getElementById('scenario-text');
+            const scenarioImage = document.getElementById('scenario-image');
+            const optionsContainer = document.getElementById('options-container');
+            const message = document.getElementById('message');
+            const feedback = document.getElementById('feedback');
+            const sensoryMeter = document.getElementById('sensory-meter');
+            
+            // Reset elements
+            message.textContent = '';
+            feedback.style.display = 'none';
+            optionsContainer.innerHTML = '';
+            sensoryMeter.style.display = 'none';
+            
+            // Get current scenario
+            currentScenario = scenarios[level - 1];
+            
+            // Update scenario content
+            scenarioText.textContent = currentScenario.text;
+            scenarioImage.textContent = currentScenario.image;
+            
+            // Setup based on scenario type
+            if (currentScenario.type === 'sensory-meter') {
+                setupSensoryMeter();
+                
+                // Add submit button for meter
+                const submitButton = document.createElement('button');
+                submitButton.textContent = 'Submit Answer';
+                submitButton.className = 'next-button';
+                submitButton.style.display = 'inline-block';
+                submitButton.style.marginTop = '20px';
+                submitButton.addEventListener('click', checkMeterAnswer);
+                optionsContainer.appendChild(submitButton);
+            } else {
+                // Setup multiple choice options
+                currentScenario.options.forEach(option => {
+                    const optionElement = document.createElement('div');
+                    optionElement.className = 'option';
+                    optionElement.textContent = option.text;
+                    optionElement.addEventListener('click', () => checkAnswer(option));
+                    optionsContainer.appendChild(optionElement);
+                });
+            }
+            
+            updateGameInfo();
+        }
+
+        function checkAnswer(selectedOption) {
+            const message = document.getElementById('message');
+            const feedback = document.getElementById('feedback');
+            const feedbackText = document.getElementById('feedback-text');
+            const nextButton = document.getElementById('next-button');
+            
+            // Disable all options
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === selectedOption.text) {
+                    option.style.backgroundColor = selectedOption.correct ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)';
+                }
+            });
+            
+            // Show feedback
+            feedback.style.display = 'block';
+            feedbackText.textContent = selectedOption.feedback;
+            nextButton.style.display = 'inline-block';
+            
+            // Update score
+            if (selectedOption.correct) {
+                score += 10;
+                feedbackText.style.color = '#4CAF50';
+            } else {
+                feedbackText.style.color = '#FF5252';
+            }
+            
+            updateGameInfo();
+        }
+
+        function nextLevel() {
+            const feedback = document.getElementById('feedback');
+            feedback.style.display = 'none';
+            
+            if (level < scenarios.length) {
+                level++;
+                setupLevel();
+            } else {
+                // Game completed
+                const message = document.getElementById('message');
+                message.textContent = `Congratulations! You've completed all levels with a score of ${score}!`;
+                document.getElementById('restart').style.display = 'inline-block';
+            }
+        }
+
+        function startGame() {
+            level = 1;
+            score = 0;
+            document.getElementById('restart').style.display = 'inline-block';
+            document.getElementById('next-button').addEventListener('click', nextLevel);
+            setupLevel();
+        }
+
+        // Start the game when page loads
+        window.onload = startGame;
+    </script>
+</body>
+</html>

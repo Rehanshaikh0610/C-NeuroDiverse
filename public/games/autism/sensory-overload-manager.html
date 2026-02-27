@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensory Overload Manager</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .scenario-container {
+            position: relative;
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .scenario-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .scenario-description {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .sensory-elements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .sensory-element {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .sensory-element:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .sensory-element.selected {
+            background: rgba(76, 175, 80, 0.5);
+        }
+        .coping-strategies {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .strategy-option {
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        .strategy-option:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .check-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .check-button:hover {
+            background: #1976D2;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Sensory Overload Manager</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Identify sensory triggers and select appropriate coping strategies!</div>
+        <div class="scenario-container" id="scenario-container">
+            <div class="scenario-title" id="scenario-title"></div>
+            <div class="scenario-description" id="scenario-description"></div>
+            <div class="sensory-elements" id="sensory-elements"></div>
+            <button class="check-button" id="check-triggers-button">Check Triggers</button>
+            <div class="feedback" id="triggers-feedback"></div>
+            <div class="coping-strategies" id="coping-strategies" style="display: none;"></div>
+            <button class="check-button" id="check-strategy-button" style="display: none;">Check Strategy</button>
+            <div class="feedback" id="strategy-feedback"></div>
+        </div>
+        <button class="next-button" id="next-button">Next Scenario</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentScenario = {};
+        let selectedTriggers = [];
+        let selectedStrategy = null;
+        let triggersChecked = false;
+        
+        // Scenarios with sensory triggers and coping strategies
+        const scenarios = [
+            {
+                title: "Busy Shopping Mall",
+                description: "You are in a busy shopping mall with bright fluorescent lights, loud music, many people talking, and various strong perfume smells from the cosmetics section.",
+                triggers: ["Bright lights", "Loud sounds", "Strong smells", "Crowded space"],
+                distractors: ["Soft textures", "Quiet voices", "Gentle movement"],
+                strategies: [
+                    {
+                        text: "Find a quiet corner or restroom to take a break from the sensory input",
+                        correct: true
+                    },
+                    {
+                        text: "Put on noise-canceling headphones or earplugs to reduce auditory input",
+                        correct: true
+                    },
+                    {
+                        text: "Stay in the busiest part of the mall to get used to the sensations",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Classroom During an Exam",
+                description: "You're taking an important exam in a classroom. The fluorescent lights are flickering slightly, someone is tapping their pencil, the clock is ticking loudly, and your chair feels uncomfortable.",
+                triggers: ["Flickering lights", "Repetitive sounds", "Uncomfortable seating"],
+                distractors: ["Strong smells", "Crowded space", "Loud music"],
+                strategies: [
+                    {
+                        text: "Ask to move to a different seat away from the distractions",
+                        correct: true
+                    },
+                    {
+                        text: "Use a fidget tool to help maintain focus despite the distractions",
+                        correct: true
+                    },
+                    {
+                        text: "Yell at the person tapping their pencil to make them stop",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Noisy Restaurant",
+                description: "You're at a restaurant with friends. The restaurant is busy with clattering dishes, multiple conversations, and waiters rushing past your table. The overhead lights are bright and music is playing in the background.",
+                triggers: ["Multiple conversations", "Clattering dishes", "Bright lights", "Background music"],
+                distractors: ["Soft textures", "Pleasant smells", "Gentle touches"],
+                strategies: [
+                    {
+                        text: "Ask to be seated in a quieter corner of the restaurant",
+                        correct: true
+                    },
+                    {
+                        text: "Take short breaks by stepping outside or visiting the restroom",
+                        correct: true
+                    },
+                    {
+                        text: "Try to ignore all sensory input and focus only on your food",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Public Transportation",
+                description: "You're on a crowded bus during rush hour. People are pressed close together, someone nearby is wearing strong perfume, the bus is making loud engine noises, and the overhead lights are bright.",
+                triggers: ["Close physical proximity", "Strong perfume", "Engine noise", "Bright lights"],
+                distractors: ["Quiet voices", "Soft music", "Comfortable seating"],
+                strategies: [
+                    {
+                        text: "Wear headphones with calming music to block out noise",
+                        correct: true
+                    },
+                    {
+                        text: "Focus on deep breathing and use a calming scent on a handkerchief",
+                        correct: true
+                    },
+                    {
+                        text: "Ask everyone around you to be quiet and turn off the lights",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Family Gathering",
+                description: "You're at a large family gathering at home. Multiple conversations are happening at once, children are running and playing loudly, the TV is on in the background, and there are strong cooking smells from the kitchen.",
+                triggers: ["Multiple conversations", "Loud playing", "TV noise", "Strong food smells"],
+                distractors: ["Dim lighting", "Soft textures", "Gentle movement"],
+                strategies: [
+                    {
+                        text: "Find a quieter room to take short breaks when feeling overwhelmed",
+                        correct: true
+                    },
+                    {
+                        text: "Use a stress ball or other fidget tool to help manage anxiety",
+                        correct: true
+                    },
+                    {
+                        text: "Tell everyone to be quiet because you can't handle the noise",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Grocery Store",
+                description: "You're shopping in a grocery store. The fluorescent lights are bright, announcements are being made over the PA system, shopping carts are squeaking, and there are many different food smells mixing together.",
+                triggers: ["Bright fluorescent lights", "PA announcements", "Squeaking carts", "Mixed food smells"],
+                distractors: ["Soft textures", "Comfortable temperature", "Pleasant music"],
+                strategies: [
+                    {
+                        text: "Wear sunglasses to reduce the impact of bright lights",
+                        correct: true
+                    },
+                    {
+                        text: "Shop during less busy times when the store is quieter",
+                        correct: true
+                    },
+                    {
+                        text: "Rush through shopping as fast as possible while feeling overwhelmed",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Movie Theater",
+                description: "You're watching a movie in a theater. The sound is very loud with dramatic music and sound effects, the screen is extremely bright with quick scene changes, and you can smell popcorn and feel the sticky floor under your shoes.",
+                triggers: ["Loud sound effects", "Bright screen", "Quick scene changes", "Sticky floor sensation"],
+                distractors: ["Crowded space", "Cold temperature", "Strong perfumes"],
+                strategies: [
+                    {
+                        text: "Choose seats near the back where sound and visual effects are less intense",
+                        correct: true
+                    },
+                    {
+                        text: "Bring earplugs to reduce the volume of loud scenes",
+                        correct: true
+                    },
+                    {
+                        text: "Watch the movie with your eyes closed most of the time",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "School Cafeteria",
+                description: "You're eating lunch in the school cafeteria. There's a loud buzz of conversations, chairs scraping on the floor, food smells mixing together, and bright overhead lighting.",
+                triggers: ["Loud conversations", "Scraping chairs", "Mixed food smells", "Bright lighting"],
+                distractors: ["Soft textures", "Gentle touches", "Pleasant music"],
+                strategies: [
+                    {
+                        text: "Eat at a less crowded table or corner of the cafeteria",
+                        correct: true
+                    },
+                    {
+                        text: "Use noise-canceling headphones during lunch time",
+                        correct: true
+                    },
+                    {
+                        text: "Skip lunch to avoid the cafeteria altogether",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "Fireworks Display",
+                description: "You're at a fireworks display. There are extremely loud booms and cracks, bright flashing lights in the dark sky, crowds of people around you, and the smell of smoke in the air.",
+                triggers: ["Loud explosive sounds", "Bright flashing lights", "Crowds", "Smoke smell"],
+                distractors: ["Uncomfortable seating", "Cold temperature", "Fast movement"],
+                strategies: [
+                    {
+                        text: "Watch from a distance where the sounds are less intense",
+                        correct: true
+                    },
+                    {
+                        text: "Wear noise-canceling headphones and sunglasses",
+                        correct: true
+                    },
+                    {
+                        text: "Stand as close as possible to get used to the sensations",
+                        correct: false
+                    }
+                ]
+            },
+            {
+                title: "New Clothing",
+                description: "You've just bought new clothes and are trying them on. The tags are scratchy against your skin, the fabric feels stiff and uncomfortable, the clothes fit tightly in some places, and they have a strong 'new clothes' smell.",
+                triggers: ["Scratchy tags", "Stiff fabric", "Tight fit", "New clothes smell"],
+                distractors: ["Bright colors", "Loud sounds", "Flashing lights"],
+                strategies: [
+                    {
+                        text: "Remove tags and wash clothes before wearing to soften fabric and reduce smell",
+                        correct: true
+                    },
+                    {
+                        text: "Wear comfortable clothes underneath if possible",
+                        correct: true
+                    },
+                    {
+                        text: "Force yourself to wear uncomfortable clothes until you get used to them",
+                        correct: false
+                    }
+                ]
+            }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to set up scenario
+        function setupScenario() {
+            // Reset state
+            selectedTriggers = [];
+            selectedStrategy = null;
+            triggersChecked = false;
+            
+            // Hide elements
+            document.getElementById('coping-strategies').style.display = 'none';
+            document.getElementById('check-strategy-button').style.display = 'none';
+            document.getElementById('triggers-feedback').style.display = 'none';
+            document.getElementById('strategy-feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            document.getElementById('check-triggers-button').style.display = 'block';
+            
+            // Select scenario based on level
+            currentScenario = scenarios[level - 1];
+            
+            // Update scenario display
+            document.getElementById('scenario-title').textContent = currentScenario.title;
+            document.getElementById('scenario-description').textContent = currentScenario.description;
+            
+            // Generate sensory elements
+            const sensoryElementsContainer = document.getElementById('sensory-elements');
+            sensoryElementsContainer.innerHTML = '';
+            
+            // Combine triggers and distractors and shuffle
+            const allElements = [...currentScenario.triggers];
+            
+            // Add distractors based on level
+            const numDistractors = Math.min(currentScenario.distractors.length, Math.floor(level / 3) + 1);
+            allElements.push(...currentScenario.distractors.slice(0, numDistractors));
+            
+            const shuffledElements = shuffleArray(allElements);
+            
+            // Create elements
+            shuffledElements.forEach(element => {
+                const elementDiv = document.createElement('div');
+                elementDiv.className = 'sensory-element';
+                elementDiv.textContent = element;
+                elementDiv.addEventListener('click', () => toggleTrigger(elementDiv, element));
+                sensoryElementsContainer.appendChild(elementDiv);
+            });
+        }
+        
+        // Function to toggle trigger selection
+        function toggleTrigger(element, trigger) {
+            if (triggersChecked) return; // Prevent changes after checking
+            
+            if (selectedTriggers.includes(trigger)) {
+                // Deselect
+                selectedTriggers = selectedTriggers.filter(t => t !== trigger);
+                element.classList.remove('selected');
+            } else {
+                // Select
+                selectedTriggers.push(trigger);
+                element.classList.add('selected');
+            }
+        }
+        
+        // Function to check selected triggers
+        function checkTriggers() {
+            const feedbackElement = document.getElementById('triggers-feedback');
+            const correctTriggers = currentScenario.triggers;
+            
+            // Calculate correct and incorrect selections
+            const correctSelections = selectedTriggers.filter(trigger => correctTriggers.includes(trigger));
+            const incorrectSelections = selectedTriggers.filter(trigger => !correctTriggers.includes(trigger));
+            const missedTriggers = correctTriggers.filter(trigger => !selectedTriggers.includes(trigger));
+            
+            // Determine feedback
+            let feedbackMessage = '';
+            let isCorrect = false;
+            
+            if (correctSelections.length === correctTriggers.length && incorrectSelections.length === 0) {
+                // Perfect match
+                feedbackMessage = 'Perfect! You identified all the sensory triggers correctly!';
+                isCorrect = true;
+                score += 5 * level;
+            } else if (correctSelections.length > 0 && incorrectSelections.length === 0) {
+                // Some correct, none incorrect
+                feedbackMessage = `Good job identifying ${correctSelections.length} triggers! You missed: ${missedTriggers.join(', ')}.`;
+                isCorrect = true;
+                score += 2 * level;
+            } else if (incorrectSelections.length > 0) {
+                // Some incorrect
+                feedbackMessage = `You identified ${incorrectSelections.length} items that aren't triggers. The actual triggers are: ${correctTriggers.join(', ')}.`;
+                isCorrect = false;
+            } else {
+                // None selected
+                feedbackMessage = `You didn't select any triggers. The triggers in this scenario are: ${correctTriggers.join(', ')}.`;
+                isCorrect = false;
+            }
+            
+            // Display feedback
+            feedbackElement.textContent = feedbackMessage;
+            feedbackElement.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedbackElement.style.display = 'block';
+            
+            // Mark as checked and show coping strategies
+            triggersChecked = true;
+            document.getElementById('check-triggers-button').style.display = 'none';
+            
+            // Show coping strategies
+            setupCopingStrategies();
+            document.getElementById('coping-strategies').style.display = 'flex';
+            document.getElementById('check-strategy-button').style.display = 'block';
+            
+            updateGameInfo();
+        }
+        
+        // Function to set up coping strategies
+        function setupCopingStrategies() {
+            const strategiesContainer = document.getElementById('coping-strategies');
+            strategiesContainer.innerHTML = '';
+            
+            // Shuffle strategies
+            const shuffledStrategies = shuffleArray(currentScenario.strategies);
+            
+            // Create strategy options
+            shuffledStrategies.forEach((strategy, index) => {
+                const strategyDiv = document.createElement('div');
+                strategyDiv.className = 'strategy-option';
+                strategyDiv.textContent = strategy.text;
+                strategyDiv.dataset.index = index;
+                strategyDiv.addEventListener('click', () => selectStrategy(strategyDiv, index));
+                strategiesContainer.appendChild(strategyDiv);
+            });
+        }
+        
+        // Function to select strategy
+        function selectStrategy(element, index) {
+            // Remove selection from all strategies
+            document.querySelectorAll('.strategy-option').forEach(el => {
+                el.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+            });
+            
+            // Select this strategy
+            element.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+            selectedStrategy = index;
+        }
+        
+        // Function to check selected strategy
+        function checkStrategy() {
+            if (selectedStrategy === null) {
+                alert('Please select a coping strategy!');
+                return;
+            }
+            
+            const feedbackElement = document.getElementById('strategy-feedback');
+            const selectedStrategyData = currentScenario.strategies[selectedStrategy];
+            
+            // Determine feedback
+            let feedbackMessage = '';
+            let isCorrect = false;
+            
+            if (selectedStrategyData.correct) {
+                feedbackMessage = 'Excellent choice! This is an effective coping strategy for this situation.';
+                isCorrect = true;
+                score += 5 * level;
+            } else {
+                feedbackMessage = 'This might not be the most effective strategy. Consider a different approach that respects both your needs and others.';
+                isCorrect = false;
+            }
+            
+            // Display feedback
+            feedbackElement.textContent = feedbackMessage;
+            feedbackElement.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedbackElement.style.display = 'block';
+            
+            // Show next button
+            document.getElementById('check-strategy-button').style.display = 'none';
+            document.getElementById('next-button').style.display = 'block';
+            
+            updateGameInfo();
+        }
+        
+        // Function to move to next scenario
+        function nextScenario() {
+            if (level < 10) {
+                level++;
+                setupScenario();
+            } else {
+                // Game completed
+                document.getElementById('scenario-container').innerHTML = `
+                    <div class="scenario-title">Game Completed!</div>
+                    <div class="scenario-description">Congratulations! You've completed all scenarios and earned a total score of ${score} points. You've learned valuable skills for identifying sensory triggers and managing sensory overload.</div>
+                `;
+                document.getElementById('next-button').style.display = 'none';
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setupScenario();
+        }
+        
+        // Event listeners
+        document.getElementById('check-triggers-button').addEventListener('click', checkTriggers);
+        document.getElementById('check-strategy-button').addEventListener('click', checkStrategy);
+        document.getElementById('next-button').addEventListener('click', nextScenario);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

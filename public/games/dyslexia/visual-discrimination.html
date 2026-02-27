@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Discrimination Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .target-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            width: 80%;
+        }
+        .target-symbol {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 10px 0;
+            font-family: 'Arial', sans-serif;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            width: 80%;
+        }
+        .option-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 2.5em;
+            font-weight: bold;
+            font-family: 'Arial', sans-serif;
+        }
+        .option-card:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-5px);
+        }
+        .option-card.selected {
+            background: rgba(76, 175, 80, 0.3);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+        .option-card.correct {
+            background: rgba(76, 175, 80, 0.3);
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        }
+        .option-card.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .stats-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Visual Discrimination Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Find the symbol that matches the target exactly. Pay close attention to orientation, size, and small details.</div>
+        
+        <div class="stats-container">
+            <div class="stat-box">
+                <div class="stat-label">Correct</div>
+                <div class="stat-value" id="correct-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Incorrect</div>
+                <div class="stat-value" id="incorrect-count">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Accuracy</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+        
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">Time: 60s</div>
+        </div>
+        
+        <div class="game-area">
+            <div class="target-container">
+                <div>Find this symbol:</div>
+                <div class="target-symbol" id="target-symbol">b</div>
+            </div>
+            
+            <div class="options-container" id="options-container">
+                <!-- Options will be generated here -->
+            </div>
+        </div>
+        
+        <button class="button start" id="start-button">Start Game</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let gameActive = false;
+        let correctCount = 0;
+        let incorrectCount = 0;
+        let currentRound = 0;
+        let maxRounds = 10;
+        let selectedOption = null;
+        let currentChallenge = null;
+        
+        // Challenge database
+        const challenges = [
+            // Level 1-3: Basic letter discrimination
+            [
+                { target: 'b', options: ['b', 'd', 'p', 'q'], correctIndex: 0 },
+                { target: 'd', options: ['b', 'd', 'p', 'q'], correctIndex: 1 },
+                { target: 'p', options: ['b', 'd', 'p', 'q'], correctIndex: 2 },
+                { target: 'q', options: ['b', 'd', 'p', 'q'], correctIndex: 3 },
+                { target: 'm', options: ['m', 'n', 'w', 'u'], correctIndex: 0 },
+                { target: 'n', options: ['m', 'n', 'w', 'u'], correctIndex: 1 },
+                { target: 'u', options: ['n', 'u', 'v', 'w'], correctIndex: 1 },
+                { target: 'v', options: ['u', 'v', 'w', 'y'], correctIndex: 1 }
+            ],
+            // Level 4-6: More complex discrimination
+            [
+                { target: 'was', options: ['was', 'saw', 'aws', 'swa'], correctIndex: 0 },
+                { target: 'on', options: ['on', 'no', 'an', 'in'], correctIndex: 0 },
+                { target: 'saw', options: ['was', 'saw', 'swa', 'aws'], correctIndex: 1 },
+                { target: '6', options: ['6', '9', 'G', 'g'], correctIndex: 0 },
+                { target: '9', options: ['6', '9', 'g', 'q'], correctIndex: 1 },
+                { target: 'E', options: ['E', '3', 'F', 'B'], correctIndex: 0 },
+                { target: '3', options: ['E', '3', 'B', '8'], correctIndex: 1 },
+                { target: 'S', options: ['S', '5', 'Z', '2'], correctIndex: 0 }
+            ],
+            // Level 7-10: Advanced discrimination
+            [
+                { target: 'the', options: ['the', 'teh', 'hte', 'het'], correctIndex: 0 },
+                { target: 'from', options: ['from', 'form', 'fram', 'frmo'], correctIndex: 0 },
+                { target: 'where', options: ['where', 'were', 'wheer', 'wher'], correctIndex: 0 },
+                { target: 'tion', options: ['tion', 'toin', 'tino', 'tnio'], correctIndex: 0 },
+                { target: '13', options: ['13', '31', '12', '23'], correctIndex: 0 },
+                { target: '€', options: ['€', 'E', '£', 'C'], correctIndex: 0 },
+                { target: '8:30', options: ['8:30', '8.30', '8;30', '3:80'], correctIndex: 0 },
+                { target: '©', options: ['©', 'O', 'C', '@'], correctIndex: 0 }
+            ]
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('incorrect-count').textContent = incorrectCount;
+            
+            const totalAttempts = correctCount + incorrectCount;
+            const accuracy = totalAttempts > 0 ? Math.round((correctCount / totalAttempts) * 100) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        // Function to load a random challenge
+        function loadRandomChallenge() {
+            // Determine difficulty level
+            let difficultyIndex = 0;
+            if (level >= 4 && level <= 6) {
+                difficultyIndex = 1;
+            } else if (level >= 7) {
+                difficultyIndex = 2;
+            }
+            
+            // Get challenges for current difficulty
+            const levelChallenges = challenges[difficultyIndex];
+            
+            // Select a random challenge
+            const randomIndex = Math.floor(Math.random() * levelChallenges.length);
+            currentChallenge = levelChallenges[randomIndex];
+            
+            // Display challenge
+            document.getElementById('target-symbol').textContent = currentChallenge.target;
+            
+            // Render options
+            renderOptions();
+        }
+        
+        // Function to render options
+        function renderOptions() {
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            // Shuffle options to randomize their order
+            const shuffledIndices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+            const correctOptionIndex = shuffledIndices.indexOf(currentChallenge.correctIndex);
+            
+            shuffledIndices.forEach((originalIndex, newIndex) => {
+                const optionCard = document.createElement('div');
+                optionCard.className = 'option-card';
+                optionCard.textContent = currentChallenge.options[originalIndex];
+                optionCard.dataset.index = newIndex;
+                optionCard.dataset.correct = (originalIndex === currentChallenge.correctIndex).toString();
+                
+                optionCard.addEventListener('click', () => selectOption(optionCard, newIndex, originalIndex === currentChallenge.correctIndex));
+                
+                optionsContainer.appendChild(optionCard);
+            });
+        }
+        
+        // Function to select an option
+        function selectOption(card, index, isCorrect) {
+            if (!gameActive) return;
+            
+            // Clear previous selection
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select new option
+            card.classList.add('selected');
+            selectedOption = index;
+            
+            // Process answer
+            processAnswer(isCorrect);
+        }
+        
+        // Function to process answer
+        function processAnswer(isCorrect) {
+            if (isCorrect) {
+                // Correct answer
+                correctCount++;
+                score += 10 + level * 2; // More points for higher levels
+                
+                showFeedback('Correct! Good job!', true);
+                document.querySelectorAll('.option-card').forEach(card => {
+                    if (card.dataset.correct === 'true') {
+                        card.classList.add('correct');
+                    }
+                });
+            } else {
+                // Incorrect answer
+                incorrectCount++;
+                
+                showFeedback('Incorrect. Try to look more carefully.', false);
+                document.querySelectorAll('.option-card').forEach(card => {
+                    if (card.dataset.correct === 'true') {
+                        card.classList.add('correct');
+                    } else if (card.classList.contains('selected')) {
+                        card.classList.add('incorrect');
+                    }
+                });
+            }
+            
+            updateGameInfo();
+            
+            // Disable further selection
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.style.pointerEvents = 'none';
+            });
+            
+            // Move to next round after delay
+            setTimeout(() => {
+                currentRound++;
+                if (currentRound < maxRounds) {
+                    loadRandomChallenge();
+                } else {
+                    endGame();
+                }
+            }, 2000);
+        }
+        
+        // Function to show feedback
+        function showFeedback(message, isCorrect) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+            feedback.style.display = 'block';
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 2000);
+        }
+        
+        // Function to start game
+        function startGame() {
+            // Reset game state
+            currentRound = 0;
+            correctCount = 0;
+            incorrectCount = 0;
+            score = 0;
+            gameActive = true;
+            
+            // Clear any existing timeouts
+            clearInterval(timerInterval);
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'none';
+            
+            // Update instructions based on level
+            updateInstructions();
+            
+            // Start the timer
+            startTimer();
+            
+            // Update game info
+            updateGameInfo();
+            
+            // Load first challenge
+            loadRandomChallenge();
+        }
+        
+        // Function to update instructions
+        function updateInstructions() {
+            const instructions = document.getElementById('instructions');
+            
+            if (level <= 3) {
+                instructions.textContent = 'Find the symbol that matches the target exactly. Pay close attention to orientation and shape.';
+            } else if (level <= 6) {
+                instructions.textContent = 'The challenges are getting harder! Look carefully at letter combinations and number similarities.';
+            } else {
+                instructions.textContent = 'Expert level! These visual discrimination challenges require intense focus and attention to detail.';
+            }
+        }
+        
+        // Function to end game
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            // Calculate final score with bonuses
+            const totalAttempts = correctCount + incorrectCount;
+            const accuracy = totalAttempts > 0 ? (correctCount / totalAttempts) : 0;
+            const accuracyBonus = Math.floor(accuracy * 100);
+            
+            score += accuracyBonus;
+            
+            // Show feedback
+            const feedback = document.getElementById('feedback');
+            feedback.innerHTML = `Game Over!<br>Final Score: ${score}<br>Accuracy Bonus: +${accuracyBonus}<br><br>`;
+            
+            if (accuracy > 0.8) {
+                feedback.innerHTML += 'Excellent visual discrimination skills! You have a great eye for detail.';
+            } else if (accuracy > 0.6) {
+                feedback.innerHTML += 'Good job! With practice, you can improve your visual discrimination abilities even more.';
+            } else {
+                feedback.innerHTML += 'Visual discrimination takes practice. Keep working on noticing small details and differences.';
+            }
+            
+            feedback.className = 'feedback correct';
+            feedback.style.display = 'block';
+            
+            // Show restart button
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Play Again';
+            document.getElementById('start-button').onclick = startGame;
+            
+            // Level up if score is good enough
+            if (accuracy > 0.7 && level < 10) {
+                level++;
+                updateInstructions();
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', startGame);
+        
+        // Initialize game (show start button)
+        document.getElementById('start-button').style.display = 'block';
+        updateGameInfo();
+    </script>
+</body>
+</html>

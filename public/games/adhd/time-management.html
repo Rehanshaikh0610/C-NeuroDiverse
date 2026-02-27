@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Management Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .timer-container {
+            margin: 20px 0;
+            position: relative;
+        }
+        .timer-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9800, #f44336);
+            transition: width 0.1s linear;
+            width: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            line-height: 20px;
+            font-weight: bold;
+        }
+        .schedule-container {
+            display: flex;
+            margin: 20px 0;
+            gap: 20px;
+        }
+        .tasks-container {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: left;
+        }
+        .timeline-container {
+            flex: 2;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+        }
+        .task-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .task-item.dragging {
+            opacity: 0.5;
+        }
+        .task-item .task-duration {
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .task-item .task-priority {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        .task-priority.high {
+            background: rgba(244, 67, 54, 0.7);
+        }
+        .task-priority.medium {
+            background: rgba(255, 152, 0, 0.7);
+        }
+        .task-priority.low {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .timeline {
+            height: 300px;
+            position: relative;
+            border-left: 2px solid rgba(255, 255, 255, 0.5);
+            margin-left: 50px;
+        }
+        .time-marker {
+            position: absolute;
+            left: -50px;
+            width: 45px;
+            text-align: right;
+            font-size: 0.9em;
+        }
+        .timeline-slot {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            padding: 5px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .timeline-slot:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .timeline-slot.filled {
+            background: rgba(33, 150, 243, 0.5);
+        }
+        .timeline-slot.conflict {
+            background: rgba(244, 67, 54, 0.5);
+        }
+        .timeline-slot.optimal {
+            background: rgba(76, 175, 80, 0.5);
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Time Management Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Plan your day by dragging tasks to the timeline. Consider task duration, priority, and deadlines to create an optimal schedule!</div>
+        <div class="timer-container">
+            <div class="timer-bar">
+                <div class="timer-progress" id="timer-progress"></div>
+            </div>
+            <div class="timer-text" id="timer-text">Planning Time: 60s</div>
+        </div>
+        <div class="schedule-container">
+            <div class="tasks-container" id="tasks-container">
+                <h3>Tasks</h3>
+                <div id="task-list">
+                    <!-- Tasks will be generated here -->
+                </div>
+            </div>
+            <div class="timeline-container">
+                <h3>Daily Schedule (9 AM - 5 PM)</h3>
+                <div class="timeline" id="timeline">
+                    <!-- Timeline slots will be generated here -->
+                </div>
+            </div>
+        </div>
+        <button class="button start" id="start-button">Start Planning</button>
+        <button class="button" id="submit-button" style="display: none;">Submit Schedule</button>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let gameActive = false;
+        let currentTasks = [];
+        let scheduledTasks = [];
+        let optimalSchedule = [];
+        let draggedTask = null;
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 60;
+            document.getElementById('timer-text').textContent = `Planning Time: ${timeLeft}s`;
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer-text').textContent = `Planning Time: ${timeLeft}s`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endPlanning();
+                }
+            }, 1000);
+        }
+        
+        // Function to generate tasks based on level
+        function generateTasks() {
+            const taskTypes = [
+                { name: "Study", icon: "📚" },
+                { name: "Exercise", icon: "🏃" },
+                { name: "Meeting", icon: "👥" },
+                { name: "Email", icon: "📧" },
+                { name: "Project", icon: "📝" },
+                { name: "Break", icon: "☕" },
+                { name: "Call", icon: "📞" },
+                { name: "Research", icon: "🔍" }
+            ];
+            
+            const priorities = ["high", "medium", "low"];
+            const durations = [30, 60, 90, 120]; // minutes
+            
+            // Number of tasks based on level
+            const taskCount = Math.min(3 + Math.floor(level / 2), 8);
+            
+            currentTasks = [];
+            
+            // Generate random tasks
+            for (let i = 0; i < taskCount; i++) {
+                const taskType = taskTypes[Math.floor(Math.random() * taskTypes.length)];
+                const priority = priorities[Math.floor(Math.random() * priorities.length)];
+                const duration = durations[Math.floor(Math.random() * durations.length)];
+                
+                currentTasks.push({
+                    id: i + 1,
+                    name: `${taskType.icon} ${taskType.name} ${i + 1}`,
+                    duration: duration,
+                    priority: priority,
+                    scheduled: false
+                });
+            }
+            
+            // Generate optimal schedule (simplified algorithm)
+            generateOptimalSchedule();
+            
+            return currentTasks;
+        }
+        
+        // Function to generate optimal schedule (simplified)
+        function generateOptimalSchedule() {
+            // Sort tasks by priority and duration
+            const sortedTasks = [...currentTasks].sort((a, b) => {
+                const priorityValues = { high: 3, medium: 2, low: 1 };
+                return priorityValues[b.priority] - priorityValues[a.priority];
+            });
+            
+            optimalSchedule = [];
+            let currentTime = 9 * 60; // 9 AM in minutes
+            const endTime = 17 * 60; // 5 PM in minutes
+            
+            for (const task of sortedTasks) {
+                if (currentTime + task.duration <= endTime) {
+                    optimalSchedule.push({
+                        taskId: task.id,
+                        startTime: currentTime,
+                        endTime: currentTime + task.duration
+                    });
+                    currentTime += task.duration;
+                }
+            }
+        }
+        
+        // Function to render tasks
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            currentTasks.forEach(task => {
+                if (!task.scheduled) {
+                    const taskElement = document.createElement('div');
+                    taskElement.className = 'task-item';
+                    taskElement.draggable = true;
+                    taskElement.dataset.taskId = task.id;
+                    
+                    taskElement.innerHTML = `
+                        <div>${task.name}</div>
+                        <div class="task-duration">${task.duration} min</div>
+                        <span class="task-priority ${task.priority}">${task.priority}</span>
+                    `;
+                    
+                    // Add drag events
+                    taskElement.addEventListener('dragstart', handleDragStart);
+                    taskElement.addEventListener('dragend', handleDragEnd);
+                    
+                    taskList.appendChild(taskElement);
+                }
+            });
+        }
+        
+        // Function to render timeline
+        function renderTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            
+            // Create time markers (9 AM to 5 PM)
+            for (let hour = 9; hour <= 17; hour++) {
+                const marker = document.createElement('div');
+                marker.className = 'time-marker';
+                marker.style.top = `${(hour - 9) * 37.5}px`;
+                marker.textContent = `${hour % 12 === 0 ? 12 : hour % 12} ${hour < 12 ? 'AM' : 'PM'}`;
+                timeline.appendChild(marker);
+            }
+            
+            // Create timeline slots (30-minute intervals)
+            for (let i = 0; i < 16; i++) { // 8 hours * 2 slots per hour
+                const slot = document.createElement('div');
+                slot.className = 'timeline-slot';
+                slot.dataset.slotIndex = i;
+                slot.dataset.startTime = 9 * 60 + i * 30; // Start time in minutes (9 AM = 540 minutes)
+                slot.style.top = `${i * 18.75}px`;
+                slot.style.height = '18.75px';
+                
+                // Add drop events
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('drop', handleDrop);
+                
+                timeline.appendChild(slot);
+            }
+            
+            // Render scheduled tasks
+            renderScheduledTasks();
+        }
+        
+        // Function to render scheduled tasks
+        function renderScheduledTasks() {
+            // Clear all filled slots
+            document.querySelectorAll('.timeline-slot').forEach(slot => {
+                slot.classList.remove('filled');
+                slot.textContent = '';
+            });
+            
+            // Render each scheduled task
+            scheduledTasks.forEach(scheduledTask => {
+                const task = currentTasks.find(t => t.id === scheduledTask.taskId);
+                if (!task) return;
+                
+                const startMinutes = scheduledTask.startTime;
+                const endMinutes = scheduledTask.endTime;
+                const startSlotIndex = Math.floor((startMinutes - 9 * 60) / 30);
+                const slotCount = Math.ceil((endMinutes - startMinutes) / 30);
+                
+                // Mark slots as filled
+                for (let i = 0; i < slotCount; i++) {
+                    const slotIndex = startSlotIndex + i;
+                    const slot = document.querySelector(`.timeline-slot[data-slot-index="${slotIndex}"]`);
+                    if (slot) {
+                        slot.classList.add('filled');
+                        if (i === 0) {
+                            slot.textContent = task.name;
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            draggedTask = currentTasks.find(task => task.id === parseInt(this.dataset.taskId));
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', this.dataset.taskId);
+        }
+        
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            if (!draggedTask) return;
+            
+            const slotIndex = parseInt(this.dataset.slotIndex);
+            const startTime = parseInt(this.dataset.startTime);
+            const endTime = startTime + draggedTask.duration;
+            
+            // Check if the task fits in the day
+            if (endTime > 17 * 60) {
+                alert('Task does not fit in the workday!');
+                return;
+            }
+            
+            // Check for conflicts with other scheduled tasks
+            const conflict = scheduledTasks.some(scheduledTask => {
+                return (startTime < scheduledTask.endTime && endTime > scheduledTask.startTime);
+            });
+            
+            if (conflict) {
+                alert('Time conflict with another task!');
+                return;
+            }
+            
+            // Schedule the task
+            draggedTask.scheduled = true;
+            scheduledTasks.push({
+                taskId: draggedTask.id,
+                startTime: startTime,
+                endTime: endTime
+            });
+            
+            // Re-render tasks and timeline
+            renderTasks();
+            renderScheduledTasks();
+            
+            draggedTask = null;
+        }
+        
+        // Function to evaluate schedule
+        function evaluateSchedule() {
+            if (scheduledTasks.length === 0) return 0;
+            
+            let score = 0;
+            const priorityValues = { high: 30, medium: 20, low: 10 };
+            
+            // Base score for scheduled tasks
+            scheduledTasks.forEach(scheduledTask => {
+                const task = currentTasks.find(t => t.id === scheduledTask.taskId);
+                if (task) {
+                    score += priorityValues[task.priority];
+                }
+            });
+            
+            // Bonus for scheduling high priority tasks
+            const highPriorityScheduled = scheduledTasks.filter(scheduledTask => {
+                const task = currentTasks.find(t => t.id === scheduledTask.taskId);
+                return task && task.priority === 'high';
+            }).length;
+            
+            const highPriorityTotal = currentTasks.filter(task => task.priority === 'high').length;
+            
+            if (highPriorityScheduled === highPriorityTotal && highPriorityTotal > 0) {
+                score += 50; // Bonus for scheduling all high priority tasks
+            }
+            
+            // Bonus for efficient use of time
+            const scheduledMinutes = scheduledTasks.reduce((total, scheduledTask) => {
+                return total + (scheduledTask.endTime - scheduledTask.startTime);
+            }, 0);
+            
+            const totalAvailableMinutes = 8 * 60; // 8 hours
+            const timeEfficiency = scheduledMinutes / totalAvailableMinutes;
+            
+            if (timeEfficiency > 0.8) {
+                score += 30; // Bonus for using more than 80% of available time
+            } else if (timeEfficiency > 0.6) {
+                score += 15; // Bonus for using more than 60% of available time
+            }
+            
+            // Compare with optimal schedule
+            const optimalTaskIds = optimalSchedule.map(item => item.taskId);
+            const scheduledTaskIds = scheduledTasks.map(item => item.taskId);
+            
+            const matchingTasks = scheduledTaskIds.filter(id => optimalTaskIds.includes(id)).length;
+            const optimalMatch = matchingTasks / optimalTaskIds.length;
+            
+            if (optimalMatch > 0.8) {
+                score += 50; // Bonus for matching optimal schedule
+            } else if (optimalMatch > 0.5) {
+                score += 25; // Partial bonus
+            }
+            
+            return Math.min(score, 200); // Cap score at 200
+        }
+        
+        // Function to end planning phase
+        function endPlanning() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            // Disable drag and drop
+            document.querySelectorAll('.task-item').forEach(item => {
+                item.draggable = false;
+            });
+            
+            // Show submit button
+            document.getElementById('submit-button').style.display = 'block';
+            document.getElementById('start-button').style.display = 'none';
+        }
+        
+        // Function to submit schedule
+        function submitSchedule() {
+            const scheduleScore = evaluateSchedule();
+            const feedbackElement = document.getElementById('feedback');
+            
+            // Add level bonus
+            const levelBonus = level * 10;
+            const finalScore = scheduleScore + levelBonus;
+            
+            score += finalScore;
+            
+            // Provide feedback
+            if (scheduleScore > 150) {
+                feedbackElement.textContent = `Excellent planning! Your schedule is very efficient. Score: ${finalScore} points (including ${levelBonus} level bonus)`;
+                feedbackElement.className = 'feedback correct';
+            } else if (scheduleScore > 100) {
+                feedbackElement.textContent = `Good job! Your schedule works well. Score: ${finalScore} points (including ${levelBonus} level bonus)`;
+                feedbackElement.className = 'feedback correct';
+            } else if (scheduleScore > 50) {
+                feedbackElement.textContent = `Not bad, but there's room for improvement. Score: ${finalScore} points (including ${levelBonus} level bonus)`;
+                feedbackElement.className = 'feedback incorrect';
+            } else {
+                feedbackElement.textContent = `Your schedule needs work. Try to prioritize important tasks. Score: ${finalScore} points (including ${levelBonus} level bonus)`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            
+            // Show optimal schedule
+            highlightOptimalSchedule();
+            
+            // Update button for next level
+            document.getElementById('submit-button').textContent = 'Next Level';
+            document.getElementById('submit-button').onclick = nextLevel;
+            
+            updateGameInfo();
+        }
+        
+        // Function to highlight optimal schedule
+        function highlightOptimalSchedule() {
+            // Clear all optimal highlights
+            document.querySelectorAll('.timeline-slot').forEach(slot => {
+                slot.classList.remove('optimal');
+            });
+            
+            // Highlight optimal schedule slots
+            optimalSchedule.forEach(scheduledTask => {
+                const startMinutes = scheduledTask.startTime;
+                const endMinutes = scheduledTask.endTime;
+                const startSlotIndex = Math.floor((startMinutes - 9 * 60) / 30);
+                const slotCount = Math.ceil((endMinutes - startMinutes) / 30);
+                
+                for (let i = 0; i < slotCount; i++) {
+                    const slotIndex = startSlotIndex + i;
+                    const slot = document.querySelector(`.timeline-slot[data-slot-index="${slotIndex}"]`);
+                    if (slot && !slot.classList.contains('filled')) {
+                        slot.classList.add('optimal');
+                    }
+                }
+            });
+        }
+        
+        // Function to move to next level
+        function nextLevel() {
+            if (level < 10) {
+                level++;
+                setupLevel();
+            } else {
+                // Game completed
+                document.getElementById('task-list').innerHTML = '';
+                document.getElementById('timeline').innerHTML = '';
+                document.getElementById('feedback').textContent = `Congratulations! You've completed all levels. Final score: ${score}. You've mastered time management!`;
+                document.getElementById('feedback').className = 'feedback correct';
+                document.getElementById('feedback').style.display = 'block';
+                document.getElementById('submit-button').style.display = 'none';
+                document.getElementById('timer-text').textContent = 'Game Complete!';
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to set up level
+        function setupLevel() {
+            // Reset game state
+            gameActive = false;
+            scheduledTasks = [];
+            clearInterval(timerInterval);
+            
+            // Generate tasks for this level
+            generateTasks();
+            
+            // Render tasks and timeline
+            renderTasks();
+            renderTimeline();
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').textContent = 'Start Planning';
+            document.getElementById('submit-button').style.display = 'none';
+            document.getElementById('timer-text').textContent = 'Planning Time: 60s';
+            document.getElementById('timer-progress').style.width = '100%';
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 'Plan your day by dragging tasks to the timeline. Consider task duration, priority, and deadlines to create an optimal schedule!';
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 'Time management is getting more complex! Prioritize high-priority tasks and make efficient use of your time.';
+            } else {
+                document.getElementById('instructions').textContent = 'Expert level time management! Balance multiple priorities and create the most efficient schedule possible.';
+            }
+        }
+        
+        // Function to start planning
+        function startPlanning() {
+            gameActive = true;
+            startTimer();
+            document.getElementById('start-button').style.display = 'none';
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setupLevel();
+        }
+        
+        // Event listeners
+        document.getElementById('start-button').addEventListener('click', startPlanning);
+        document.getElementById('submit-button').addEventListener('click', submitSchedule);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

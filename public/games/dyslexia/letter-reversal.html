@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Reversal Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .letter-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            font-size: 5em;
+            font-weight: bold;
+            height: 150px;
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .option {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+        .option:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .letter-container {
+            position: relative;
+            display: inline-block;
+        }
+        .letter {
+            font-size: 5em;
+            transition: transform 0.3s ease;
+        }
+        .reversed {
+            transform: scaleX(-1);
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Letter Reversal Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Is the letter shown correctly or reversed? Select the right answer!</div>
+        <div class="letter-display" id="letter-display"></div>
+        <div class="options-container">
+            <div class="option" id="correct-option">Correct</div>
+            <div class="option" id="reversed-option">Reversed</div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Letter</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentLetter = '';
+        let isReversed = false;
+        let letterAnswered = false;
+        
+        // Letters that are commonly reversed by people with dyslexia
+        const reversibleLetters = ['b', 'd', 'p', 'q', 'g', 'j', 'n', 'u', 's', 'z'];
+        const nonReversibleLetters = ['a', 'c', 'e', 'f', 'h', 'i', 'k', 'l', 'm', 'o', 'r', 't', 'v', 'w', 'x', 'y'];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to select a letter appropriate for the current level
+        function selectLetter() {
+            let availableLetters = [];
+            
+            if (level <= 3) {
+                // Simple reversible letters
+                availableLetters = reversibleLetters.slice(0, 4); // b, d, p, q
+            } else if (level <= 6) {
+                // All reversible letters
+                availableLetters = reversibleLetters;
+            } else {
+                // Mix of reversible and non-reversible letters
+                availableLetters = [...reversibleLetters, ...nonReversibleLetters.slice(0, 5)];
+            }
+            
+            // Select a random letter from available letters
+            return availableLetters[Math.floor(Math.random() * availableLetters.length)];
+        }
+        
+        // Function to set up letter challenge
+        function setupLetterChallenge() {
+            // Select a letter appropriate for the level
+            currentLetter = selectLetter();
+            
+            // Determine if the letter should be displayed reversed
+            isReversed = Math.random() < 0.5;
+            
+            // Set up letter display
+            const letterDisplay = document.getElementById('letter-display');
+            letterDisplay.innerHTML = '';
+            
+            const letterContainer = document.createElement('div');
+            letterContainer.className = 'letter-container';
+            
+            const letterElement = document.createElement('div');
+            letterElement.className = 'letter' + (isReversed ? ' reversed' : '');
+            letterElement.textContent = currentLetter;
+            
+            letterContainer.appendChild(letterElement);
+            letterDisplay.appendChild(letterContainer);
+            
+            // Reset feedback and next button
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            // Reset letter answered flag
+            letterAnswered = false;
+            
+            // Enable options
+            document.getElementById('correct-option').style.pointerEvents = 'auto';
+            document.getElementById('reversed-option').style.pointerEvents = 'auto';
+            document.getElementById('correct-option').style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            document.getElementById('reversed-option').style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+        }
+        
+        // Function to check answer
+        function checkAnswer(selectedOption) {
+            if (letterAnswered) return;
+            
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            // Disable options
+            document.getElementById('correct-option').style.pointerEvents = 'none';
+            document.getElementById('reversed-option').style.pointerEvents = 'none';
+            
+            // Highlight correct answer
+            if (isReversed) {
+                document.getElementById('reversed-option').style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+            } else {
+                document.getElementById('correct-option').style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+            }
+            
+            if ((selectedOption === 'correct' && !isReversed) || (selectedOption === 'reversed' && isReversed)) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! You identified the letter orientation perfectly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+            } else {
+                // Incorrect answer
+                feedbackElement.textContent = `Not quite. The letter was ${isReversed ? 'reversed' : 'correct'}.`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            nextButton.style.display = 'block';
+            letterAnswered = true;
+            updateGameInfo();
+        }
+        
+        // Function to move to next letter
+        function nextLetter() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            if (level < 10) {
+                level++;
+                setupLetterChallenge();
+            } else {
+                // Game completed
+                document.getElementById('letter-display').innerHTML = '🏆';
+                document.getElementById('correct-option').style.display = 'none';
+                document.getElementById('reversed-option').style.display = 'none';
+                document.getElementById('instructions').textContent = `Game completed! Final score: ${score}`;
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            document.getElementById('correct-option').style.display = 'block';
+            document.getElementById('reversed-option').style.display = 'block';
+            document.getElementById('instructions').textContent = 'Is the letter shown correctly or reversed? Select the right answer!';
+            setupLetterChallenge();
+        }
+        
+        // Event listeners
+        document.getElementById('correct-option').addEventListener('click', () => checkAnswer('correct'));
+        document.getElementById('reversed-option').addEventListener('click', () => checkAnswer('reversed'));
+        document.getElementById('next-button').addEventListener('click', nextLetter);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus Finder Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+            position: relative;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .target {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            user-select: none;
+        }
+        .target:hover {
+            transform: scale(1.1);
+        }
+        .distraction {
+            position: absolute;
+            font-size: 30px;
+            animation: float 3s infinite ease-in-out;
+            cursor: default;
+            user-select: none;
+            z-index: 1;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .sequence-display {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .sequence-item {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+        .sequence-item.correct {
+            background: rgba(76, 175, 80, 0.5);
+        }
+        .sequence-item.incorrect {
+            background: rgba(244, 67, 54, 0.5);
+        }
+        .timer-bar {
+            width: 100%;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .timer {
+            height: 100%;
+            background: linear-gradient(90deg, #FF5722, #FFC107);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .start-button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .start-button:hover {
+            background: #1976D2;
+        }
+        .distraction-text {
+            position: absolute;
+            font-size: 24px;
+            color: rgba(255, 255, 255, 0.7);
+            pointer-events: none;
+            animation: fadeInOut 4s infinite;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Focus Finder Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Focus on finding and clicking the targets in the correct sequence while ignoring distractions!</div>
+        <div class="timer-bar">
+            <div class="timer" id="timer"></div>
+        </div>
+        <div class="sequence-display" id="sequence-display"></div>
+        <div class="game-area" id="game-area">
+            <button class="start-button" id="start-button">Start Level</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Level</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="restartGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentSequence = [];
+        let userSequence = [];
+        let gameActive = false;
+        let timerInterval = null;
+        let timeLeft = 0;
+        let distractionInterval = null;
+        let distractionTexts = [
+            "Look here!", "Distraction!", "Hey!", "Click me!", "Over here!",
+            "Notice me!", "Hello there!", "Psst!", "Attention!", "Focus?"
+        ];
+        let emojis = [
+            "🎈", "🎮", "🎯", "🎪", "🎭", "🎨", "🎬", "🎤", "🎧", "🎸",
+            "🎹", "🎺", "🎻", "🎲", "🎯", "🎮", "🎪", "🎭", "🎨", "🎬"
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to generate a random position within the game area
+        function getRandomPosition(elementWidth, elementHeight) {
+            const gameArea = document.getElementById('game-area');
+            const maxX = gameArea.clientWidth - elementWidth;
+            const maxY = gameArea.clientHeight - elementHeight;
+            return {
+                x: Math.floor(Math.random() * maxX),
+                y: Math.floor(Math.random() * maxY)
+            };
+        }
+        
+        // Function to generate a sequence
+        function generateSequence() {
+            const sequenceLength = Math.min(3 + Math.floor(level / 2), 8);
+            const sequence = [];
+            
+            for (let i = 0; i < sequenceLength; i++) {
+                sequence.push(i + 1);
+            }
+            
+            return sequence;
+        }
+        
+        // Function to display the sequence
+        function displaySequence() {
+            const sequenceDisplay = document.getElementById('sequence-display');
+            sequenceDisplay.innerHTML = '';
+            
+            currentSequence.forEach(num => {
+                const item = document.createElement('div');
+                item.className = 'sequence-item';
+                item.textContent = num;
+                sequenceDisplay.appendChild(item);
+            });
+        }
+        
+        // Function to create targets
+        function createTargets() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = ''; // Clear previous targets
+            
+            // Create targets based on the sequence
+            currentSequence.forEach(num => {
+                const target = document.createElement('div');
+                target.className = 'target';
+                target.textContent = num;
+                target.dataset.number = num;
+                
+                // Set random position
+                const position = getRandomPosition(60, 60);
+                target.style.left = `${position.x}px`;
+                target.style.top = `${position.y}px`;
+                
+                // Add click event
+                target.addEventListener('click', () => targetClicked(num));
+                
+                gameArea.appendChild(target);
+            });
+        }
+        
+        // Function to create distractions
+        function createDistractions() {
+            const gameArea = document.getElementById('game-area');
+            const numDistractions = Math.min(level, 10);
+            
+            // Create emoji distractions
+            for (let i = 0; i < numDistractions; i++) {
+                const distraction = document.createElement('div');
+                distraction.className = 'distraction';
+                distraction.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                // Set random position
+                const position = getRandomPosition(40, 40);
+                distraction.style.left = `${position.x}px`;
+                distraction.style.top = `${position.y}px`;
+                
+                // Add random animation delay
+                distraction.style.animationDelay = `${Math.random() * 2}s`;
+                
+                gameArea.appendChild(distraction);
+            }
+            
+            // Start interval for text distractions
+            distractionInterval = setInterval(() => {
+                if (!gameActive) return;
+                
+                const distraction = document.createElement('div');
+                distraction.className = 'distraction-text';
+                distraction.textContent = distractionTexts[Math.floor(Math.random() * distractionTexts.length)];
+                
+                // Set random position
+                const position = getRandomPosition(100, 30);
+                distraction.style.left = `${position.x}px`;
+                distraction.style.top = `${position.y}px`;
+                
+                gameArea.appendChild(distraction);
+                
+                // Remove after animation completes
+                setTimeout(() => {
+                    if (distraction.parentNode === gameArea) {
+                        gameArea.removeChild(distraction);
+                    }
+                }, 4000);
+                
+            }, 2000 / Math.sqrt(level)); // Distractions appear more frequently at higher levels
+        }
+        
+        // Function to handle target clicks
+        function targetClicked(number) {
+            if (!gameActive) return;
+            
+            userSequence.push(number);
+            
+            // Update sequence display
+            const sequenceItems = document.querySelectorAll('.sequence-item');
+            const index = userSequence.length - 1;
+            
+            if (userSequence[index] === currentSequence[index]) {
+                // Correct selection
+                sequenceItems[index].classList.add('correct');
+                
+                // Check if sequence is complete
+                if (userSequence.length === currentSequence.length) {
+                    endLevel(true);
+                }
+            } else {
+                // Incorrect selection
+                sequenceItems[index].classList.add('incorrect');
+                endLevel(false);
+            }
+        }
+        
+        // Function to start the timer
+        function startTimer() {
+            const timerElement = document.getElementById('timer');
+            timeLeft = 100; // 100% of time
+            timerElement.style.width = `${timeLeft}%`;
+            
+            // Calculate time based on level and sequence length
+            const totalTime = 10000 - (level * 500) + (currentSequence.length * 1000);
+            const interval = 100; // Update every 100ms
+            const decrementPerInterval = (interval / totalTime) * 100;
+            
+            timerInterval = setInterval(() => {
+                timeLeft -= decrementPerInterval;
+                timerElement.style.width = `${Math.max(0, timeLeft)}%`;
+                
+                if (timeLeft <= 0) {
+                    endLevel(false);
+                }
+            }, interval);
+        }
+        
+        // Function to end the level
+        function endLevel(success) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearInterval(distractionInterval);
+            
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            if (success) {
+                feedbackElement.textContent = 'Great job! You completed the sequence correctly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+                nextButton.textContent = 'Next Level';
+            } else {
+                feedbackElement.textContent = 'Oops! That wasn\'t the correct sequence or you ran out of time.';
+                feedbackElement.className = 'feedback incorrect';
+                nextButton.textContent = 'Try Again';
+            }
+            
+            feedbackElement.style.display = 'block';
+            nextButton.style.display = 'block';
+            
+            updateGameInfo();
+        }
+        
+        // Function to start the level
+        function startLevel() {
+            // Reset game state
+            userSequence = [];
+            gameActive = true;
+            
+            // Hide start button and feedback
+            document.getElementById('start-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            // Generate and display sequence
+            currentSequence = generateSequence();
+            displaySequence();
+            
+            // Create targets and distractions
+            createTargets();
+            createDistractions();
+            
+            // Start timer
+            startTimer();
+        }
+        
+        // Function to set up the next level
+        function nextLevel() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            // Clear game area and show start button
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '<button class="start-button" id="start-button">Start Level</button>';
+            document.getElementById('start-button').addEventListener('click', startLevel);
+            
+            // Clear sequence display
+            document.getElementById('sequence-display').innerHTML = '';
+            
+            // Reset timer
+            document.getElementById('timer').style.width = '100%';
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 'Focus on finding and clicking the targets in the correct sequence while ignoring distractions!';
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 'The challenge is getting harder! Stay focused and remember the sequence.';
+            } else {
+                document.getElementById('instructions').textContent = 'Maximum focus required! Ignore the distractions and complete the sequence quickly.';
+            }
+        }
+        
+        // Function to handle next button click
+        function handleNextButton() {
+            const feedbackElement = document.getElementById('feedback');
+            
+            if (feedbackElement.classList.contains('correct')) {
+                // Move to next level if successful
+                if (level < 10) {
+                    level++;
+                } else {
+                    // Game completed
+                    document.getElementById('game-area').innerHTML = `
+                        <div style="font-size: 2em; margin: 20px;">🏆</div>
+                        <div style="font-size: 1.5em; margin: 20px;">Congratulations!</div>
+                        <div>You've completed all levels with a score of ${score}!</div>
+                    `;
+                    document.getElementById('next-button').style.display = 'none';
+                    return;
+                }
+            }
+            
+            nextLevel();
+            updateGameInfo();
+        }
+        
+        // Function to restart the game
+        function restartGame() {
+            level = 1;
+            score = 0;
+            clearInterval(timerInterval);
+            clearInterval(distractionInterval);
+            updateGameInfo();
+            nextLevel();
+        }
+        
+        // Event listeners
+        document.getElementById('next-button').addEventListener('click', handleNextButton);
+        document.getElementById('start-button').addEventListener('click', startLevel);
+        
+        // Initialize game
+        updateGameInfo();
+    </script>
+</body>
+</html>

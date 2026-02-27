@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Scenario Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .scenario-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .scenario-title {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .scenario-description {
+            font-size: 1.2em;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .scenario-image {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .option {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        .option:hover {
+            transform: translateX(10px);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .explanation {
+            margin-top: 15px;
+            font-style: italic;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Social Scenario Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Read each social scenario carefully and choose the most appropriate response.</div>
+        <div class="scenario-container">
+            <div class="scenario-title" id="scenario-title">Scenario Title</div>
+            <div class="scenario-image" id="scenario-image">🤔</div>
+            <div class="scenario-description" id="scenario-description">Scenario description will appear here.</div>
+            <div class="options-container" id="options-container">
+                <!-- Options will be generated here -->
+            </div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Scenario</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentScenario = {};
+        let scenarioAnswered = false;
+        
+        // Scenario data with increasing complexity
+        const scenarios = [
+            // Level 1-3: Basic social interactions
+            {
+                title: "Meeting Someone New",
+                description: "You are at a birthday party and see a new kid you haven't met before. What would be the best way to introduce yourself?",
+                image: "👋",
+                options: [
+                    { text: "Walk up, say 'Hi, my name is [your name]. What's your name?'" , correct: true, explanation: "This is a friendly and direct way to introduce yourself." },
+                    { text: "Stand nearby and wait for them to talk to you first." , correct: false, explanation: "While this is okay if you're shy, taking initiative is usually better for making new friends." },
+                    { text: "Tell them all about yourself without asking their name." , correct: false, explanation: "Conversations work best when both people get to share and listen." },
+                    { text: "Ignore them since you don't know them." , correct: false, explanation: "This misses an opportunity to make a new friend." }
+                ]
+            },
+            {
+                title: "Sharing Toys",
+                description: "You're playing with your favorite toy and another child asks if they can play with it too. What would be a good response?",
+                image: "🧸",
+                options: [
+                    { text: "Say 'No, it's mine!' and turn away." , correct: false, explanation: "This response might hurt the other child's feelings." },
+                    { text: "Say 'Sure, we can take turns' and share the toy." , correct: true, explanation: "Sharing and taking turns is a kind way to play with others." },
+                    { text: "Give them the toy but feel sad about it." , correct: false, explanation: "Sharing doesn't mean you have to give up your turn completely." },
+                    { text: "Hide the toy so they can't play with it." , correct: false, explanation: "This isn't honest or kind behavior." }
+                ]
+            },
+            {
+                title: "Classroom Participation",
+                description: "Your teacher asks a question in class. You think you know the answer. What should you do?",
+                image: "🏫",
+                options: [
+                    { text: "Shout out the answer immediately." , correct: false, explanation: "In most classrooms, it's better to raise your hand and wait to be called on." },
+                    { text: "Raise your hand and wait to be called on." , correct: true, explanation: "This shows respect for classroom rules and gives everyone a fair chance." },
+                    { text: "Don't say anything even if you know the answer." , correct: false, explanation: "Participating in class helps you learn and shows your teacher you're engaged." },
+                    { text: "Whisper the answer to your friend." , correct: false, explanation: "This could distract others and might be considered cheating." }
+                ]
+            },
+            
+            // Level 4-6: More complex social situations
+            {
+                title: "Handling Disappointment",
+                description: "You and your friend both tried out for the school play. Your friend got a part, but you didn't. How should you respond when they tell you the news?",
+                image: "🎭",
+                options: [
+                    { text: "Say 'I don't care about the stupid play anyway.'" , correct: false, explanation: "This response comes from hurt feelings but might make your friend feel bad about their success." },
+                    { text: "Congratulate your friend but then avoid talking to them for a while." , correct: false, explanation: "Avoiding your friend might hurt your relationship." },
+                    { text: "Congratulate your friend and ask them about their part." , correct: true, explanation: "This shows you care about your friend even when you're disappointed." },
+                    { text: "Tell your friend they probably only got the part because the teacher likes them better." , correct: false, explanation: "This accusation could hurt your friend and isn't likely to be true." }
+                ]
+            },
+            {
+                title: "Group Project",
+                description: "You're working on a group project and one team member isn't doing their share of the work. What's the best way to handle this?",
+                image: "📚",
+                options: [
+                    { text: "Do their part yourself and say nothing." , correct: false, explanation: "While this gets the project done, it doesn't solve the problem and might lead to resentment." },
+                    { text: "Tell the teacher immediately that they aren't helping." , correct: false, explanation: "It's usually better to try resolving conflicts directly first before involving authority figures." },
+                    { text: "Privately ask if they need help and explain that everyone needs to contribute." , correct: true, explanation: "This approach is respectful and gives them a chance to explain and improve." },
+                    { text: "Tell the other group members to exclude this person from the project." , correct: false, explanation: "Excluding someone doesn't solve the problem and might make the situation worse." }
+                ]
+            },
+            {
+                title: "Lunch Table Situation",
+                description: "You want to sit at a lunch table where some kids you know are already sitting, but there isn't an empty seat right next to them. What should you do?",
+                image: "🍽️",
+                options: [
+                    { text: "Sit somewhere else by yourself." , correct: false, explanation: "This misses an opportunity to socialize." },
+                    { text: "Ask if you can join them at the table, even if you have to sit a few seats away." , correct: true, explanation: "This is polite and shows you want to be included while respecting the current seating arrangement." },
+                    { text: "Tell someone to move so you can sit with your friends." , correct: false, explanation: "This is demanding and might make others uncomfortable." },
+                    { text: "Stand next to the table until someone notices and offers you a seat." , correct: false, explanation: "This might make people uncomfortable and doesn't clearly communicate what you want." }
+                ]
+            },
+            
+            // Level 7-10: Complex social nuances and emotions
+            {
+                title: "Receiving Criticism",
+                description: "Your teacher returns your project with a lower grade than you expected and some critical comments. How should you respond?",
+                image: "📝",
+                options: [
+                    { text: "Argue that your work deserves a better grade." , correct: false, explanation: "This defensive reaction doesn't help you learn from the feedback." },
+                    { text: "Ignore the comments and just accept the grade." , correct: false, explanation: "This misses an opportunity to learn and improve." },
+                    { text: "Read the comments carefully and ask your teacher for specific advice on how to improve." , correct: true, explanation: "This shows maturity and a desire to learn and improve." },
+                    { text: "Complain to your parents that the teacher is being unfair." , correct: false, explanation: "This assumes the teacher is wrong without trying to understand their perspective." }
+                ]
+            },
+            {
+                title: "Friend in Distress",
+                description: "You notice your friend seems sad and quiet lately. They haven't been joining activities they usually enjoy. What's the best way to help?",
+                image: "😢",
+                options: [
+                    { text: "Don't mention it - they probably want to be left alone." , correct: false, explanation: "While some people do need space, offering support is important." },
+                    { text: "Tell them to cheer up and stop being so negative." , correct: false, explanation: "This dismisses their feelings and puts pressure on them." },
+                    { text: "Ask them privately if they're okay and let them know you're there if they want to talk." , correct: true, explanation: "This shows concern while respecting their privacy and giving them control over sharing." },
+                    { text: "Tell other friends that something is wrong with them so everyone can help." , correct: false, explanation: "Sharing someone's personal struggles without permission can breach their trust." }
+                ]
+            },
+            {
+                title: "Handling Disagreements",
+                description: "You and your friend strongly disagree about which activity to do this weekend. You both feel strongly about your choice. How can you resolve this?",
+                image: "🤝",
+                options: [
+                    { text: "Insist on your choice because it's what you want to do." , correct: false, explanation: "This doesn't consider your friend's feelings or preferences." },
+                    { text: "Give in and do what your friend wants, even though you'll be unhappy." , correct: false, explanation: "While compromise is important, always giving in can lead to resentment." },
+                    { text: "Suggest doing your activity this weekend and their choice next weekend." , correct: true, explanation: "This offers a fair compromise where both people get what they want eventually." },
+                    { text: "Tell your friend you won't hang out with them unless you do your activity." , correct: false, explanation: "Ultimatums can damage friendships and don't show respect for the other person." }
+                ]
+            },
+            {
+                title: "Understanding Sarcasm",
+                description: "Your friend says 'Oh, GREAT job!' after you accidentally spill water on their homework. What are they really communicating?",
+                image: "🙃",
+                options: [
+                    { text: "They're genuinely praising your actions." , correct: false, explanation: "This misses the sarcastic tone that indicates they're actually upset." },
+                    { text: "They're being sarcastic and are actually upset about their homework." , correct: true, explanation: "The context and tone suggest they're using sarcasm to express frustration." },
+                    { text: "They think spilling water is funny and are thanking you for the laugh." , correct: false, explanation: "Damaging homework would rarely be considered funny." },
+                    { text: "They're trying to make you feel better about making a mistake." , correct: false, explanation: "Their response is more likely expressing frustration than trying to comfort you." }
+                ]
+            }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to set up scenario
+        function setupScenario() {
+            // Select scenario based on level
+            const scenarioIndex = Math.min(level - 1, scenarios.length - 1);
+            currentScenario = scenarios[scenarioIndex];
+            
+            // Update UI with scenario details
+            document.getElementById('scenario-title').textContent = currentScenario.title;
+            document.getElementById('scenario-description').textContent = currentScenario.description;
+            document.getElementById('scenario-image').textContent = currentScenario.image;
+            
+            // Generate options
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            // Shuffle options for variety
+            const shuffledOptions = [...currentScenario.options].sort(() => Math.random() - 0.5);
+            
+            shuffledOptions.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = `${String.fromCharCode(65 + index)}. ${option.text}`;
+                optionElement.dataset.index = index;
+                
+                optionElement.addEventListener('click', () => {
+                    if (scenarioAnswered) return;
+                    checkAnswer(option, optionElement);
+                });
+                
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            scenarioAnswered = false;
+        }
+        
+        // Function to check answer
+        function checkAnswer(option, optionElement) {
+            scenarioAnswered = true;
+            const feedbackElement = document.getElementById('feedback');
+            
+            // Disable all options
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            
+            if (option.correct) {
+                // Correct answer
+                optionElement.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+                feedbackElement.textContent = 'Correct! ' + option.explanation;
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+            } else {
+                // Incorrect answer
+                optionElement.style.backgroundColor = 'rgba(244, 67, 54, 0.5)';
+                feedbackElement.textContent = 'Not quite. ' + option.explanation;
+                feedbackElement.className = 'feedback incorrect';
+                
+                // Highlight the correct answer
+                options.forEach(opt => {
+                    const index = parseInt(opt.dataset.index);
+                    if (shuffledOptions[index].correct) {
+                        opt.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+                    }
+                });
+            }
+            
+            feedbackElement.style.display = 'block';
+            document.getElementById('next-button').style.display = 'block';
+            
+            updateGameInfo();
+        }
+        
+        // Function to move to next scenario
+        function nextScenario() {
+            if (level < 10) {
+                level++;
+                setupScenario();
+            } else {
+                // Game completed
+                document.getElementById('scenario-title').textContent = 'Game Completed!';
+                document.getElementById('scenario-description').textContent = `Congratulations! You've completed all scenarios. Final score: ${score}`;
+                document.getElementById('scenario-image').textContent = '🏆';
+                document.getElementById('options-container').innerHTML = '';
+                document.getElementById('feedback').style.display = 'none';
+                document.getElementById('next-button').style.display = 'none';
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setupScenario();
+        }
+        
+        // Event listeners
+        document.getElementById('next-button').addEventListener('click', nextScenario);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

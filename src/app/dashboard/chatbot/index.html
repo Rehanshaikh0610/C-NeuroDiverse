@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindMitra - Your Mental Wellness Companion</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h1>MindMitra</h1>
+                </div>
+                <p class="tagline">Your mental wellness companion</p>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="message bot-message">
+                    <div class="avatar">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Hey! How are you doing today? 😊</p>
+                        <span class="timestamp">Just now</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <textarea id="user-input" placeholder="Type your message here..." rows="1"></textarea>
+                    <button id="send-button" class="send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="features">
+                    <div class="feature">
+                        <i class="fas fa-microphone" id="voice-input"></i>
+                    </div>
+                    <div class="feature">
+                        <i class="fas fa-image" id="image-upload"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Wellness Resources</h2>
+            </div>
+            <div class="resource-cards">
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Self-Care Tips</h3>
+                    <p>Simple daily practices for mental wellness</p>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Mindfulness Guide</h3>
+                    <p>Learn techniques to stay present and calm</p>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <h3>Sleep Better</h3>
+                    <p>Tips for improving your sleep quality</p>
+                </div>
+                <div class="resource-card">
+                    <div class="resource-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Community Support</h3>
+                    <p>Connect with others on similar journeys</p>
+                </div>
+            </div>
+            <div class="mood-tracker">
+                <h3>How are you feeling today?</h3>
+                <div class="mood-options">
+                    <div class="mood">😊</div>
+                    <div class="mood">😐</div>
+                    <div class="mood">😔</div>
+                    <div class="mood">😡</div>
+                    <div class="mood">😴</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="theme-toggle">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

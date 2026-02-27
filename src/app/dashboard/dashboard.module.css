@@ -1,0 +1,96 @@
+/* Dashboard specific styles */
+
+.gridPattern {
+  background-image: linear-gradient(90deg, rgba(255,255,255,.07) 1px, transparent 1px),
+                    linear-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+  animation: fadeIn 1s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Dark mode grid pattern */
+:global(.dark) .gridPattern {
+  background-image: 
+    linear-gradient(to right, rgba(128, 144, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(128, 144, 255, 0.15) 1px, transparent 1px);
+}
+
+/* Floating card effect with dark theme support */
+.floatingCard {
+  animation: float 6s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.75rem !important;
+  margin-bottom: 0.5rem !important;
+  color: #1a1a1a;
+}
+
+:global(.dark) .floatingCard {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(75, 85, 99, 0.3);
+  color: #ffffff;
+}
+
+.floatingCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .floatingCard:hover {
+  background: rgba(17, 24, 39, 0.8);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Compact progress tracking */
+.progressSection {
+  margin: 0.5rem 0;
+  color: inherit;
+}
+
+:global(.dark) .progressSection {
+  color: #ffffff;
+}
+
+.progressSection > div {
+  padding: 0.75rem !important;
+}
+
+/* Glowing border effect */
+.glowBorder {
+  position: relative;
+  color: inherit;
+}
+
+:global(.dark) .glowBorder {
+  color: #ffffff;
+}
+
+.glowBorder::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #4f46e5, #8b5cf6, #3b82f6);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+:global(.dark) .glowBorder::before {
+  background: linear-gradient(45deg, #312e81, #5b21b6, #1e40af);
+}
+
+.glowBorder:hover::before {
+  opacity: 1;
+}

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Blending Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .word-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .sound-segments {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .sound-segment {
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 40px;
+        }
+        .sound-segment:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .sound-segment.played {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        .play-all-button {
+            padding: 10px 20px;
+            background: rgba(33, 150, 243, 0.7);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 15px;
+        }
+        .play-all-button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .option {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .option:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .image-container {
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Sound Blending Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Listen to the sound segments and select the word they make when blended together!</div>
+        <div class="word-container">
+            <button class="play-all-button" id="play-all-button">Play All Sounds</button>
+            <div class="sound-segments" id="sound-segments"></div>
+            <div class="image-container" id="image-container">?</div>
+        </div>
+        <div class="options-container" id="options-container"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Word</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentWord = '';
+        let currentSounds = [];
+        let currentOptions = [];
+        let audioContext = null;
+        
+        // Word data with phonetic segments and image representations (emojis for simplicity)
+        const wordData = [
+            // Level 1-3: Simple CVC words (consonant-vowel-consonant)
+            { word: 'cat', sounds: ['k', 'a', 't'], image: '🐱' },
+            { word: 'dog', sounds: ['d', 'o', 'g'], image: '🐶' },
+            { word: 'sun', sounds: ['s', 'u', 'n'], image: '☀️' },
+            { word: 'hat', sounds: ['h', 'a', 't'], image: '🧢' },
+            { word: 'bed', sounds: ['b', 'e', 'd'], image: '🛏️' },
+            { word: 'pig', sounds: ['p', 'i', 'g'], image: '🐷' },
+            { word: 'fox', sounds: ['f', 'o', 'k', 's'], image: '🦊' },
+            
+            // Level 4-6: Blends and digraphs
+            { word: 'ship', sounds: ['sh', 'i', 'p'], image: '🚢' },
+            { word: 'fish', sounds: ['f', 'i', 'sh'], image: '🐟' },
+            { word: 'star', sounds: ['s', 't', 'ar'], image: '⭐' },
+            { word: 'frog', sounds: ['f', 'r', 'o', 'g'], image: '🐸' },
+            { word: 'tree', sounds: ['t', 'r', 'ee'], image: '🌳' },
+            { word: 'duck', sounds: ['d', 'u', 'k'], image: '🦆' },
+            { word: 'sock', sounds: ['s', 'o', 'k'], image: '🧦' },
+            
+            // Level 7-10: More complex words
+            { word: 'plane', sounds: ['p', 'l', 'ay', 'n'], image: '✈️' },
+            { word: 'snake', sounds: ['s', 'n', 'ay', 'k'], image: '🐍' },
+            { word: 'train', sounds: ['t', 'r', 'ay', 'n'], image: '🚂' },
+            { word: 'cloud', sounds: ['k', 'l', 'ow', 'd'], image: '☁️' },
+            { word: 'bread', sounds: ['b', 'r', 'e', 'd'], image: '🍞' },
+            { word: 'grape', sounds: ['g', 'r', 'ay', 'p'], image: '🍇' },
+            { word: 'smile', sounds: ['s', 'm', 'ai', 'l'], image: '😊' },
+            { word: 'brush', sounds: ['b', 'r', 'u', 'sh'], image: '🪥' },
+            { word: 'clock', sounds: ['k', 'l', 'o', 'k'], image: '🕰️' },
+            { word: 'spoon', sounds: ['s', 'p', 'oo', 'n'], image: '🥄' }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to initialize audio context
+        function initAudioContext() {
+            // Create audio context on user interaction to comply with browser policies
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // Function to speak text using Web Speech API
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8; // Slightly slower for clarity
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Function to play a sound segment
+        function playSound(sound, element) {
+            initAudioContext();
+            speakText(sound);
+            
+            if (element) {
+                element.classList.add('played');
+                setTimeout(() => {
+                    element.classList.remove('played');
+                }, 500);
+            }
+        }
+        
+        // Function to play all sounds in sequence
+        function playAllSounds() {
+            initAudioContext();
+            
+            const soundElements = document.querySelectorAll('.sound-segment');
+            let index = 0;
+            
+            function playNextSound() {
+                if (index < currentSounds.length) {
+                    playSound(currentSounds[index], soundElements[index]);
+                    index++;
+                    setTimeout(playNextSound, 800); // Delay between sounds
+                }
+            }
+            
+            playNextSound();
+        }
+        
+        // Function to select a word appropriate for the current level
+        function selectWord() {
+            let availableWords = [];
+            
+            if (level <= 3) {
+                // Simple CVC words
+                availableWords = wordData.filter(item => item.sounds.length <= 3);
+            } else if (level <= 6) {
+                // Words with blends and digraphs
+                availableWords = wordData.filter(item => 
+                    item.sounds.length >= 3 && 
+                    item.sounds.length <= 4 && 
+                    item.sounds.some(sound => sound.length > 1)
+                );
+            } else {
+                // More complex words
+                availableWords = wordData.filter(item => 
+                    item.sounds.length >= 4 || 
+                    item.sounds.some(sound => sound.length > 1)
+                );
+            }
+            
+            // Select a random word from available words
+            return availableWords[Math.floor(Math.random() * availableWords.length)];
+        }
+        
+        // Function to generate options
+        function generateOptions() {
+            const numOptions = Math.min(3 + Math.floor(level / 3), 5);
+            
+            // Always include the correct word
+            const options = [currentWord];
+            
+            // Add similar-sounding words as distractors
+            const otherWords = wordData.filter(item => item.word !== currentWord)
+                .map(item => item.word);
+            
+            // Shuffle and take needed number of distractors
+            const shuffledWords = shuffleArray(otherWords);
+            options.push(...shuffledWords.slice(0, numOptions - 1));
+            
+            return shuffleArray(options);
+        }
+        
+        // Function to set up word challenge
+        function setupWordChallenge() {
+            // Select a word appropriate for the level
+            const wordInfo = selectWord();
+            currentWord = wordInfo.word;
+            currentSounds = wordInfo.sounds;
+            
+            // Set up sound segments
+            const soundSegmentsContainer = document.getElementById('sound-segments');
+            soundSegmentsContainer.innerHTML = '';
+            
+            currentSounds.forEach((sound, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'sound-segment';
+                segment.textContent = sound;
+                segment.addEventListener('click', () => playSound(sound, segment));
+                soundSegmentsContainer.appendChild(segment);
+            });
+            
+            // Set image (hidden initially)
+            document.getElementById('image-container').textContent = '?';
+            
+            // Generate options
+            currentOptions = generateOptions();
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            currentOptions.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.addEventListener('click', () => checkAnswer(option));
+                optionsContainer.appendChild(optionElement);
+            });
+            
+            // Reset feedback and next button
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            // Set up play all button
+            document.getElementById('play-all-button').addEventListener('click', playAllSounds);
+        }
+        
+        // Function to check answer
+        function checkAnswer(selectedWord) {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            const imageContainer = document.getElementById('image-container');
+            const options = document.querySelectorAll('.option');
+            
+            // Disable all options
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === currentWord) {
+                    option.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+                }
+            });
+            
+            // Show the image
+            const wordInfo = wordData.find(item => item.word === currentWord);
+            imageContainer.textContent = wordInfo.image;
+            
+            if (selectedWord === currentWord) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! You blended the sounds perfectly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+                speakText('Correct!');
+            } else {
+                // Incorrect answer
+                feedbackElement.textContent = `Not quite. The sounds make the word "${currentWord}".`;
+                feedbackElement.className = 'feedback incorrect';
+                speakText('Try again. The word is ' + currentWord);
+            }
+            
+            feedbackElement.style.display = 'block';
+            nextButton.style.display = 'block';
+            updateGameInfo();
+        }
+        
+        // Function to move to next word
+        function nextWord() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            if (level < 10) {
+                level++;
+                setupWordChallenge();
+            } else {
+                // Game completed
+                document.getElementById('sound-segments').innerHTML = '';
+                document.getElementById('image-container').textContent = '🏆';
+                document.getElementById('options-container').innerHTML = '';
+                document.getElementById('instructions').textContent = `Game completed! Final score: ${score}`;
+                document.getElementById('play-all-button').style.display = 'none';
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setupWordChallenge();
+            document.getElementById('instructions').textContent = 'Listen to the sound segments and select the word they make when blended together!';
+            document.getElementById('play-all-button').style.display = 'block';
+        }
+        
+        // Event listener for next button
+        document.getElementById('next-button').addEventListener('click', nextWord);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

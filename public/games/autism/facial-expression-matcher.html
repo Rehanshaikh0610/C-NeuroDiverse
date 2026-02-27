@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facial Expression Matcher</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .emotion-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .emotion-prompt {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .expression-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background-color: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .option {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+        }
+        .option:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Facial Expression Matcher</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Match the facial expression with the correct emotion!</div>
+        <div class="emotion-container">
+            <div class="emotion-prompt">What emotion is this?</div>
+            <div class="expression-image" id="expression-image"></div>
+        </div>
+        <div class="options-container" id="options-container"></div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Expression</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentEmotion = '';
+        
+        // Emotions with corresponding expressions (using emojis for simplicity)
+        const emotions = [
+            { name: 'Happy', expression: '😀' },
+            { name: 'Sad', expression: '😢' },
+            { name: 'Angry', expression: '😠' },
+            { name: 'Surprised', expression: '😮' },
+            { name: 'Scared', expression: '😨' },
+            { name: 'Disgusted', expression: '🤢' },
+            { name: 'Confused', expression: '😕' },
+            { name: 'Excited', expression: '🤩' },
+            { name: 'Bored', expression: '😒' },
+            { name: 'Nervous', expression: '😰' },
+            { name: 'Proud', expression: '😌' },
+            { name: 'Shy', expression: '😳' },
+            { name: 'Tired', expression: '😴' },
+            { name: 'Relaxed', expression: '😌' },
+            { name: 'Frustrated', expression: '😤' }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to generate options
+        function generateOptions() {
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            // Determine number of options based on level
+            const numOptions = Math.min(4 + Math.floor(level / 3), 6);
+            
+            // Create array with correct emotion and random distractors
+            const correctEmotion = emotions.find(e => e.name === currentEmotion);
+            const otherEmotions = emotions.filter(e => e.name !== currentEmotion);
+            const shuffledEmotions = shuffleArray(otherEmotions);
+            
+            const options = [correctEmotion, ...shuffledEmotions.slice(0, numOptions - 1)];
+            const shuffledOptions = shuffleArray(options);
+            
+            // Create option elements
+            shuffledOptions.forEach(emotion => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = emotion.name;
+                optionElement.addEventListener('click', () => checkAnswer(emotion.name));
+                optionsContainer.appendChild(optionElement);
+            });
+        }
+        
+        // Function to check answer
+        function checkAnswer(selectedEmotion) {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            const options = document.querySelectorAll('.option');
+            
+            // Disable all options
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+                if (option.textContent === currentEmotion) {
+                    option.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+                }
+            });
+            
+            if (selectedEmotion === currentEmotion) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! Great job recognizing the emotion!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+            } else {
+                // Incorrect answer
+                feedbackElement.textContent = `Not quite. This expression shows ${currentEmotion}.`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            nextButton.style.display = 'block';
+            updateGameInfo();
+        }
+        
+        // Function to set up next expression
+        function nextExpression() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            if (level < 10) {
+                level++;
+                setupExpression();
+            } else {
+                // Game completed
+                document.getElementById('expression-image').innerHTML = '🏆';
+                document.getElementById('options-container').innerHTML = '';
+                document.getElementById('instructions').textContent = `Game completed! Final score: ${score}`;
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to set up expression
+        function setupExpression() {
+            // Select a random emotion based on level
+            const availableEmotions = emotions.slice(0, Math.min(5 + level, emotions.length));
+            const randomEmotion = availableEmotions[Math.floor(Math.random() * availableEmotions.length)];
+            currentEmotion = randomEmotion.name;
+            
+            // Update expression image
+            document.getElementById('expression-image').textContent = randomEmotion.expression;
+            
+            // Generate options
+            generateOptions();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setupExpression();
+            document.getElementById('instructions').textContent = 'Match the facial expression with the correct emotion!';
+        }
+        
+        // Event listener for next button
+        document.getElementById('next-button').addEventListener('click', nextExpression);
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

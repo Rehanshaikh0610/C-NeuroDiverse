@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Fluency Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .reading-display {
+            font-size: 1.5em;
+            line-height: 1.6;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            text-align: left;
+            white-space: pre-wrap;
+            position: relative;
+            overflow: hidden;
+            height: 200px;
+        }
+        .reading-text {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            transition: top 0.5s ease;
+        }
+        .highlight {
+            background-color: rgba(255, 215, 0, 0.7);
+            padding: 0 2px;
+            border-radius: 3px;
+        }
+        .timer {
+            font-size: 1.5em;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .wpm-display {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        .button {
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin: 10px;
+        }
+        .button:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+        .button.start {
+            background: rgba(76, 175, 80, 0.7);
+        }
+        .button.start:hover {
+            background: rgba(76, 175, 80, 0.9);
+        }
+        .speed-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .speed-button {
+            padding: 8px 15px;
+            font-size: 1em;
+            background: rgba(255, 255, 255, 0.15);
+            color: inherit;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .speed-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .speed-button.active {
+            background: rgba(33, 150, 243, 0.7);
+            color: white;
+        }
+        .comprehension-question {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 1.2em;
+            display: none;
+        }
+        .answer-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .answer-option {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+        .answer-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Reading Fluency Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Practice reading at different speeds and answer comprehension questions to improve your reading fluency.</div>
+        <div class="timer" id="timer">Ready to start</div>
+        <div class="wpm-display">Speed: <span id="wpm">150</span> WPM</div>
+        <div class="speed-controls">
+            <button class="speed-button" data-speed="100">Slow</button>
+            <button class="speed-button active" data-speed="150">Medium</button>
+            <button class="speed-button" data-speed="200">Fast</button>
+            <button class="speed-button" data-speed="250">Very Fast</button>
+        </div>
+        <div class="reading-display">
+            <div class="reading-text" id="reading-text">Press Start to begin the reading challenge!</div>
+        </div>
+        <button class="button start" id="start-button">Start</button>
+        <div class="comprehension-question" id="question-container">
+            <div id="question-text">Question will appear here</div>
+            <div class="answer-options" id="answer-options">
+                <!-- Answer options will be generated here -->
+            </div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentPassage = {};
+        let currentWPM = 150;
+        let readingInterval;
+        let currentWordIndex = 0;
+        let readingActive = false;
+        let readingComplete = false;
+        
+        // Reading passages with increasing complexity
+        const passages = [
+            // Level 1-3: Simple passages
+            {
+                text: "The cat sat on the mat. It was a sunny day. The bird flew in the sky. The dog ran in the park. The children played games. They had a lot of fun.",
+                question: "What was the weather like in the story?",
+                options: [
+                    { text: "Sunny", correct: true },
+                    { text: "Rainy", correct: false },
+                    { text: "Cloudy", correct: false },
+                    { text: "Snowy", correct: false }
+                ]
+            },
+            {
+                text: "Tom went to the store. He wanted to buy some apples. The apples were red and green. Tom picked six apples. He paid for them and went home. His mom made an apple pie.",
+                question: "How many apples did Tom buy?",
+                options: [
+                    { text: "Four", correct: false },
+                    { text: "Five", correct: false },
+                    { text: "Six", correct: true },
+                    { text: "Seven", correct: false }
+                ]
+            },
+            {
+                text: "Lisa has a new bike. It is blue with white stripes. She rides it to school every day. The school is not far from her house. Lisa likes her bike very much. She always wears a helmet for safety.",
+                question: "What color is Lisa's bike?",
+                options: [
+                    { text: "Red with white stripes", correct: false },
+                    { text: "Blue with white stripes", correct: true },
+                    { text: "Green with black stripes", correct: false },
+                    { text: "Yellow with blue stripes", correct: false }
+                ]
+            },
+            
+            // Level 4-6: Medium complexity passages
+            {
+                text: "The old lighthouse stood on the rocky cliff. For over a hundred years, it had guided ships safely to shore. The light keeper lived there alone. Every night, he would climb the spiral staircase to light the powerful beam. Many sailors owed their lives to this faithful guardian of the coast.",
+                question: "What did the light keeper do every night?",
+                options: [
+                    { text: "Sleep in the tower", correct: false },
+                    { text: "Watch for ships with binoculars", correct: false },
+                    { text: "Climb the spiral staircase to light the beam", correct: true },
+                    { text: "Signal to passing ships with flags", correct: false }
+                ]
+            },
+            {
+                text: "Maria loved to paint landscapes. She would set up her easel in the meadow behind her house. The changing seasons offered new colors and scenes to capture. In spring, wildflowers dotted the green grass. Summer brought golden sunshine and blue skies. Fall painted the trees in red and orange. Winter covered everything in sparkling white.",
+                question: "Where did Maria set up her easel to paint?",
+                options: [
+                    { text: "In her bedroom", correct: false },
+                    { text: "At the beach", correct: false },
+                    { text: "In the meadow behind her house", correct: true },
+                    { text: "In the town square", correct: false }
+                ]
+            },
+            {
+                text: "The science museum had a new dinosaur exhibit. Jake was excited to see the massive skeletons. His favorite was the Tyrannosaurus Rex with its huge teeth and tiny arms. The museum guide explained that these creatures lived millions of years ago. Jake wondered what it would be like to see a real living dinosaur.",
+                question: "Which dinosaur was Jake's favorite?",
+                options: [
+                    { text: "Stegosaurus", correct: false },
+                    { text: "Triceratops", correct: false },
+                    { text: "Brachiosaurus", correct: false },
+                    { text: "Tyrannosaurus Rex", correct: true }
+                ]
+            },
+            
+            // Level 7-10: Complex passages
+            {
+                text: "The ancient civilization of Mesopotamia developed between the Tigris and Euphrates rivers. Often called the cradle of civilization, this region saw the emergence of the world's first cities. The Sumerians created a complex writing system called cuneiform, using wedge-shaped marks on clay tablets. They also made advancements in mathematics, astronomy, and architecture that influenced many later cultures.",
+                question: "What writing system did the Sumerians create?",
+                options: [
+                    { text: "Hieroglyphics", correct: false },
+                    { text: "Cuneiform", correct: true },
+                    { text: "Sanskrit", correct: false },
+                    { text: "Alphabet", correct: false }
+                ]
+            },
+            {
+                text: "Photosynthesis is the process by which green plants convert sunlight into energy. Chlorophyll, the pigment that gives plants their green color, captures light energy from the sun. The plant uses this energy to transform carbon dioxide and water into glucose and oxygen. The glucose provides energy for the plant to grow, while the oxygen is released into the atmosphere, providing the air we breathe.",
+                question: "What does chlorophyll do in the process of photosynthesis?",
+                options: [
+                    { text: "It releases oxygen into the air", correct: false },
+                    { text: "It converts glucose into energy", correct: false },
+                    { text: "It captures light energy from the sun", correct: true },
+                    { text: "It absorbs carbon dioxide from the air", correct: false }
+                ]
+            },
+            {
+                text: "The human brain is perhaps the most complex structure in the known universe. Containing approximately 86 billion neurons, it controls everything from basic bodily functions to complex thought and emotion. The cerebrum, the largest part of the brain, is divided into two hemispheres and is responsible for higher functions like reasoning and language. The cerebellum coordinates movement and balance, while the brain stem controls vital functions like breathing and heart rate.",
+                question: "What is the function of the cerebellum?",
+                options: [
+                    { text: "Controlling emotions and memory", correct: false },
+                    { text: "Processing language and speech", correct: false },
+                    { text: "Regulating breathing and heart rate", correct: false },
+                    { text: "Coordinating movement and balance", correct: true }
+                ]
+            },
+            {
+                text: "Climate change represents one of the greatest challenges facing humanity today. Rising global temperatures, primarily caused by greenhouse gas emissions, are leading to more frequent extreme weather events, rising sea levels, and disruptions to ecosystems worldwide. Scientists warn that without significant reductions in carbon emissions, these effects will intensify in the coming decades. Addressing this crisis requires international cooperation, technological innovation, and changes in how we produce and consume energy.",
+                question: "According to the passage, what is the primary cause of rising global temperatures?",
+                options: [
+                    { text: "Deforestation", correct: false },
+                    { text: "Solar radiation", correct: false },
+                    { text: "Greenhouse gas emissions", correct: true },
+                    { text: "Ocean currents", correct: false }
+                ]
+            }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to set up reading passage
+        function setupReading() {
+            // Select passage based on level
+            const passageIndex = Math.min(level - 1, passages.length - 1);
+            currentPassage = passages[passageIndex];
+            
+            // Reset reading state
+            currentWordIndex = 0;
+            readingComplete = false;
+            
+            // Display passage
+            document.getElementById('reading-text').textContent = currentPassage.text;
+            document.getElementById('reading-text').style.top = '20px';
+            
+            // Hide question container
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            // Update button
+            document.getElementById('start-button').textContent = 'Start Reading';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').onclick = startReading;
+            
+            // Update timer
+            document.getElementById('timer').textContent = 'Ready to start';
+            
+            // Update instructions based on level
+            if (level <= 3) {
+                document.getElementById('instructions').textContent = 'Read the simple passage at your chosen speed. Try to understand what you read!';
+            } else if (level <= 6) {
+                document.getElementById('instructions').textContent = 'This passage is a bit more complex. Focus on reading fluently while understanding the content.';
+            } else {
+                document.getElementById('instructions').textContent = 'This is an advanced passage. Challenge yourself with higher reading speeds while maintaining comprehension.';
+            }
+        }
+        
+        // Function to start the reading process
+        function startReading() {
+            if (readingActive) return;
+            
+            readingActive = true;
+            document.getElementById('start-button').style.display = 'none';
+            
+            // Split text into words
+            const words = currentPassage.text.split(' ');
+            const readingText = document.getElementById('reading-text');
+            
+            // Calculate reading time
+            const totalWords = words.length;
+            const readingTimeSeconds = (totalWords / currentWPM) * 60;
+            
+            // Update timer
+            document.getElementById('timer').textContent = `Reading in progress...`;
+            
+            // Start scrolling the text
+            const textHeight = readingText.offsetHeight;
+            const containerHeight = document.querySelector('.reading-display').offsetHeight;
+            const scrollDistance = textHeight - containerHeight + 40; // 40px for padding
+            
+            // Only scroll if text is longer than container
+            if (textHeight > containerHeight) {
+                readingText.style.transition = `top ${readingTimeSeconds}s linear`;
+                readingText.style.top = `-${scrollDistance}px`;
+            }
+            
+            // Set timeout to show question after reading time
+            setTimeout(() => {
+                readingActive = false;
+                readingComplete = true;
+                showQuestion();
+            }, readingTimeSeconds * 1000);
+        }
+        
+        // Function to show comprehension question
+        function showQuestion() {
+            document.getElementById('timer').textContent = 'Reading complete!';
+            
+            // Set up question
+            const questionContainer = document.getElementById('question-container');
+            document.getElementById('question-text').textContent = currentPassage.question;
+            
+            // Set up answer options
+            const answerOptions = document.getElementById('answer-options');
+            answerOptions.innerHTML = '';
+            
+            // Shuffle options
+            const shuffledOptions = [...currentPassage.options].sort(() => Math.random() - 0.5);
+            
+            shuffledOptions.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'answer-option';
+                optionElement.textContent = `${String.fromCharCode(65 + index)}. ${option.text}`;
+                
+                optionElement.addEventListener('click', () => {
+                    checkAnswer(option);
+                });
+                
+                answerOptions.appendChild(optionElement);
+            });
+            
+            questionContainer.style.display = 'block';
+        }
+        
+        // Function to check answer
+        function checkAnswer(option) {
+            const feedbackElement = document.getElementById('feedback');
+            const answerOptions = document.querySelectorAll('.answer-option');
+            
+            // Disable all options
+            answerOptions.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            
+            if (option.correct) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! Great reading comprehension!';
+                feedbackElement.className = 'feedback correct';
+                
+                // Calculate score based on level and reading speed
+                const speedBonus = Math.floor(currentWPM / 50); // Bonus points for faster reading
+                const pointsEarned = 10 * level + speedBonus;
+                score += pointsEarned;
+                
+                feedbackElement.textContent += ` You earned ${pointsEarned} points!`;
+            } else {
+                // Incorrect answer
+                feedbackElement.textContent = 'Not quite right. Try to focus more on understanding what you read.';
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            
+            // Update button for next level
+            document.getElementById('start-button').textContent = level >= 10 ? 'Finish Game' : 'Next Level';
+            document.getElementById('start-button').style.display = 'block';
+            document.getElementById('start-button').onclick = nextLevel;
+            
+            updateGameInfo();
+        }
+        
+        // Function to move to next level
+        function nextLevel() {
+            if (level < 10) {
+                level++;
+                setupReading();
+            } else {
+                // Game completed
+                document.getElementById('reading-text').textContent = 'Congratulations! You have completed all reading challenges!';
+                document.getElementById('question-container').style.display = 'none';
+                document.getElementById('feedback').textContent = `Final score: ${score}. Your reading fluency has improved!`;
+                document.getElementById('feedback').className = 'feedback correct';
+                document.getElementById('feedback').style.display = 'block';
+                document.getElementById('start-button').style.display = 'none';
+                document.getElementById('timer').textContent = 'Game Complete!';
+                document.getElementById('instructions').textContent = 'You have successfully completed all reading fluency challenges!';
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to set reading speed
+        function setReadingSpeed(speed) {
+            currentWPM = speed;
+            document.getElementById('wpm').textContent = speed;
+            
+            // Update active button
+            document.querySelectorAll('.speed-button').forEach(button => {
+                if (parseInt(button.dataset.speed) === speed) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            setReadingSpeed(150); // Reset to medium speed
+            setupReading();
+        }
+        
+        // Event listeners for speed buttons
+        document.querySelectorAll('.speed-button').forEach(button => {
+            button.addEventListener('click', () => {
+                if (readingActive) return; // Don't change speed during active reading
+                setReadingSpeed(parseInt(button.dataset.speed));
+            });
+        });
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>

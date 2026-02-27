@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <style>
+    .diary-cover {
+      fill: #3b4fd1;
+    }
+    .diary-pages {
+      fill: #f8fafc;
+    }
+    .diary-binding {
+      fill: #f59e0b;
+    }
+    .diary-decoration {
+      fill: #f472b6;
+    }
+    .diary-tab-red {
+      fill: #ef4444;
+    }
+    .diary-tab-green {
+      fill: #10b981;
+    }
+    .diary-tab-blue {
+      fill: #3b82f6;
+    }
+    .diary-tab-orange {
+      fill: #f97316;
+    }
+    .diary-line {
+      stroke: #cbd5e1;
+      stroke-width: 2;
+    }
+    @media (prefers-color-scheme: dark) {
+      .diary-cover {
+        fill: #4f6bff;
+      }
+      .diary-pages {
+        fill: #e2e8f0;
+      }
+      .diary-line {
+        stroke: #94a3b8;
+      }
+    }
+  </style>
+  
+  <!-- Diary Pages -->
+  <path class="diary-pages" d="M40,30 L150,30 L150,170 L40,170 Z" />
+  
+  <!-- Diary Cover -->
+  <path class="diary-cover" d="M35,25 L145,25 C147,25 150,27 150,30 L150,170 C150,173 147,175 145,175 L35,175 C33,175 30,173 30,170 L30,30 C30,27 33,25 35,25 Z M40,30 L140,30 L140,170 L40,170 Z" />
+  
+  <!-- Binding Rings -->
+  <circle class="diary-binding" cx="45" cy="45" r="5" />
+  <circle class="diary-binding" cx="45" cy="65" r="5" />
+  <circle class="diary-binding" cx="45" cy="85" r="5" />
+  <circle class="diary-binding" cx="45" cy="105" r="5" />
+  <circle class="diary-binding" cx="45" cy="125" r="5" />
+  <circle class="diary-binding" cx="45" cy="145" r="5" />
+  
+  <!-- Colorful Tabs -->
+  <rect class="diary-tab-red" x="140" y="45" width="15" height="20" rx="2" ry="2" />
+  <rect class="diary-tab-green" x="140" y="75" width="15" height="20" rx="2" ry="2" />
+  <rect class="diary-tab-blue" x="140" y="105" width="15" height="20" rx="2" ry="2" />
+  <rect class="diary-tab-orange" x="140" y="135" width="15" height="20" rx="2" ry="2" />
+  
+  <!-- Lines for pages -->
+  <line class="diary-line" x1="60" y1="60" x2="130" y2="60" />
+  <line class="diary-line" x1="60" y1="80" x2="130" y2="80" />
+  <line class="diary-line" x1="60" y1="100" x2="130" y2="100" />
+  <line class="diary-line" x1="60" y1="120" x2="130" y2="120" />
+  <line class="diary-line" x1="60" y1="140" x2="130" y2="140" />
+  
+  <!-- Decorations -->
+  <path class="diary-decoration" d="M70,45 L80,35 L90,45 L80,55 Z" />
+  <circle class="diary-decoration" cx="110" cy="45" r="6" />
+  <path class="diary-decoration" d="M120,150 L125,155 L120,160 L115,155 Z" />
+  <circle class="diary-decoration" cx="90" cy="155" r="5" />
+  <path class="diary-decoration" d="M70,155 L75,150 L80,155 L75,160 Z" />
+</svg> 

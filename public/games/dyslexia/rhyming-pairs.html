@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhyming Pairs Challenge</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        /* Dark Theme (default) */
+        body.dark {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+        }
+        /* Light Theme */
+        body.light {
+            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        #game-info {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #game-container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            transition: background 0.5s ease;
+        }
+        body.dark #game-container {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        body.light #game-container {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .word-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            gap: 30px;
+        }
+        .word-card {
+            padding: 20px 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 2em;
+            font-weight: bold;
+            min-width: 120px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .option {
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+        .option:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        .feedback.incorrect {
+            background: rgba(244, 67, 54, 0.2);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            transition: width 0.5s ease;
+        }
+        .next-button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            display: none;
+        }
+        .next-button:hover {
+            background: #388E3C;
+        }
+        #theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        body.dark #theme-toggle {
+            background: #ffd700;
+            color: #333;
+        }
+        body.light #theme-toggle {
+            background: #333;
+            color: white;
+        }
+        #restart {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        #restart:hover {
+            background: #cc0000;
+        }
+        .play-sound {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: rgba(33, 150, 243, 0.7);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .play-sound:hover {
+            background: rgba(33, 150, 243, 0.9);
+        }
+    </style>
+</head>
+<body class="dark">
+    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+    <h1>Rhyming Pairs Challenge</h1>
+    <div id="game-info">
+        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+    </div>
+    <div id="game-container">
+        <div class="instructions" id="instructions">Do these words rhyme? Listen to the words and select Yes or No!</div>
+        <div class="word-display">
+            <div class="word-card" id="word1"></div>
+            <div class="word-card" id="word2"></div>
+        </div>
+        <div>
+            <button class="play-sound" id="play-word1">Play Word 1</button>
+            <button class="play-sound" id="play-word2">Play Word 2</button>
+        </div>
+        <div class="options-container">
+            <div class="option" id="yes-option">Yes, they rhyme</div>
+            <div class="option" id="no-option">No, they don't rhyme</div>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <button class="next-button" id="next-button">Next Pair</button>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <script>
+        // Game variables
+        let level = 1;
+        let score = 0;
+        let currentWord1 = '';
+        let currentWord2 = '';
+        let doTheyRhyme = false;
+        let pairAnswered = false;
+        
+        // Rhyming pairs data
+        const rhymingPairs = [
+            // Level 1-3: Simple rhymes with common patterns
+            { word1: 'cat', word2: 'hat', rhymes: true },
+            { word1: 'dog', word2: 'log', rhymes: true },
+            { word1: 'sun', word2: 'fun', rhymes: true },
+            { word1: 'cake', word2: 'lake', rhymes: true },
+            { word1: 'ball', word2: 'tall', rhymes: true },
+            { word1: 'car', word2: 'star', rhymes: true },
+            { word1: 'cat', word2: 'dog', rhymes: false },
+            { word1: 'sun', word2: 'moon', rhymes: false },
+            { word1: 'cake', word2: 'book', rhymes: false },
+            { word1: 'ball', word2: 'pen', rhymes: false },
+            
+            // Level 4-6: Medium difficulty rhymes
+            { word1: 'light', word2: 'night', rhymes: true },
+            { word1: 'mouse', word2: 'house', rhymes: true },
+            { word1: 'train', word2: 'rain', rhymes: true },
+            { word1: 'flower', word2: 'power', rhymes: true },
+            { word1: 'chair', word2: 'bear', rhymes: true },
+            { word1: 'light', word2: 'dark', rhymes: false },
+            { word1: 'mouse', word2: 'cat', rhymes: false },
+            { word1: 'train', word2: 'car', rhymes: false },
+            { word1: 'flower', word2: 'tree', rhymes: false },
+            { word1: 'chair', word2: 'table', rhymes: false },
+            
+            // Level 7-10: More challenging rhymes and near-rhymes
+            { word1: 'mountain', word2: 'fountain', rhymes: true },
+            { word1: 'teacher', word2: 'creature', rhymes: true },
+            { word1: 'rocket', word2: 'pocket', rhymes: true },
+            { word1: 'treasure', word2: 'measure', rhymes: true },
+            { word1: 'yellow', word2: 'fellow', rhymes: true },
+            { word1: 'mountain', word2: 'valley', rhymes: false },
+            { word1: 'teacher', word2: 'student', rhymes: false },
+            { word1: 'rocket', word2: 'planet', rhymes: false },
+            { word1: 'treasure', word2: 'gold', rhymes: false },
+            { word1: 'yellow', word2: 'blue', rhymes: false },
+            
+            // Tricky pairs (similar sounds but don't rhyme)
+            { word1: 'bear', word2: 'beer', rhymes: false },
+            { word1: 'love', word2: 'move', rhymes: false },
+            { word1: 'good', word2: 'food', rhymes: false },
+            { word1: 'home', word2: 'come', rhymes: false },
+            { word1: 'pear', word2: 'bear', rhymes: true },
+            { word1: 'grow', word2: 'flow', rhymes: true },
+            { word1: 'might', word2: 'bite', rhymes: true },
+            { word1: 'crown', word2: 'down', rhymes: true }
+        ];
+        
+        // Function to toggle theme
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.getElementById('theme-toggle');
+            if (body.classList.contains('dark')) {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.textContent = 'Dark Theme';
+            } else {
+                body.classList.remove('light');
+                body.classList.add('dark');
+                themeButton.textContent = 'Light Theme';
+            }
+        }
+        
+        // Function to update game info
+        function updateGameInfo() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+        }
+        
+        // Function to shuffle array
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // Function to speak text using Web Speech API
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.8; // Slightly slower for clarity
+                speechSynthesis.speak(utterance);
+            }
+        }
+        
+        // Function to select a word pair appropriate for the current level
+        function selectWordPair() {
+            let availablePairs = [];
+            
+            if (level <= 3) {
+                // Simple rhymes with common patterns
+                availablePairs = rhymingPairs.slice(0, 10);
+            } else if (level <= 6) {
+                // Medium difficulty rhymes
+                availablePairs = rhymingPairs.slice(10, 20);
+            } else {
+                // More challenging rhymes and near-rhymes
+                availablePairs = rhymingPairs.slice(20);
+            }
+            
+            // Select a random pair from available pairs
+            return availablePairs[Math.floor(Math.random() * availablePairs.length)];
+        }
+        
+        // Function to set up word pair challenge
+        function setupWordPairChallenge() {
+            // Select a word pair appropriate for the level
+            const pairInfo = selectWordPair();
+            currentWord1 = pairInfo.word1;
+            currentWord2 = pairInfo.word2;
+            doTheyRhyme = pairInfo.rhymes;
+            
+            // Set up word display
+            document.getElementById('word1').textContent = currentWord1;
+            document.getElementById('word2').textContent = currentWord2;
+            
+            // Reset feedback and next button
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            // Reset pair answered flag
+            pairAnswered = false;
+            
+            // Enable options
+            document.getElementById('yes-option').style.pointerEvents = 'auto';
+            document.getElementById('no-option').style.pointerEvents = 'auto';
+            document.getElementById('yes-option').style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+            document.getElementById('no-option').style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+        }
+        
+        // Function to play word sounds
+        function playWord(word) {
+            speakText(word);
+        }
+        
+        // Function to check answer
+        function checkAnswer(selectedOption) {
+            if (pairAnswered) return;
+            
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            // Disable options
+            document.getElementById('yes-option').style.pointerEvents = 'none';
+            document.getElementById('no-option').style.pointerEvents = 'none';
+            
+            // Highlight correct answer
+            if (doTheyRhyme) {
+                document.getElementById('yes-option').style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+            } else {
+                document.getElementById('no-option').style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
+            }
+            
+            if ((selectedOption === 'yes' && doTheyRhyme) || (selectedOption === 'no' && !doTheyRhyme)) {
+                // Correct answer
+                feedbackElement.textContent = 'Correct! You identified the rhyming pattern perfectly!';
+                feedbackElement.className = 'feedback correct';
+                score += 10 * level;
+            } else {
+                // Incorrect answer
+                feedbackElement.textContent = `Not quite. The words ${doTheyRhyme ? 'do' : 'do not'} rhyme.`;
+                feedbackElement.className = 'feedback incorrect';
+            }
+            
+            feedbackElement.style.display = 'block';
+            nextButton.style.display = 'block';
+            pairAnswered = true;
+            updateGameInfo();
+        }
+        
+        // Function to move to next pair
+        function nextPair() {
+            const feedbackElement = document.getElementById('feedback');
+            const nextButton = document.getElementById('next-button');
+            
+            feedbackElement.style.display = 'none';
+            nextButton.style.display = 'none';
+            
+            if (level < 10) {
+                level++;
+                setupWordPairChallenge();
+            } else {
+                // Game completed
+                document.getElementById('word1').textContent = '🏆';
+                document.getElementById('word2').textContent = '🏆';
+                document.getElementById('yes-option').style.display = 'none';
+                document.getElementById('no-option').style.display = 'none';
+                document.getElementById('play-word1').style.display = 'none';
+                document.getElementById('play-word2').style.display = 'none';
+                document.getElementById('instructions').textContent = `Game completed! Final score: ${score}`;
+            }
+            
+            updateGameInfo();
+        }
+        
+        // Function to start game
+        function startGame() {
+            level = 1;
+            score = 0;
+            updateGameInfo();
+            document.getElementById('yes-option').style.display = 'block';
+            document.getElementById('no-option').style.display = 'block';
+            document.getElementById('play-word1').style.display = 'inline-block';
+            document.getElementById('play-word2').style.display = 'inline-block';
+            document.getElementById('instructions').textContent = 'Do these words rhyme? Listen to the words and select Yes or No!';
+            setupWordPairChallenge();
+        }
+        
+        // Event listeners
+        document.getElementById('yes-option').addEventListener('click', () => checkAnswer('yes'));
+        document.getElementById('no-option').addEventListener('click', () => checkAnswer('no'));
+        document.getElementById('next-button').addEventListener('click', nextPair);
+        document.getElementById('play-word1').addEventListener('click', () => playWord(currentWord1));
+        document.getElementById('play-word2').addEventListener('click', () => playWord(currentWord2));
+        
+        // Initialize game
+        startGame();
+    </script>
+</body>
+</html>
