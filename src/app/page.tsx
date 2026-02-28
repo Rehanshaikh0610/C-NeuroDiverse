@@ -30,7 +30,7 @@ export default function Home() {
     // In a real app, you would send this data to your backend
     console.log('Feedback submitted:', feedbackForm);
     setFeedbackSubmitted(true);
-    
+
     // Reset form after 3 seconds
     setTimeout(() => {
       setFeedbackSubmitted(false);
@@ -43,14 +43,14 @@ export default function Home() {
   };
 
   const scrollToSupport = () => {
-    supportSectionRef.current?.scrollIntoView({ 
+    supportSectionRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'start'
     });
   };
 
   const scrollToFeedback = () => {
-    feedbackFormRef.current?.scrollIntoView({ 
+    feedbackFormRef.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'start'
     });
@@ -69,13 +69,16 @@ export default function Home() {
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <button 
+          <Link href="/geofence" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-300">
+            Geo Fence
+          </Link>
+          <button
             onClick={scrollToSupport}
             className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-300"
           >
             Contact Us
           </button>
-          <button 
+          <button
             onClick={scrollToFeedback}
             className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors duration-300"
           >
@@ -98,7 +101,7 @@ export default function Home() {
               Supporting <span className="text-blue-600 dark:text-blue-400">Neurodivergent</span> Minds
             </h2>
             <p className="text-lg mb-8 text-gray-700 dark:text-gray-300 leading-relaxed">
-              A supportive platform designed specifically for individuals with autism, ADHD, and dyslexia. 
+              A supportive platform designed specifically for individuals with autism, ADHD, and dyslexia.
               Organize tasks, manage time, and access resources tailored to your unique needs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -119,7 +122,7 @@ export default function Home() {
             <div className="relative w-full max-w-md">
               <div className="absolute -top-6 -left-6 w-64 h-64 bg-blue-200 dark:bg-blue-900/30 rounded-full filter blur-3xl opacity-70 animate-pulse"></div>
               <div className="absolute -bottom-8 -right-8 w-64 h-64 bg-purple-200 dark:bg-purple-900/30 rounded-full filter blur-3xl opacity-70 animate-pulse" style={{ animationDelay: '2s' }}></div>
-              
+
               <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700">
                 <div className="p-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
                 <div className="p-8">
@@ -132,24 +135,24 @@ export default function Home() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Your supportive companion</p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4 mb-6">
                     <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                       <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Task Management</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Organize your day with visual schedules and reminders</p>
                     </div>
-                    
+
                     <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
                       <h4 className="font-medium text-purple-800 dark:text-purple-300 mb-2">Resource Library</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Access specialized content for autism, ADHD, and dyslexia</p>
                     </div>
-                    
+
                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
                       <h4 className="font-medium text-green-800 dark:text-green-300 mb-2">Support Community</h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Connect with others who understand your experiences</p>
                     </div>
                   </div>
-                  
+
                   <div className="text-center">
                     <span className="text-sm text-gray-500 dark:text-gray-400">Join thousands of users today</span>
                   </div>
@@ -167,7 +170,7 @@ export default function Home() {
               Our team is here to help you navigate your journey. Reach out to us anytime for support, guidance, or just to chat.
             </p>
           </div>
-          
+
           <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-700 max-w-4xl mx-auto">
             <div className="p-1 bg-gradient-to-r from-green-400 to-teal-500"></div>
             <div className="p-8">
@@ -177,7 +180,7 @@ export default function Home() {
                     <ChatBubbleLeftRightIcon className="h-6 w-6 mr-2 text-green-500" />
                     Contact Our Team
                   </h3>
-                  
+
                   <div className="space-y-6">
                     <div className="flex items-start">
                       <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full mr-4">
@@ -188,7 +191,7 @@ export default function Home() {
                         <p className="text-gray-600 dark:text-gray-400">9067110122</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start">
                       <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full mr-4">
                         <PhoneIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -198,7 +201,7 @@ export default function Home() {
                         <p className="text-gray-600 dark:text-gray-400">8169347887</p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-start">
                       <div className="bg-green-100 dark:bg-green-900/30 p-2 rounded-full mr-4">
                         <PhoneIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
@@ -210,13 +213,13 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div ref={feedbackFormRef} className="md:w-1/2 md:border-l md:border-gray-200 md:dark:border-gray-700 md:pl-8 scroll-mt-24">
                   <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6 flex items-center">
                     <EnvelopeIcon className="h-6 w-6 mr-2 text-blue-500" />
                     Send Us Feedback
                   </h3>
-                  
+
                   {feedbackSubmitted ? (
                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
                       <p className="text-green-800 dark:text-green-300 font-medium">Thank you for your feedback!</p>
@@ -239,7 +242,7 @@ export default function Home() {
                           placeholder="Your name"
                         />
                       </div>
-                      
+
                       <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Email
@@ -255,7 +258,7 @@ export default function Home() {
                           placeholder="your@email.com"
                         />
                       </div>
-                      
+
                       <div>
                         <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Message
@@ -271,7 +274,7 @@ export default function Home() {
                           placeholder="Your feedback or questions..."
                         ></textarea>
                       </div>
-                      
+
                       <button
                         type="submit"
                         className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium py-2.5 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center"
@@ -301,7 +304,7 @@ export default function Home() {
             <Link href="/terms" className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Terms of Service
             </Link>
-            <button 
+            <button
               onClick={scrollToSupport}
               className="text-sm text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
