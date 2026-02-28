@@ -2,193 +2,211 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Social Cues Matching Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Social Cues Matching</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --primary-dark: #2a5298;
+            --success: #38b000;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
-            transition: background 0.5s ease, color 0.5s ease;
-        }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-        }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
-        }
-        h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-        #game-container {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
+            justify-content: center;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
+            transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
         }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
+            position: absolute; top: 20px; width: 100%; max-width: 900px;
+            display: flex; justify-content: space-between; padding: 0 20px;
         }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 16px; font-family: var(--font-head); font-size: 1rem;
+            cursor: pointer; color: inherit; transition: all 0.3s ease; font-weight: 800;
         }
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
+        h1 {
+            font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900; margin: 40px 0 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        #game-info {
+            display: flex; gap: 20px; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 10px; background: rgba(0,0,0,0.05);
+            padding: 10px 25px; border-radius: 20px;
+        }
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+
+        /* Main Container */
+        #game-container {
+            width: 95%; max-width: 850px; background: var(--card-bg);
+            padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        body.dark #game-container { background: var(--card-dark); border-color: rgba(255,255,255,0.1); }
+
+        .scenario {
+            background: rgba(0, 0, 0, 0.04); padding: 15px 25px; border-radius: 12px;
+            margin-bottom: 20px; font-size: 1.2rem; font-weight: 700; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        body.dark .scenario { background: rgba(255, 255, 255, 0.05); }
+
+        .read-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s; }
+        .read-btn:hover { transform: scale(1.15); }
+
+        /* Card Grid */
         .card-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-top: 20px;
+            display: grid; gap: 15px; width: 100%; margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            justify-items: center;
         }
+
         .card {
-            width: 150px;
-            height: 150px;
-            perspective: 1000px;
-            cursor: pointer;
+            width: 140px; height: 140px; perspective: 1000px; cursor: pointer;
         }
+
         .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
+            position: relative; width: 100%; height: 100%; text-align: center;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             transform-style: preserve-3d;
         }
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
+        
+        .card.flipped .card-inner { transform: rotateY(180deg); }
+        .card.matched .card-inner { transform: rotateY(180deg) scale(0.95); opacity: 0.7; }
+        
         .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            position: absolute; width: 100%; height: 100%;
+            -webkit-backface-visibility: hidden; backface-visibility: hidden;
+            border-radius: 16px; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
         }
+
         .card-front {
-            background: linear-gradient(45deg, #6a11cb, #2575fc);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: rgba(255,255,255,0.8); font-size: 3rem; font-weight: 900;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+        .card:hover .card-front { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2); }
+
         .card-back {
-            background: white;
-            color: #333;
-            transform: rotateY(180deg);
-            font-size: 18px;
-            padding: 10px;
-            text-align: center;
+            background: white; color: var(--text-main); transform: rotateY(180deg);
+            padding: 10px; border: 3px solid var(--primary);
+            flex-direction: column; gap: 5px;
         }
-        .card-back img {
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-        }
+        body.dark .card-back { background: #1a1a1a; color: white; }
+
+        .card-content-emoji { font-size: 3.5rem; line-height: 1; }
+        .card-content-text { font-family: var(--font-head); font-size: 1rem; font-weight: 800; line-height: 1.2; word-wrap: break-word; }
+
+        /* Progress & Messages */
         #message {
-            font-size: 1.5em;
-            margin-top: 20px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            margin-top: 15px; font-family: var(--font-head); font-size: 1.5rem;
+            font-weight: 900; min-height: 35px; color: var(--success);
+            animation: slideUp 0.3s ease;
         }
-        #theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
+
+        .level-progress-bar {
+            width: 100%; height: 10px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; margin-top: 15px; overflow: hidden;
         }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
+        body.dark .level-progress-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .level-progress {
+            height: 100%; background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
+
+        .action-btn {
+            margin-top: 20px; padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #restart:hover {
-            background: #cc0000;
-        }
-        .scenario {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.2em;
-            max-width: 80%;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            transition: width 0.5s ease;
-        }
+        #restart-btn { background: var(--error); display:none; margin-top: 20px; }
+        .action-btn:hover { transform: translateY(-3px); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popMatch { 0% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 20px var(--success); } 100% { transform: scale(1); } }
+        @keyframes shakeWrong { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
-    <h1>Social Cues Matching Game</h1>
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
+    <h1>Social Cues Matching</h1>
     <div id="game-info">
-        Level: <span id="level">1</span>/5 | Score: <span id="score">0</span>
+        <div>Level: <span id="level">1</span>/5</div>
+        <div>Score: <span id="score">0</span></div>
     </div>
+
     <div id="game-container">
-        <div class="scenario" id="scenario">Match the facial expressions with the correct emotions!</div>
-        <div class="card-grid" id="card-grid"></div>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
+        
+        <div id="welcome-screen">
+            <h2 style="font-family: var(--font-head); margin-bottom: 15px;">Welcome to Social Matching!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                Flip the cards to find matching pairs. Match the feeling or social situation with the correct response!
+            </p>
+            <button class="action-btn" id="start-button" style="background: var(--primary);" onclick="startGame()">Start Playing ▶</button>
         </div>
+
+        <div id="play-area" style="display: none; width: 100%;">
+            <div class="scenario">
+                <button class="read-btn" onclick="speakText(document.getElementById('scenario-text').textContent)" title="Read Aloud">📢</button>
+                <span id="scenario-text">Match the facial expressions with the correct emotions!</span>
+            </div>
+            
+            <div class="card-grid" id="card-grid"></div>
+            
+            <div class="level-progress-bar">
+                <div class="level-progress" id="progress"></div>
+            </div>
+        </div>
+
     </div>
+    
     <div id="message"></div>
-    <button id="restart" onclick="startGame()">Restart Game</button>
+    <button class="action-btn" id="restart-btn" onclick="location.reload()">↺ Restart Game</button>
 
     <script>
-        // Game variables
-        let level = 1;
-        let score = 0;
-        let flippedCards = [];
-        let matchedPairs = 0;
-        let totalPairs = 0;
-        let canFlip = true;
-        
-        // Game content for different levels
+        // Database
         const levels = [
-            // Level 1: Basic emotions
             {
-                scenario: "Match the facial expressions with the correct emotions!",
+                scenario: "Match the facial expressions with the correct emotions.",
                 pairs: [
                     { emotion: "Happy", image: "😀" },
                     { emotion: "Sad", image: "😢" },
@@ -196,72 +214,135 @@
                     { emotion: "Surprised", image: "😮" }
                 ]
             },
-            // Level 2: More complex emotions
             {
-                scenario: "Can you match these more subtle emotions?",
+                scenario: "Can you match these subtle feelings?",
                 pairs: [
                     { emotion: "Confused", image: "🤔" },
                     { emotion: "Nervous", image: "😰" },
-                    { emotion: "Proud", image: "😊" },
+                    { emotion: "Proud", image: "😌" },
                     { emotion: "Bored", image: "😒" },
                     { emotion: "Excited", image: "🤩" }
                 ]
             },
-            // Level 3: Social situations
             {
-                scenario: "Match the social situation with the appropriate response!",
+                scenario: "Match the social situation with the best response.",
                 pairs: [
                     { emotion: "Someone says hello", image: "Wave and say hi" },
-                    { emotion: "Someone looks sad", image: "Ask if they're okay" },
-                    { emotion: "Someone gives you a gift", image: "Say thank you" },
-                    { emotion: "Someone is talking", image: "Listen attentively" },
-                    { emotion: "Someone needs help", image: "Offer assistance" }
+                    { emotion: "Someone looks sad", image: "Ask if they are okay" },
+                    { emotion: "You receive a gift", image: "Say thank you" },
+                    { emotion: "Someone is talking", image: "Listen quietly" }
                 ]
             },
-            // Level 4: Body language
             {
-                scenario: "Match the body language with what it might mean!",
+                scenario: "Match the body language with what it means.",
                 pairs: [
-                    { emotion: "Arms crossed", image: "Defensive or closed off" },
-                    { emotion: "Leaning forward", image: "Interested or engaged" },
-                    { emotion: "Looking away", image: "Distracted or uncomfortable" },
-                    { emotion: "Tapping foot", image: "Impatient or anxious" },
-                    { emotion: "Smiling with eye contact", image: "Friendly and attentive" },
-                    { emotion: "Fidgeting", image: "Nervous or bored" }
+                    { emotion: "Arms crossed", image: "Defensive or closed" },
+                    { emotion: "Leaning forward", image: "Interested" },
+                    { emotion: "Looking away", image: "Distracted" },
+                    { emotion: "Tapping foot", image: "Impatient" },
+                    { emotion: "Smiling with eye contact", image: "Friendly" }
                 ]
             },
-            // Level 5: Complex social scenarios
             {
-                scenario: "Match these complex social scenarios with appropriate responses!",
+                scenario: "Match these complex social scenarios!",
                 pairs: [
-                    { emotion: "Friend seems upset but says they're fine", image: "Give space but check in later" },
-                    { emotion: "Group is laughing at an inside joke", image: "Smile and ask to be included" },
-                    { emotion: "Someone interrupts you", image: "Wait for a pause to continue" },
-                    { emotion: "Meeting someone new", image: "Introduce yourself and ask questions" },
-                    { emotion: "Someone disagrees with you", image: "Listen to their perspective" },
-                    { emotion: "Someone gives you a compliment", image: "Say thank you and maybe return one" }
+                    { emotion: "Friend seems upset", image: "Check in on them" },
+                    { emotion: "Group is laughing", image: "Smile and join in" },
+                    { emotion: "Someone interrupts you", image: "Wait for a pause" },
+                    { emotion: "Meeting someone new", image: "Introduce yourself" },
+                    { emotion: "Someone disagrees", image: "Listen to them" }
                 ]
             }
         ];
 
+        // Game State
+        let level = 1;
+        let score = 0;
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let totalPairs = 0;
+        let canFlip = true;
+        let audioEnabled = true;
+
+        // Audio System
+        function playTone(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                
+                if (type === 'flip') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start(); osc.stop(ctx.currentTime + 0.1);
+                } else if (type === 'match') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc.start(); osc.stop(ctx.currentTime + 0.2);
+                } else if (type === 'levelup') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+                    osc.start(); osc.stop(ctx.currentTime + 0.5);
+                }
+            } catch(e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
 
-        function updateGameInfo() {
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
+        }
+
+        // --- Core Logic ---
+        function updateUI() {
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
             document.getElementById('progress').style.width = `${(matchedPairs / totalPairs) * 100}%`;
+        }
+
+        function isEmoji(str) {
+            const regex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu;
+            return regex.test(str);
         }
 
         function createCard(content, type, index) {
@@ -279,22 +360,39 @@
             
             const cardBack = document.createElement('div');
             cardBack.className = 'card-back';
-            cardBack.textContent = content;
+            
+            // Format content based on whether it is an emoji or text
+            if (isEmoji(content) && content.length <= 2) {
+                const emj = document.createElement('div');
+                emj.className = 'card-content-emoji';
+                emj.textContent = content;
+                cardBack.appendChild(emj);
+            } else {
+                const txt = document.createElement('div');
+                txt.className = 'card-content-text';
+                txt.textContent = content;
+                cardBack.appendChild(txt);
+            }
             
             cardInner.appendChild(cardFront);
             cardInner.appendChild(cardBack);
             card.appendChild(cardInner);
             
-            card.addEventListener('click', () => flipCard(card));
-            
+            card.addEventListener('click', () => handleCardClick(card, content));
             return card;
         }
 
-        function flipCard(card) {
-            if (!canFlip || card.classList.contains('flipped') || flippedCards.length >= 2) return;
+        function handleCardClick(card, contentText) {
+            if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
             
+            playTone('flip');
             card.classList.add('flipped');
             flippedCards.push(card);
+            
+            // Speak content
+            if(!isEmoji(contentText) || contentText.length > 2) {
+                speakText(contentText);
+            }
             
             if (flippedCards.length === 2) {
                 canFlip = false;
@@ -308,97 +406,118 @@
             
             setTimeout(() => {
                 if (isMatch) {
-                    card1.style.visibility = 'hidden';
-                    card2.style.visibility = 'hidden';
+                    playTone('match');
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    
+                    // Add success animation to inner card
+                    card1.querySelector('.card-inner').style.animation = "popMatch 0.5s ease";
+                    card2.querySelector('.card-inner').style.animation = "popMatch 0.5s ease";
+
                     matchedPairs++;
                     score += 10;
-                    updateGameInfo();
+                    updateUI();
                     
                     if (matchedPairs === totalPairs) {
-                        setTimeout(() => levelComplete(), 500);
+                        setTimeout(levelComplete, 600);
                     }
                 } else {
-                    card1.classList.remove('flipped');
-                    card2.classList.remove('flipped');
+                    playTone('wrong');
+                    // Add shake animation
+                    card1.querySelector('.card-inner').style.animation = "shakeWrong 0.4s ease";
+                    card2.querySelector('.card-inner').style.animation = "shakeWrong 0.4s ease";
+                    
+                    setTimeout(() => {
+                        card1.classList.remove('flipped');
+                        card2.classList.remove('flipped');
+                        card1.querySelector('.card-inner').style.animation = "";
+                        card2.querySelector('.card-inner').style.animation = "";
+                    }, 500);
                 }
                 
                 flippedCards = [];
                 canFlip = true;
-            }, 1000);
+            }, 900);
         }
 
         function levelComplete() {
-            const message = document.getElementById('message');
+            const msg = document.getElementById('message');
+            playTone('levelup');
+            
             if (level < levels.length) {
-                message.textContent = `Level ${level} complete! Moving to next level...`;
+                msg.textContent = `🌟 Level ${level} Complete!`;
+                msg.style.display = 'block';
                 level++;
-                setTimeout(() => setupLevel(), 2000);
+                
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                    setupLevel();
+                }, 2000);
             } else {
-                message.textContent = `Congratulations! You've completed all levels with a score of ${score}!`;
-                document.getElementById('restart').style.display = 'inline-block';
+                msg.textContent = `🏆 Incredible! You finished the game!`;
+                speakText("Incredible! You finished the game!");
+                document.getElementById('restart-btn').style.display = 'block';
             }
         }
 
         function setupLevel() {
             const currentLevel = levels[level - 1];
             const cardGrid = document.getElementById('card-grid');
-            const scenario = document.getElementById('scenario');
-            const message = document.getElementById('message');
             
-            // Reset game state
+            // Reset state
             cardGrid.innerHTML = '';
-            message.textContent = '';
             matchedPairs = 0;
             flippedCards = [];
             canFlip = true;
             
-            // Update scenario
-            scenario.textContent = currentLevel.scenario;
+            // Setup Text
+            document.getElementById('scenario-text').textContent = currentLevel.scenario;
+            speakText(currentLevel.scenario);
             
-            // Create pairs of cards
             const pairs = currentLevel.pairs;
             totalPairs = pairs.length;
             
-            // Create array with emotions and images
+            // Create deck
             let cards = [];
             pairs.forEach((pair, index) => {
                 cards.push({ content: pair.emotion, type: 'emotion', index });
                 cards.push({ content: pair.image, type: 'image', index });
             });
             
-            // Shuffle cards
-            cards = shuffleArray(cards);
+            // Shuffle
+            cards = cards.sort(() => 0.5 - Math.random());
             
-            // Set grid columns based on number of cards
-            const columns = Math.min(4, Math.ceil(Math.sqrt(cards.length)));
-            cardGrid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
+            // Set CSS Grid layout dynamically based on card count
+            if(cards.length <= 8) {
+                cardGrid.style.gridTemplateColumns = `repeat(4, 1fr)`;
+            } else {
+                cardGrid.style.gridTemplateColumns = `repeat(5, 1fr)`;
+            }
             
-            // Add cards to grid
             cards.forEach(card => {
                 cardGrid.appendChild(createCard(card.content, card.type, card.index));
             });
             
-            updateGameInfo();
-        }
-
-        function shuffleArray(array) {
-            const newArray = [...array];
-            for (let i = newArray.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-            }
-            return newArray;
+            updateUI();
         }
 
         function startGame() {
+            // Unlock audio context
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                ctx.resume();
+            } catch(e) {}
+
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('play-area').style.display = 'block';
+            
             level = 1;
             score = 0;
-            document.getElementById('restart').style.display = 'none';
             setupLevel();
         }
 
-        // Start the game when page loads
-        window.onload = startGame;
+        // Init UI
+        updateUI();
     </script>
 </body>
 </html>

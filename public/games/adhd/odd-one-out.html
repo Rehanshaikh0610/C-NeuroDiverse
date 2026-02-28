@@ -2,284 +2,453 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Epic Odd One Out Marathon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Epic Odd One Out</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --success: #38b000;
+            --warning: #f4a261;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
-            transition: background 0.5s ease, color 0.5s ease;
-        }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-        }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
-        }
-        h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-        #game-container {
-            display: grid;
-            gap: 4px;
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 10px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
-        }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
-        }
-        .emoji {
-            font-size: 36px;
-            width: 50px;
-            height: 50px;
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
+            transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
+            user-select: none;
         }
-        body.dark .emoji {
-            border: 2px solid rgba(255, 255, 255, 0.2);
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
+            position: absolute; top: 20px; width: 100%; max-width: 900px;
+            display: flex; justify-content: space-between; padding: 0 20px;
+            z-index: 100;
         }
-        body.light .emoji {
-            border: 2px solid rgba(0, 0, 0, 0.2);
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 16px; font-family: var(--font-head); font-size: 1rem;
+            cursor: pointer; color: inherit; transition: all 0.3s ease; font-weight: 800;
         }
-        .emoji:hover {
-            transform: scale(1.1);
-            border-color: #ffd700;
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
+        h1 {
+            font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 900; margin: 40px 0 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        body.dark .emoji:hover {
-            background: rgba(255, 255, 255, 0.2);
+
+        #game-info {
+            display: flex; gap: 20px; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 10px; background: rgba(0,0,0,0.05);
+            padding: 10px 25px; border-radius: 20px; flex-wrap: wrap; justify-content: center;
         }
-        body.light .emoji:hover {
-            background: rgba(0, 0, 0, 0.1);
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+        .streak-text { color: #ff9f1c; font-weight: 900; animation: pulse 1.5s infinite; }
+        .timer-text { color: var(--error); font-weight: 900; font-family: monospace; font-size: 1.3rem;}
+
+        /* Main Container */
+        #game-container {
+            width: 95%; max-width: 800px; background: var(--card-bg);
+            padding: 25px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+            display: flex; flex-direction: column; align-items: center;
         }
-        #message {
-            font-size: 1.5em;
-            margin-top: 20px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        body.dark #game-container { background: var(--card-dark); border-color: rgba(255,255,255,0.1); }
+
+        .instructions {
+            background: rgba(0, 0, 0, 0.04); padding: 15px 25px; border-radius: 12px;
+            margin-bottom: 20px; font-size: 1.2rem; font-weight: 700; width: 100%;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        #theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
+        body.dark .instructions { background: rgba(255, 255, 255, 0.05); }
+
+        /* Responsive Grid */
+        .emoji-grid {
+            display: grid; gap: 6px; width: 100%; max-width: 550px;
+            margin: 0 auto 20px; padding: 10px; background: rgba(0,0,0,0.02);
+            border-radius: 16px; border: 2px dashed rgba(0,0,0,0.1);
         }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
+        body.dark .emoji-grid { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); }
+
+        .emoji-cell {
+            aspect-ratio: 1; /* Forces perfect squares */
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(255, 255, 255, 0.8); border-radius: 8px;
+            cursor: pointer; transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-family: 'Nunito', sans-serif; font-weight: 900;
         }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
+        body.dark .emoji-cell { background: rgba(255, 255, 255, 0.1); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        .emoji-cell:hover {
+            transform: scale(1.1); z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            background: rgba(74, 144, 226, 0.15);
         }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            display: none;
+
+        .emoji-cell.correct-pop { background: var(--success) !important; color: white; animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; pointer-events: none;}
+        .emoji-cell.wrong-shake { background: var(--error) !important; color: white; animation: shake 0.4s ease; pointer-events: none;}
+
+        /* Timer Bar */
+        .timer-bar {
+            width: 100%; height: 10px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; overflow: hidden; margin-bottom: 20px;
         }
-        #restart:hover {
-            background: #cc0000;
+        body.dark .timer-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .timer-progress { height: 100%; width: 100%; background: linear-gradient(90deg, #4A90E2, #e63946); transition: width 0.2s linear; }
+
+        /* Buttons & Feedback */
+        .action-btn {
+            margin-top: 10px; padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
+        #start-button { background: linear-gradient(135deg, var(--primary), #0072ff); display: block; margin: 0 auto;}
+        #restart-btn { background: var(--error); display:none; margin-top: 20px; }
+        .action-btn:hover { transform: translateY(-3px); }
+
+        .feedback {
+            margin-top: 15px; padding: 12px 25px; border-radius: 14px;
+            font-size: 1.2rem; font-weight: 800; display: none; width: 100%;
+            animation: slideUp 0.3s ease forwards;
+        }
+        .feedback.correct { background: rgba(56, 176, 0, 0.15); color: #2b8a00; border: 2px solid rgba(56,176,0,0.3);}
+        .feedback.incorrect { background: rgba(230, 57, 70, 0.15); color: #c1121f; border: 2px solid rgba(230,57,70,0.3);}
+        body.dark .feedback.correct { color: #80ed99; }
+        body.dark .feedback.incorrect { color: #ffb3c1; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px) rotate(-5deg); } 50% { transform: translateX(4px) rotate(5deg); } 75% { transform: translateX(-4px) rotate(-5deg); } }
+        @keyframes popIn { 0% { transform: scale(0.8); } 50% { transform: scale(1.2); box-shadow: 0 0 20px var(--success); } 100% { transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
-    <h1>Epic Odd One Out Marathon</h1>
-    <div id="game-info">
-        Round: <span id="round">1</span>/15 | Points: <span id="points">0</span> | Time: <span id="timer">30</span>s
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
     </div>
-    <div id="game-container"></div>
-    <div id="message"></div>
-    <button id="restart" onclick="startGame(true)">Restart Marathon</button>
+
+    <h1>Epic Odd One Out</h1>
+    
+    <div id="game-info">
+        <div>Round: <span id="round">1</span>/15</div>
+        <div>Score: <span id="score">0</span></div>
+        <div id="streak-container" style="display:none;" class="streak-text">🔥 Streak: <span id="streak">0</span></div>
+        <div class="timer-text">⏱️ <span id="timer-text-val">30.0</span>s</div>
+    </div>
+
+    <div id="game-container">
+        
+        <div id="welcome-screen">
+            <h2 style="font-family: var(--font-head); margin-bottom: 15px;">Spot the Difference!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                Find the one emoji or letter that doesn't match the rest. Be careful, clicking the wrong one costs you 3 seconds! How far can you go?
+            </p>
+            <button class="action-btn" id="start-button" onclick="startGame()">Start Marathon ▶</button>
+        </div>
+
+        <div id="play-area" style="display: none; width: 100%;">
+            <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
+            
+            <div class="instructions">
+                🔍 Find the odd one out before time runs out!
+            </div>
+            
+            <div class="emoji-grid" id="emoji-grid"></div>
+            
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+    </div>
+    
+    <button class="action-btn" id="restart-btn" onclick="startGame()">↺ Try Again</button>
 
     <script>
-        const commonEmoji = '😆';
-        const oddEmoji = '😓';
-        const totalRounds = 15;
-        let round = 1;
-        let points = 0;
-        let timeLeft = 30;
-        let oddPosition;
-        let timerInterval;
-
-        const levelSizes = [
-            { rows: 4, cols: 4, rounds: 2 },   // Rounds 1-2
-            { rows: 5, cols: 6, rounds: 2 },   // Rounds 3-4
-            { rows: 6, cols: 8, rounds: 3 },   // Rounds 5-7
-            { rows: 7, cols: 10, rounds: 3 },  // Rounds 8-10
-            { rows: 8, cols: 10, rounds: 2 },  // Rounds 11-12
-            { rows: 9, cols: 12, rounds: 2 },  // Rounds 13-14
-            { rows: 10, cols: 12, rounds: 1 }  // Round 15
+        // Visual Discrimination Pairs (Great for Dyslexia & ADHD focus)
+        const emojiPairs = [
+            { c: '😀', o: '😃' }, { c: '🙂', o: '🙃' }, { c: '🍎', o: '🍅' },
+            { c: '🌟', o: '✨' }, { c: 'b', o: 'd' }, { c: 'p', o: 'q' },
+            { c: 'O', o: '0' }, { c: 'I', o: 'l' }, { c: '🧐', o: '🤓' },
+            { c: '🐢', o: '🐍' }, { c: '🌞', o: '☀️' }, { c: '🐶', o: '🐻' },
+            { c: '💙', o: '💜' }, { c: '✅', o: '❎' }, { c: 'u', o: 'v' },
+            { c: 'M', o: 'N' }, { c: '9', o: '6' }, { c: 'E', o: 'F' }
         ];
 
+        // Level sizing logic (cols x cols to keep it a perfect square grid)
+        const getGridSize = (roundNum) => {
+            if (roundNum <= 3) return 4;      // 4x4
+            if (roundNum <= 6) return 5;      // 5x5
+            if (roundNum <= 9) return 6;      // 6x6
+            if (roundNum <= 12) return 8;     // 8x8
+            return 10;                        // 10x10 for rounds 13-15
+        };
+
+        let round = 1;
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 30.0;
+        let timerInterval;
+        let oddIndex = -1;
+        let gameActive = false;
+        let audioEnabled = true;
+
+        // --- Audio System ---
+        function playTone(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(880.00, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc.start(); osc.stop(ctx.currentTime + 0.2);
+                } else if (type === 'levelup') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
+                    osc.start(); osc.stop(ctx.currentTime + 0.6);
+                }
+            } catch(e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
 
-        function getLevelForRound(roundNum) {
-            let cumulativeRounds = 0;
-            for (const level of levelSizes) {
-                cumulativeRounds += level.rounds;
-                if (roundNum <= cumulativeRounds) {
-                    return level;
-                }
-            }
-            return levelSizes[levelSizes.length - 1];
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
         }
 
-        function updateGameInfo() {
+        // --- Core UI & Logic ---
+        function updateUI() {
             document.getElementById('round').textContent = round;
-            document.getElementById('points').textContent = points;
-            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('score').textContent = score;
+            
+            const streakEl = document.getElementById('streak-container');
+            if(streak >= 3) {
+                streakEl.style.display = 'block';
+                document.getElementById('streak').textContent = streak;
+            } else {
+                streakEl.style.display = 'none';
+            }
         }
 
         function startTimer() {
             clearInterval(timerInterval);
+            document.getElementById('timer-progress').style.width = '100%';
+            
             timerInterval = setInterval(() => {
-                timeLeft--;
-                updateGameInfo();
+                if(!gameActive) return;
+                timeLeft -= 0.1; // Decrease by 100ms
+                
                 if (timeLeft <= 0) {
-                    endRound(false);
+                    timeLeft = 0;
+                    document.getElementById('timer-text-val').textContent = "0.0";
+                    document.getElementById('timer-progress').style.width = `0%`;
+                    clearInterval(timerInterval);
+                    handleGameOver(false);
+                } else {
+                    document.getElementById('timer-text-val').textContent = timeLeft.toFixed(1);
+                    document.getElementById('timer-progress').style.width = `${(timeLeft / 30.0) * 100}%`;
+                }
+            }, 100);
+        }
+
+        function startGame() {
+            try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume(); } catch(e){}
+            
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('play-area').style.display = 'block';
+            document.getElementById('restart-btn').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            round = 1;
+            score = 0;
+            streak = 0;
+            timeLeft = 30.0;
+            
+            updateUI();
+            startTimer();
+            loadRound();
+        }
+
+        function loadRound() {
+            gameActive = true;
+            document.getElementById('feedback').style.display = 'none';
+            
+            const grid = document.getElementById('emoji-grid');
+            grid.innerHTML = '';
+            
+            const gridSize = getGridSize(round);
+            const totalCells = gridSize * gridSize;
+            
+            // Setup Grid CSS dynamically
+            grid.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            
+            // Determine dynamic font size based on grid columns so it doesn't overflow
+            let fontSize = '2rem';
+            if(gridSize >= 6) fontSize = '1.6rem';
+            if(gridSize >= 8) fontSize = '1.3rem';
+            if(gridSize >= 10) fontSize = '1.1rem';
+
+            // Pick a random pair
+            const pair = emojiPairs[Math.floor(Math.random() * emojiPairs.length)];
+            const common = pair.c;
+            const odd = pair.o;
+            
+            oddIndex = Math.floor(Math.random() * totalCells);
+
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'emoji-cell';
+                cell.style.fontSize = fontSize;
+                
+                if (i === oddIndex) {
+                    cell.textContent = odd;
+                    cell.onclick = () => handleCorrectClick(cell);
+                } else {
+                    cell.textContent = common;
+                    cell.onclick = () => handleWrongClick(cell);
+                }
+                
+                grid.appendChild(cell);
+            }
+            
+            updateUI();
+        }
+
+        function handleCorrectClick(cellElement) {
+            if(!gameActive) return;
+            gameActive = false; // pause game while animating
+            playTone('correct');
+            
+            cellElement.classList.add('correct-pop');
+            
+            streak++;
+            const timeBonus = Math.floor(timeLeft * 2);
+            const basePoints = 50 + (round * 10);
+            const streakBonus = streak * 5;
+            const earned = basePoints + timeBonus + streakBonus;
+            score += earned;
+            
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = `🎉 Found it! +${earned} pts`;
+            feedback.className = 'feedback correct';
+            feedback.style.display = 'block';
+            
+            updateUI();
+            
+            setTimeout(() => {
+                if (round < 15) {
+                    round++;
+                    timeLeft = Math.min(30.0, timeLeft + 3.0); // Reward 3 seconds back for being fast!
+                    loadRound();
+                } else {
+                    handleGameOver(true);
                 }
             }, 1000);
         }
 
-        function startRound() {
-            const gameContainer = document.getElementById('game-container');
-            const message = document.getElementById('message');
-            const restartButton = document.getElementById('restart');
-
-            gameContainer.innerHTML = '';
-            message.innerHTML = '';
-            restartButton.style.display = 'none';
-
-            const { rows, cols } = getLevelForRound(round);
-            gameContainer.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
-
-            const totalCells = rows * cols;
-            const oddIndex = Math.floor(Math.random() * totalCells);
-            oddPosition = { row: Math.floor(oddIndex / cols), col: oddIndex % cols };
-
-            for (let i = 0; i < rows; i++) {
-                for (let j = 0; j < cols; j++) {
-                    const emojiDiv = document.createElement('div');
-                    emojiDiv.className = 'emoji';
-                    emojiDiv.textContent = (i === oddPosition.row && j === oddPosition.col) ? oddEmoji : commonEmoji;
-                    emojiDiv.dataset.row = i;
-                    emojiDiv.dataset.col = j;
-                    emojiDiv.onclick = () => checkAnswer(i, j);
-                    gameContainer.appendChild(emojiDiv);
-                }
-            }
-
-            message.textContent = `Round ${round}/15: Find the odd one out! (${rows}x${cols})`;
-            timeLeft = 30;
-            updateGameInfo();
-            startTimer();
+        function handleWrongClick(cellElement) {
+            if(!gameActive) return;
+            playTone('wrong');
+            
+            // Forgiving mechanic: shake cell, reduce time, but keep going
+            cellElement.classList.add('wrong-shake');
+            streak = 0;
+            updateUI();
+            
+            // Penalty
+            timeLeft -= 3.0;
+            if(timeLeft < 0) timeLeft = 0;
+            
+            // Clean up class so it can be clicked again if needed
+            setTimeout(() => {
+                cellElement.classList.remove('wrong-shake');
+            }, 400);
         }
 
-        function checkAnswer(row, col) {
-            const message = document.getElementById('message');
-            const emojis = document.querySelectorAll('.emoji');
-
-            emojis.forEach(emoji => emoji.onclick = null);
-
-            if (row === oddPosition.row && col === oddPosition.col) {
-                const timeBonus = Math.max(0, timeLeft * 5);
-                const basePoints = 50 + (round * 10);
-                points += basePoints + timeBonus;
-                message.innerHTML = `SMASHED IT! 🎉 Found ${oddEmoji}! <br>
-                                     +${basePoints} base + ${timeBonus} bonus = ${points} total!`;
-                emojis.forEach(emoji => {
-                    if (emoji.dataset.row == row && emoji.dataset.col == col) {
-                        emoji.style.background = '#ffd700';
-                        emoji.style.borderColor = '#ff4444';
-                    }
-                });
-                setTimeout(() => nextRound(), 1500);
-            } else {
-                message.innerHTML = `Dang! The odd one was at row ${oddPosition.row + 1}, col ${oddPosition.col + 1}: ${oddEmoji}. <br>
-                                     Keep rocking it!`;
-                endRound(false);
-            }
-        }
-
-        function nextRound() {
-            round++;
-            if (round > totalRounds) {
-                endGame();
-            } else {
-                startRound();
-            }
-        }
-
-        function endRound(success) {
+        function handleGameOver(won) {
+            gameActive = false;
             clearInterval(timerInterval);
-            const message = document.getElementById('message');
-            if (!success) {
-                document.getElementById('restart').style.display = 'block';
+            
+            document.getElementById('emoji-grid').innerHTML = '';
+            const feedback = document.getElementById('feedback');
+            
+            if(won) {
+                playTone('levelup');
+                speakText("Marathon Complete! You are a legend!");
+                feedback.innerHTML = `🏆 MARATHON COMPLETE!<br>You beat all 15 rounds with ${score} points!`;
+                feedback.className = 'feedback correct';
+            } else {
+                playTone('wrong');
+                speakText("Time is up. Good effort.");
+                feedback.innerHTML = `⏳ Time's Up!<br>You made it to Round ${round} with ${score} points.`;
+                feedback.className = 'feedback incorrect';
             }
+            
+            feedback.style.display = 'block';
+            document.getElementById('restart-btn').style.display = 'block';
         }
 
-        function endGame() {
-            clearInterval(timerInterval);
-            const message = document.getElementById('message');
-            message.innerHTML = `MARATHON COMPLETE! 🏆 15/15 Rounds Conquered! <br>
-                                 Final Score: ${points} points! You’re an ABSOLUTE LEGEND! 🔥`;
-            document.getElementById('restart').style.display = 'block';
-        }
-
-        function startGame(restart = false) {
-            if (restart) {
-                round = 1;
-                points = 0;
-            }
-            startRound();
-        }
-
-        window.onload = () => startGame();
     </script>
 </body>
 </html>

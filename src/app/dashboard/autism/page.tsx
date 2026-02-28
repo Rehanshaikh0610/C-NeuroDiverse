@@ -17,6 +17,7 @@ export default function AutismPage() {
   const [sensoryDetectiveActive, setSensoryDetectiveActive] = useState(false);
   const [sensoryOverloadActive, setSensoryOverloadActive] = useState(false);
   const [sensoryProcessingActive, setSensoryProcessingActive] = useState(false);
+  const [artFlowActive, setArtFlowActive] = useState(false);
   const [theme, setTheme] = useState('light');
   const [activeTab, setActiveTab] = useState('games');
 
@@ -34,8 +35,8 @@ export default function AutismPage() {
 
     // Check theme preference from localStorage
     const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark' || 
-        (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (savedTheme === 'dark' ||
+      (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       setTheme('dark');
       document.documentElement.classList.add('dark');
     } else {
@@ -58,7 +59,7 @@ export default function AutismPage() {
           <div className="flex items-center">
             {/* Teacher Booking Icon */}
             <TeacherBookingIcon type="autism" className="mr-4" />
-            <div 
+            <div
               className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md hover:scale-110 transition-transform duration-200"
             >
               <FiUser size={20} />
@@ -73,44 +74,40 @@ export default function AutismPage() {
           <div className="flex overflow-x-auto space-x-4 pb-2">
             <button
               onClick={() => setActiveTab('games')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'games' 
-                  ? 'bg-indigo-600 text-white' 
+              className={`px-4 py-2 rounded-lg flex items-center ${activeTab === 'games'
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              } transition-all duration-200 hover:scale-105 active:scale-95`}
+                } transition-all duration-200 hover:scale-105 active:scale-95`}
             >
               <FiTarget className="mr-2" />
               Games
             </button>
             <button
               onClick={() => setActiveTab('about')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'about' 
-                  ? 'bg-indigo-600 text-white' 
+              className={`px-4 py-2 rounded-lg flex items-center ${activeTab === 'about'
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              } transition-all duration-200 hover:scale-105 active:scale-95`}
+                } transition-all duration-200 hover:scale-105 active:scale-95`}
             >
               <FiInfo className="mr-2" />
               About Autism
             </button>
             <button
               onClick={() => setActiveTab('resources')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'resources' 
-                  ? 'bg-indigo-600 text-white' 
+              className={`px-4 py-2 rounded-lg flex items-center ${activeTab === 'resources'
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              } transition-all duration-200 hover:scale-105 active:scale-95`}
+                } transition-all duration-200 hover:scale-105 active:scale-95`}
             >
               <FiBookOpen className="mr-2" />
               Resources
             </button>
             <button
               onClick={() => setActiveTab('tips')}
-              className={`px-4 py-2 rounded-lg flex items-center ${
-                activeTab === 'tips' 
-                  ? 'bg-indigo-600 text-white' 
+              className={`px-4 py-2 rounded-lg flex items-center ${activeTab === 'tips'
+                  ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
-              } transition-all duration-200 hover:scale-105 active:scale-95`}
+                } transition-all duration-200 hover:scale-105 active:scale-95`}
             >
               <FiCoffee className="mr-2" />
               Management Tips
@@ -122,8 +119,47 @@ export default function AutismPage() {
       <main className="container mx-auto py-2 px-4">
         {activeTab === 'games' && (
           <div className="space-y-8 animate-fadeIn">
+            {/* ArtFlow Studio */}
+            <div
+              className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-pink-500 transition-all duration-300 hover:shadow-xl"
+            >
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-600 to-rose-600 dark:from-pink-400 dark:to-rose-400">ArtFlow Studio</h2>
+                  <p className="text-gray-600 dark:text-gray-300 mt-2">
+                    A step-by-step painting game with calming feedback to express yourself creatively.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setArtFlowActive(!artFlowActive)}
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${artFlowActive
+                      ? 'bg-red-500 hover:bg-red-600'
+                      : 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700'
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                >
+                  {artFlowActive ? 'Close Game' : 'Start Game'}
+                </button>
+              </div>
+
+              {artFlowActive && (
+                <div
+                  className="mt-4 border-2 border-pink-200 dark:border-pink-800 rounded-xl p-4 overflow-hidden animate-slideDown"
+                >
+                  <div id="artflow-wrapper" className="w-full">
+                    <iframe
+                      src="/games/autism/art.html"
+                      style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
+                      title="ArtFlow Studio"
+                      sandbox="allow-scripts allow-same-origin"
+                      className="shadow-lg"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Sensory Calibration Game */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-indigo-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -133,24 +169,23 @@ export default function AutismPage() {
                     Adjust sensory inputs to comfortable levels and select appropriate coping strategies for various sensory challenges.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSensoryCalibrationActive(!sensoryCalibrationActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    sensoryCalibrationActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${sensoryCalibrationActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {sensoryCalibrationActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {sensoryCalibrationActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="sensory-calibration-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/sensory-calibration.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Sensory Calibration Challenge"
@@ -163,7 +198,7 @@ export default function AutismPage() {
             </div>
 
             {/* Sensory Matching Game */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-blue-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -173,24 +208,23 @@ export default function AutismPage() {
                     Match sensory experiences with appropriate coping strategies to build sensory awareness and self-regulation skills.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSensoryMatchingActive(!sensoryMatchingActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    sensoryMatchingActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${sensoryMatchingActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {sensoryMatchingActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {sensoryMatchingActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="sensory-matching-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/sensory-matching.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Sensory Matching Game"
@@ -203,7 +237,7 @@ export default function AutismPage() {
             </div>
 
             {/* Facial Expression Matcher */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-purple-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -213,24 +247,23 @@ export default function AutismPage() {
                     Practice recognizing and matching facial expressions with emotions to improve social understanding and communication.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setFacialExpressionActive(!facialExpressionActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    facialExpressionActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${facialExpressionActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {facialExpressionActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {facialExpressionActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="facial-expression-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/facial-expression-matcher.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Facial Expression Matcher"
@@ -243,7 +276,7 @@ export default function AutismPage() {
             </div>
 
             {/* Social Scenario Game */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-teal-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -253,24 +286,23 @@ export default function AutismPage() {
                     Navigate through social scenarios and practice appropriate responses to build social skills and confidence.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSocialScenarioActive(!socialScenarioActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    socialScenarioActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${socialScenarioActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-600 hover:to-blue-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {socialScenarioActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {socialScenarioActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-teal-200 dark:border-teal-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="social-scenario-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/social-scenario.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Social Scenario Challenge"
@@ -283,7 +315,7 @@ export default function AutismPage() {
             </div>
 
             {/* Social Story Sequencer */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-pink-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -293,24 +325,23 @@ export default function AutismPage() {
                     Learn to understand and navigate social situations through interactive story sequences and decision-making scenarios.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSocialStoryActive(!socialStoryActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    socialStoryActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${socialStoryActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {socialStoryActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {socialStoryActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-pink-200 dark:border-pink-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="social-story-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/social-story-sequencer.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Social Story Sequencer"
@@ -323,7 +354,7 @@ export default function AutismPage() {
             </div>
 
             {/* Social Cues Match */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-orange-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -333,24 +364,23 @@ export default function AutismPage() {
                     Practice identifying and matching social cues with appropriate responses in various social contexts.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSocialCuesActive(!socialCuesActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    socialCuesActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${socialCuesActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {socialCuesActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {socialCuesActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-orange-200 dark:border-orange-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="social-cues-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/social-cues-match.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Social Cues Match"
@@ -363,7 +393,7 @@ export default function AutismPage() {
             </div>
 
             {/* Emotion Regulation Game */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-emerald-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -373,24 +403,23 @@ export default function AutismPage() {
                     Learn strategies to identify, understand, and manage emotions through interactive scenarios and calming exercises.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setEmotionRegulationActive(!emotionRegulationActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    emotionRegulationActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${emotionRegulationActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {emotionRegulationActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {emotionRegulationActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-emerald-200 dark:border-emerald-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="emotion-regulation-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/emotion-regulation.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Emotion Regulation Game"
@@ -403,7 +432,7 @@ export default function AutismPage() {
             </div>
 
             {/* Sensory Detective */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-cyan-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -413,24 +442,23 @@ export default function AutismPage() {
                     Explore and identify different sensory experiences while learning about personal sensory preferences and coping strategies.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSensoryDetectiveActive(!sensoryDetectiveActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    sensoryDetectiveActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${sensoryDetectiveActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-cyan-500 to-sky-600 hover:from-cyan-600 hover:to-sky-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {sensoryDetectiveActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {sensoryDetectiveActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-cyan-200 dark:border-cyan-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="sensory-detective-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/sensory-detective.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Sensory Detective"
@@ -443,7 +471,7 @@ export default function AutismPage() {
             </div>
 
             {/* Sensory Overload Manager */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-violet-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -453,24 +481,23 @@ export default function AutismPage() {
                     Practice managing sensory overload through interactive scenarios and learn effective coping techniques.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSensoryOverloadActive(!sensoryOverloadActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    sensoryOverloadActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${sensoryOverloadActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {sensoryOverloadActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {sensoryOverloadActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-violet-200 dark:border-violet-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="sensory-overload-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/sensory-overload-manager.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Sensory Overload Manager"
@@ -483,7 +510,7 @@ export default function AutismPage() {
             </div>
 
             {/* Sensory Processing Game */}
-            <div 
+            <div
               className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-lg p-6 border-l-4 border-fuchsia-500 transition-all duration-300 hover:shadow-xl"
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
@@ -493,24 +520,23 @@ export default function AutismPage() {
                     Engage in activities that help understand and process different sensory inputs while building self-awareness.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setSensoryProcessingActive(!sensoryProcessingActive)}
-                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${
-                    sensoryProcessingActive 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`px-6 py-3 rounded-lg font-medium shadow-md flex-shrink-0 ${sensoryProcessingActive
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-gradient-to-r from-fuchsia-500 to-pink-600 hover:from-fuchsia-600 hover:to-pink-700'
-                  } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
+                    } text-white transition-all duration-300 hover:scale-105 active:scale-95`}
                 >
                   {sensoryProcessingActive ? 'Close Game' : 'Start Game'}
                 </button>
               </div>
-              
+
               {sensoryProcessingActive && (
-                <div 
+                <div
                   className="mt-4 border-2 border-fuchsia-200 dark:border-fuchsia-800 rounded-xl p-4 overflow-hidden animate-slideDown"
                 >
                   <div id="sensory-processing-wrapper" className="w-full">
-                    <iframe 
+                    <iframe
                       src="/games/autism/sensory-processing.html"
                       style={{ width: '100%', height: '700px', border: 'none', borderRadius: '12px' }}
                       title="Sensory Processing Game"
@@ -556,10 +582,10 @@ export default function AutismPage() {
           >
             <h2 className="text-2xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">Autism Resources</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <a 
-                href="https://autismsociety.org/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://autismsociety.org/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center hover:scale-102"
               >
                 <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-white mr-4 flex-shrink-0">
@@ -570,11 +596,11 @@ export default function AutismPage() {
                   <p className="text-indigo-600 dark:text-indigo-400 text-sm">Support, Education, and Advocacy</p>
                 </div>
               </a>
-              
-              <a 
-                href="https://www.autismspeaks.org/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+
+              <a
+                href="https://www.autismspeaks.org/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center hover:scale-102"
               >
                 <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white mr-4 flex-shrink-0">
@@ -585,11 +611,11 @@ export default function AutismPage() {
                   <p className="text-blue-600 dark:text-blue-400 text-sm">Research and Resources</p>
                 </div>
               </a>
-              
-              <a 
-                href="https://www.autismresearchcentre.com/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+
+              <a
+                href="https://www.autismresearchcentre.com/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center hover:scale-102"
               >
                 <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white mr-4 flex-shrink-0">
@@ -600,11 +626,11 @@ export default function AutismPage() {
                   <p className="text-purple-600 dark:text-purple-400 text-sm">Scientific Research and Understanding</p>
                 </div>
               </a>
-              
-              <a 
-                href="https://www.autisticadvocacy.org/" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+
+              <a
+                href="https://www.autisticadvocacy.org/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="p-4 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex items-center hover:scale-102"
               >
                 <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white mr-4 flex-shrink-0">
@@ -625,7 +651,7 @@ export default function AutismPage() {
           >
             <h2 className="text-2xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">Autism Support Strategies</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div 
+              <div
                 className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 p-5 rounded-xl shadow-md hover:shadow-lg transition-transform duration-200 hover:scale-102"
               >
                 <h3 className="font-bold text-lg mb-3 text-indigo-700 dark:text-indigo-300 flex items-center">
@@ -639,8 +665,8 @@ export default function AutismPage() {
                   <li className="transition-transform hover:translate-x-1">Establish sensory breaks throughout the day</li>
                 </ul>
               </div>
-              
-              <div 
+
+              <div
                 className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/30 p-5 rounded-xl shadow-md hover:shadow-lg transition-transform duration-200 hover:scale-102"
               >
                 <h3 className="font-bold text-lg mb-3 text-purple-700 dark:text-purple-300 flex items-center">
@@ -654,8 +680,8 @@ export default function AutismPage() {
                   <li className="transition-transform hover:translate-x-1">Respect alternative communication methods</li>
                 </ul>
               </div>
-              
-              <div 
+
+              <div
                 className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 p-5 rounded-xl shadow-md hover:shadow-lg transition-transform duration-200 hover:scale-102"
               >
                 <h3 className="font-bold text-lg mb-3 text-blue-700 dark:text-blue-300 flex items-center">
@@ -669,8 +695,8 @@ export default function AutismPage() {
                   <li className="transition-transform hover:translate-x-1">Create structured, organized environments</li>
                 </ul>
               </div>
-              
-              <div 
+
+              <div
                 className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-800/30 p-5 rounded-xl shadow-md hover:shadow-lg transition-transform duration-200 hover:scale-102"
               >
                 <h3 className="font-bold text-lg mb-3 text-teal-700 dark:text-teal-300 flex items-center">

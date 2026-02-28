@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ArtFlow - Neurodiverse Painting Game</title>
+  
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // Extract React hooks from the global React object
+    const { useState, useEffect, useRef, useCallback, useReducer } = React;
+
+    /* ═══════════════════════════════════════════════════════════════════════
+       ARTFLOW – LEARN PAINTING STEP BY STEP
+       Neurodiverse-Friendly Painting Game
+       Target: Autism · ADHD · Dyslexia
+       ═══════════════════════════════════════════════════════════════════════ */
+
+    // ─── INJECTED GLOBAL STYLES ──────────────────────────────────────────────
+    const injectStyles = () => {
+      if (document.getElementById("artflow-styles")) return;
+      const s = document.createElement("style");
+      s.id = "artflow-styles";
+      s.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700;800;900&display=swap');
+        :root {
+          --cream:    #faf7f2;
+          --warm:     #f4ede4;
+          --card:     #ffffff;
+          --border:   #e2d9cc;
+          --slate:    #6e8fa8;
+          --slateL:   #a8c2d4;
+          --gold:     #c8a055;
+          --goldL:    #e8cb8a;
+          --sage:     #7ab89a;
+          --sageL:    #b0d4c0;
+          --lavender: #9a8cc8;
+          --lavL:     #c4b8e8;
+          --coral:    #d4826a;
+          --coralL:   #eeb8a4;
+          --sky:      #7aaec8;
+          --skyL:     #b4d4e8;
+          --text:     #3a2e24;
+          --textMid:  #6b5a4a;
+          --textSoft: #9e8c7c;
+          --radius:   20px;
+          --radiusLg: 28px;
+          --shadow:   0 4px 24px rgba(110,80,50,0.08);
+          --shadowLg: 0 8px 40px rgba(110,80,50,0.12);
+          --font:     'Atkinson Hyperlegible', Georgia, serif;
+          --fontHead: 'Nunito', 'Atkinson Hyperlegible', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font); background: var(--cream); color: var(--text); }
+        button:focus-visible, [tabindex="0"]:focus-visible {
+          outline: 3px solid var(--slate);
+          outline-offset: 3px;
+          border-radius: 10px;
+        }
+        ::-webkit-scrollbar { width: 7px; }
+        ::-webkit-scrollbar-track { background: var(--warm); }
+        ::-webkit-scrollbar-thumb { background: var(--slateL); border-radius: 8px; }
+        @keyframes gentleFloat {
+          0%,100% { transform: translateY(0px); }
+          50%      { transform: translateY(-5px); }
+        }
+        @keyframes softPop {
+          0%   { transform: scale(0.85); opacity: 0; }
+          70%  { transform: scale(1.04); }
+          100% { transform: scale(1);    opacity: 1; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+        @keyframes shimmerPulse {
+          0%,100% { opacity: 0.6; }
+          50%     { opacity: 1;   }
+        }
+        @keyframes badgePop {
+          0%   { transform: scale(0) rotate(-15deg); opacity: 0; }
+          60%  { transform: scale(1.15) rotate(3deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes sparkle {
+          0%,100% { transform: scale(1) rotate(0deg);   opacity: 1; }
+          50%     { transform: scale(1.3) rotate(20deg); opacity: 0.7; }
+        }
+        @keyframes progressFill {
+          from { width: 0%; }
+          to   { width: var(--target-w); }
+        }
+        .gentle-hover {
+          transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.2s ease;
+        }
+        .gentle-hover:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadowLg);
+        }
+        .canvas-cursor { cursor: crosshair; }
+      `;
+      document.head.appendChild(s);
+    };
+
+    // ─── SPEAK UTILITY ───────────────────────────────────────────────────────
+    let speakEnabled = true;
+    function speak(text, rate = 0.88) {
+      if (!speakEnabled || !window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = rate; u.pitch = 1.05; u.volume = 0.85;
+      window.speechSynthesis.speak(u);
+    }
+
+    // ─── SOFT AUDIO FEEDBACK ─────────────────────────────────────────────────
+    function playChime(freq = 528, dur = 0.3, type = "sine") {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.type = type; osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.start(); osc.stop(ctx.currentTime + dur);
+      } catch {}
+    }
+    const playSuccess = () => {
+      playChime(523, 0.15); setTimeout(() => playChime(659, 0.15), 140);
+      setTimeout(() => playChime(784, 0.25), 280); setTimeout(() => playChime(1047, 0.3), 420);
+    };
+    const playStep    = () => playChime(440, 0.12, "triangle");
+    const playError   = () => playChime(220, 0.2, "sawtooth");
+    const playBrush   = () => playChime(880, 0.04, "sine");
+
+    // ─── COLOR-BLIND SAFE PALETTE ────────────────────────────────────────────
+    const SAFE_PALETTE = [
+      { name:"Sky Blue",    hex:"#89b4d4", safe:true  },
+      { name:"Sage Green",  hex:"#7ab89a", safe:true  },
+      { name:"Warm Gold",   hex:"#e8b86d", safe:true  },
+      { name:"Coral Pink",  hex:"#e8957a", safe:true  },
+      { name:"Lavender",    hex:"#b0a0d8", safe:true  },
+      { name:"Cream White", hex:"#f5ede0", safe:true  },
+      { name:"Slate Blue",  hex:"#6e8fa8", safe:true  },
+      { name:"Soft Brown",  hex:"#c4956a", safe:true  },
+      { name:"Mint",        hex:"#8ed4c0", safe:true  },
+      { name:"Blush",       hex:"#f0b4b4", safe:true  },
+      { name:"Dusk Purple", hex:"#8878a8", safe:true  },
+      { name:"Deep Teal",   hex:"#4a9090", safe:true  },
+      { name:"Butter",      hex:"#f0d898", safe:true  },
+      { name:"Rose Mist",   hex:"#d4a0b8", safe:true  },
+      { name:"Warm White",  hex:"#ffffff", safe:true  },
+      { name:"Charcoal",    hex:"#3a3028", safe:true  },
+    ];
+
+    const BRUSHES = [
+      { id:"round",    name:"Round",    icon:"●",  opacity:0.9, smooth:0.4 },
+      { id:"flat",     name:"Flat",     icon:"▬",  opacity:0.85, smooth:0.3 },
+      { id:"fan",      name:"Fan",      icon:"𝄁",  opacity:0.6,  smooth:0.6 },
+      { id:"texture",  name:"Texture",  icon:"⋯",  opacity:0.7,  smooth:0.5 },
+    ];
+
+    // ─── ACHIEVEMENTS SYSTEM ─────────────────────────────────────────────────
+    const ACHIEVEMENTS = [
+      { id:"first_stroke",   icon:"🖌️",  title:"First Brushstroke",   desc:"Made your first painting stroke",                 points:10,  trigger:"strokes",   threshold:1  },
+      { id:"layer_one",      icon:"🌅",  title:"Sky Painter",          desc:"Completed the Sky layer",                         points:30,  trigger:"layers",    threshold:1  },
+      { id:"layer_three",    icon:"⛰️",  title:"Mountain Artist",      desc:"Completed 3 layers",                              points:50,  trigger:"layers",    threshold:3  },
+      { id:"full_scene",     icon:"🎨",  title:"Scene Master",         desc:"Completed a full painting scene",                 points:100, trigger:"scenes",    threshold:1  },
+      { id:"tracer",         icon:"✏️",  title:"Careful Tracer",       desc:"Completed a guided tracing",                      points:40,  trigger:"tracings",  threshold:1  },
+      { id:"accurate",       icon:"🎯",  title:"Precision Artist",     desc:"Achieved 80%+ tracing accuracy",                  points:60,  trigger:"accuracy",  threshold:80 },
+      { id:"free_spirit",    icon:"🌈",  title:"Free Spirit",          desc:"Created artwork in Free Studio",                  points:20,  trigger:"studio",    threshold:1  },
+      { id:"color_explorer", icon:"🎭",  title:"Color Explorer",       desc:"Used 8 different colors",                         points:30,  trigger:"colors",    threshold:8  },
+      { id:"big_artist",     icon:"⭐",  title:"Big Artist",           desc:"Earned 200 total points",                         points:50,  trigger:"totalPts",  threshold:200},
+      { id:"saver",          icon:"💾",  title:"Gallery Keeper",       desc:"Saved your first artwork",                        points:15,  trigger:"saves",     threshold:1  },
+    ];
+
+    function achReducer(state, action) {
+      const next = { ...state };
+      switch (action.type) {
+        case "STROKE":    next.strokes  = (next.strokes  || 0) + 1; break;
+        case "LAYER":     next.layers   = (next.layers   || 0) + 1; break;
+        case "SCENE":     next.scenes   = (next.scenes   || 0) + 1; break;
+        case "TRACING":   next.tracings = (next.tracings || 0) + 1; break;
+        case "ACCURACY":  next.accuracy = Math.max(next.accuracy || 0, action.val); break;
+        case "STUDIO":    next.studio   = (next.studio   || 0) + 1; break;
+        case "COLOR":     next.colors   = [...new Set([...(next.colors||[]), action.color])]; break;
+        case "SAVE":      next.saves    = (next.saves    || 0) + 1; break;
+        case "POINTS":    next.totalPts = (next.totalPts || 0) + action.val; break;
+        case "EARN_ACH":
+          if (!next.earned.includes(action.id)) next.earned = [...next.earned, action.id];
+          next.justEarned = action.id;
+          return next;
+        case "CLEAR_JUST": next.justEarned = null; return next;
+        default: return state;
+      }
+      const toEarn = ACHIEVEMENTS.filter(a => {
+        if (next.earned.includes(a.id)) return false;
+        const val = a.trigger === "colors" ? (next.colors||[]).length : next[a.trigger] || 0;
+        return val >= a.threshold;
+      });
+      if (toEarn.length) {
+        next.earned = [...next.earned, toEarn[0].id];
+        next.justEarned = toEarn[0].id;
+        const pts = toEarn.reduce((s, a) => s + a.points, 0);
+        next.totalPts = (next.totalPts || 0) + pts;
+      }
+      return next;
+    };
+
+    // ─── BADGE TOAST ─────────────────────────────────────────────────────────
+    function BadgeToast({ achId, onClose }) {
+      const ach = ACHIEVEMENTS.find(a => a.id === achId);
+      useEffect(() => {
+        if (!ach) return;
+        playSuccess();
+        speak(`Achievement unlocked! ${ach.title}. ${ach.desc}`);
+        const t = setTimeout(onClose, 4000);
+        return () => clearTimeout(t);
+      }, [achId]);
+      if (!ach) return null;
+      return (
+        <div style={{
+          position:"fixed", bottom:28, right:24, zIndex:9999,
+          background:"linear-gradient(135deg, #ffffff, #fdf8f0)",
+          border:"2.5px solid var(--goldL)", borderRadius:20,
+          padding:"18px 22px", boxShadow:"0 12px 48px rgba(200,160,85,0.35)",
+          display:"flex", alignItems:"center", gap:16,
+          animation:"badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) both",
+          minWidth:280, maxWidth:340,
+        }}>
+          <div style={{ fontSize:42, animation:"sparkle 1.5s ease infinite", flexShrink:0 }}>{ach.icon}</div>
+          <div>
+            <div style={{ fontSize:11, fontWeight:700, color:"var(--gold)", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>Achievement Unlocked!</div>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:17, fontWeight:800, color:"var(--text)", marginBottom:3 }}>{ach.title}</div>
+            <div style={{ fontSize:13, color:"var(--textMid)", lineHeight:1.4 }}>{ach.desc}</div>
+            <div style={{ marginTop:6, fontFamily:"var(--fontHead)", fontSize:13, color:"var(--gold)", fontWeight:700 }}>+{ach.points} pts ⭐</div>
+          </div>
+          <button onClick={onClose} aria-label="Dismiss" style={{ position:"absolute", top:10, right:12, background:"none", border:"none", fontSize:16, cursor:"pointer", color:"var(--textSoft)" }}>✕</button>
+        </div>
+      );
+    }
+
+    // ─── SCORE HEADER ────────────────────────────────────────────────────────
+    function ScoreHeader({ state, onMenu, mode, calmMode, setCalmMode, focusMode, setFocusMode }) {
+      const totalPoints = state.totalPts || 0;
+      return (
+        <div style={{
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"12px 20px", background:"var(--card)", borderBottom:"2px solid var(--border)",
+          boxShadow:"0 2px 12px rgba(0,0,0,0.04)", flexWrap:"wrap", gap:10,
+        }}>
+          <button onClick={onMenu} style={{
+            display:"flex", alignItems:"center", gap:8,
+            background:"var(--warm)", border:"2px solid var(--border)", borderRadius:14,
+            padding:"9px 18px", fontFamily:"var(--font)", fontSize:15, cursor:"pointer",
+            color:"var(--textMid)", fontWeight:700,
+          }}>
+            ← Gallery
+          </button>
+
+          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:24, animation:"gentleFloat 4s ease infinite" }}>🎨</span>
+            <span style={{ fontFamily:"var(--fontHead)", fontSize:22, fontWeight:900, color:"var(--slate)", letterSpacing:-0.3 }}>ArtFlow</span>
+            {mode && <span style={{ fontSize:13, color:"var(--textSoft)", paddingLeft:6 }}>· {mode}</span>}
+          </div>
+
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <button onClick={() => { setCalmMode(c=>!c); speak(calmMode ? "Calm mode off" : "Calm mode on. No timers, no pressure."); }}
+              style={{ background: calmMode ? "#b0d4c0" : "var(--warm)", border:`2px solid ${calmMode?"var(--sage)":"var(--border)"}`, borderRadius:12, padding:"7px 14px", fontSize:13, cursor:"pointer", fontWeight:700, color: calmMode ? "#2d6a4a" : "var(--textMid)" }}>
+              {calmMode ? "🌿 Calm ON" : "🌿 Calm"}
+            </button>
+            <button onClick={() => { setFocusMode(f=>!f); speak(focusMode ? "Focus mode off" : "Focus mode on."); }}
+              style={{ background: focusMode ? "#a8c2d4" : "var(--warm)", border:`2px solid ${focusMode?"var(--slate)":"var(--border)"}`, borderRadius:12, padding:"7px 14px", fontSize:13, cursor:"pointer", fontWeight:700, color: focusMode ? "#1d4a6a" : "var(--textMid)" }}>
+              {focusMode ? "🔵 Focus ON" : "🔵 Focus"}
+            </button>
+            <div style={{
+              background:"linear-gradient(135deg, var(--gold), var(--goldL))",
+              color:"#3a2800", borderRadius:50, padding:"8px 18px",
+              fontFamily:"var(--fontHead)", fontSize:16, fontWeight:900, boxShadow:"0 3px 12px rgba(200,160,85,0.3)",
+            }}>
+              ⭐ {totalPoints}
+            </div>
+            <div style={{ display:"flex", gap:4, fontSize:18 }} title="Badges">
+              {(state.earned || []).map(id => {
+                const a = ACHIEVEMENTS.find(x => x.id === id);
+                return a ? <span key={id} title={a.title}>{a.icon}</span> : null;
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // HOME SCREEN
+    // ═══════════════════════════════════════════════════════════════════════
+    function HomeScreen({ achState, onSelect }) {
+      useEffect(() => {
+        speak("Welcome to ArtFlow! Choose a painting mode to begin your art journey.");
+      }, []);
+
+      const modes = [
+        { id:"layer",   icon:"🌅", label:"Layer Builder",    sub:"Step-by-step guided painting", color:"var(--skyL)", border:"var(--sky)",     pts:"+30 per layer",  desc:"Paint a beautiful scene one layer at a time. Sky, sun, mountains, and reflections — unlock them step by step!" },
+        { id:"tracing", icon:"✏️",  label:"Guided Tracing",   sub:"Trace the faint outline",      color:"var(--sageL)", border:"var(--sage)",   pts:"+40 per tracing", desc:"A soft outline appears on the canvas. Follow it carefully with your brush and see how accurate you can be!" },
+        { id:"studio",  icon:"🌈", label:"Free Studio",      sub:"Create anything you imagine",  color:"var(--lavL)",  border:"var(--lavender)",pts:"+20 per artwork", desc:"Your canvas, your rules! Pick colors, brush sizes, and textures. Make something wonderful!" },
+      ];
+
+      return (
+        <div style={{ minHeight:"100vh", background:"var(--cream)", display:"flex", flexDirection:"column" }}>
+          <div style={{ padding:"18px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", background:"var(--card)", borderBottom:"2px solid var(--border)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ fontSize:34, animation:"gentleFloat 3.5s ease infinite" }}>🎨</span>
+              <div>
+                <div style={{ fontFamily:"var(--fontHead)", fontSize:28, fontWeight:900, color:"var(--slate)", letterSpacing:-0.5 }}>ArtFlow</div>
+                <div style={{ fontSize:13, color:"var(--textSoft)", letterSpacing:"0.06em" }}>LEARN PAINTING STEP BY STEP</div>
+              </div>
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ background:"linear-gradient(135deg, var(--gold), var(--goldL))", color:"#3a2800", borderRadius:50, padding:"8px 20px", fontFamily:"var(--fontHead)", fontSize:16, fontWeight:900 }}>
+                ⭐ {achState.totalPts || 0} pts
+              </div>
+              <button onClick={() => speak("Welcome to ArtFlow! Choose Layer Builder to paint step by step. Guided Tracing to trace outlines. Free Studio to create freely.")}
+                style={{ background:"var(--skyL)", border:"2px solid var(--sky)", borderRadius:14, padding:"9px 16px", fontSize:13, cursor:"pointer", fontWeight:700, color:"var(--slate)" }}>
+                🔊 Read Aloud
+              </button>
+            </div>
+          </div>
+
+          <div style={{ textAlign:"center", padding:"40px 20px 20px", animation:"fadeUp 0.6s ease" }}>
+            <h1 style={{ fontFamily:"var(--fontHead)", fontSize:"clamp(26px,4vw,42px)", fontWeight:900, color:"var(--text)", lineHeight:1.2, marginBottom:10 }}>
+              Welcome, Young Artist! 🌟
+            </h1>
+            <p style={{ fontSize:"clamp(15px,2vw,18px)", color:"var(--textMid)", maxWidth:540, margin:"0 auto", lineHeight:1.7 }}>
+              Choose your painting adventure below. Every brushstroke you make is wonderful!
+            </p>
+          </div>
+
+          <div style={{ display:"flex", gap:22, flexWrap:"wrap", justifyContent:"center", padding:"20px 28px 16px", maxWidth:1100, margin:"0 auto", width:"100%" }}>
+            {modes.map((m, i) => (
+              <button key={m.id} onClick={() => { speak(`Opening ${m.label}. ${m.desc}`); onSelect(m.id); }}
+                aria-label={`${m.label}. ${m.desc}`}
+                className="gentle-hover"
+                style={{
+                  background: m.color, border:`3px solid ${m.border}`,
+                  borderRadius:24, padding:"28px 24px", textAlign:"left",
+                  cursor:"pointer", flex:"1 1 280px", maxWidth:320,
+                  boxShadow:"var(--shadow)", animation:`fadeUp ${0.5+i*0.1}s ease both`,
+                }}>
+                <div style={{ fontSize:44, marginBottom:14, display:"block" }}>{m.icon}</div>
+                <div style={{ fontFamily:"var(--fontHead)", fontSize:22, fontWeight:900, color:"var(--text)", marginBottom:6 }}>{m.label}</div>
+                <div style={{ fontSize:14, color:"var(--textMid)", marginBottom:12, lineHeight:1.5 }}>{m.desc}</div>
+                <div style={{ display:"inline-flex", alignItems:"center", gap:6, background:"rgba(255,255,255,0.7)", borderRadius:50, padding:"5px 14px", fontSize:13, fontWeight:700, color:"var(--gold)" }}>
+                  ⭐ {m.pts}
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {(achState.earned || []).length > 0 && (
+            <div style={{ maxWidth:760, margin:"16px auto 0", padding:"0 28px 28px", width:"100%", animation:"fadeUp 0.8s ease" }}>
+              <div style={{ background:"var(--card)", borderRadius:20, padding:"18px 22px", border:"2px solid var(--border)" }}>
+                <div style={{ fontFamily:"var(--fontHead)", fontSize:17, fontWeight:800, color:"var(--textMid)", marginBottom:12 }}>🏅 Your Achievements</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:10 }}>
+                  {(achState.earned || []).map(id => {
+                    const a = ACHIEVEMENTS.find(x => x.id === id);
+                    if (!a) return null;
+                    return (
+                      <div key={id} title={a.desc} style={{ display:"flex", alignItems:"center", gap:8, background:"var(--warm)", borderRadius:14, padding:"8px 14px", border:"1.5px solid var(--border)" }}>
+                        <span style={{ fontSize:20 }}>{a.icon}</span>
+                        <div>
+                          <div style={{ fontSize:12, fontWeight:700, color:"var(--text)" }}>{a.title}</div>
+                          <div style={{ fontSize:11, color:"var(--gold)", fontWeight:700 }}>+{a.points} pts</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MODE A: LAYER BUILDER
+    // ═══════════════════════════════════════════════════════════════════════
+    const LAYER_STEPS = [
+      {
+        id:"sky", label:"Sky", icon:"🌤️", order:0,
+        hint:"Brush soft blues and pinks across the top of your canvas",
+        instructions:"Fill the sky with beautiful blue and pink colors. Start from the top and paint down gently.",
+        color:"#89b4d4", altColor:"#f0b4b4", yFrom:0, yTo:0.45,
+        draw(ctx, W, H, progress) {
+          const grad = ctx.createLinearGradient(0, 0, 0, H * 0.45);
+          grad.addColorStop(0, `rgba(137,180,212,${progress})`);
+          grad.addColorStop(0.6, `rgba(180,200,230,${progress})`);
+          grad.addColorStop(1, `rgba(240,180,180,${progress * 0.8})`);
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, W, H * 0.45);
+        }
+      },
+      {
+        id:"sun", label:"Sun", icon:"☀️", order:1,
+        hint:"Paint a warm golden circle in the upper sky",
+        instructions:"Draw a glowing sun in the sky. Choose a warm yellow or orange color.",
+        color:"#e8b86d", altColor:"#f0d070",
+        draw(ctx, W, H, progress) {
+          const cx = W * 0.72, cy = H * 0.18, r = W * 0.09 * progress;
+          const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2.2);
+          glow.addColorStop(0, `rgba(255,220,100,${0.35 * progress})`);
+          glow.addColorStop(1, "rgba(255,220,100,0)");
+          ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(cx, cy, r * 2.2, 0, Math.PI * 2); ctx.fill();
+          const sunG = ctx.createRadialGradient(cx - r*0.2, cy - r*0.2, r*0.1, cx, cy, r);
+          sunG.addColorStop(0, `rgba(255,235,130,${progress})`);
+          sunG.addColorStop(0.7, `rgba(240,185,80,${progress})`);
+          sunG.addColorStop(1, `rgba(210,140,50,${progress})`);
+          ctx.fillStyle = sunG; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+          for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI * 2) / 8;
+            ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+            ctx.fillStyle = `rgba(255,220,80,${0.6 * progress})`;
+            ctx.beginPath(); ctx.moveTo(r * 1.2, -3 * progress); ctx.lineTo(r * 1.9, 0); ctx.lineTo(r * 1.2, 3 * progress); ctx.fill();
+            ctx.restore();
+          }
+        }
+      },
+      {
+        id:"mountains", label:"Mountains", icon:"⛰️", order:2,
+        hint:"Layer purple and blue mountain shapes in the middle",
+        instructions:"Paint mountains in the middle of the scene. Use purple and blue shades for depth.",
+        color:"#9a8cc8", altColor:"#7ab89a",
+        draw(ctx, W, H, progress) {
+          ctx.beginPath(); ctx.moveTo(0, H * 0.62);
+          ctx.lineTo(W*0.15, H*0.28); ctx.lineTo(W*0.3, H*0.42);
+          ctx.lineTo(W*0.48, H*0.22); ctx.lineTo(W*0.65, H*0.38);
+          ctx.lineTo(W*0.82, H*0.25); ctx.lineTo(W, H*0.40); ctx.lineTo(W, H*0.62); ctx.closePath();
+          const mg1 = ctx.createLinearGradient(0, H*0.22, 0, H*0.62);
+          mg1.addColorStop(0, `rgba(154,140,200,${progress})`);
+          mg1.addColorStop(1, `rgba(120,110,170,${progress})`);
+          ctx.fillStyle = mg1; ctx.fill();
+          [[W*0.15,H*0.28],[W*0.48,H*0.22],[W*0.82,H*0.25]].forEach(([px,py]) => {
+            ctx.beginPath(); ctx.moveTo(px, py);
+            ctx.lineTo(px - W*0.04, py + H*0.07); ctx.lineTo(px + W*0.04, py + H*0.07); ctx.closePath();
+            ctx.fillStyle = `rgba(240,240,255,${progress * 0.8})`; ctx.fill();
+          });
+          ctx.beginPath(); ctx.moveTo(0, H*0.62);
+          ctx.quadraticCurveTo(W*0.25, H*0.50, W*0.5, H*0.58);
+          ctx.quadraticCurveTo(W*0.75, H*0.48, W, H*0.55);
+          ctx.lineTo(W, H*0.62); ctx.closePath();
+          const mg2 = ctx.createLinearGradient(0, H*0.48, 0, H*0.62);
+          mg2.addColorStop(0, `rgba(122,184,154,${progress})`);
+          mg2.addColorStop(1, `rgba(90,160,120,${progress})`);
+          ctx.fillStyle = mg2; ctx.fill();
+        }
+      },
+      {
+        id:"ground", label:"Ground", icon:"🌿", order:3,
+        hint:"Paint lush green ground across the bottom",
+        instructions:"Fill the ground with greens and earth tones. Add some texture for grass and soil.",
+        color:"#7ab89a", altColor:"#c4956a",
+        draw(ctx, W, H, progress) {
+          const gg = ctx.createLinearGradient(0, H*0.62, 0, H);
+          gg.addColorStop(0, `rgba(122,184,154,${progress})`);
+          gg.addColorStop(0.5, `rgba(100,160,120,${progress})`);
+          gg.addColorStop(1, `rgba(80,120,90,${progress})`);
+          ctx.fillStyle = gg; ctx.fillRect(0, H*0.62, W, H*0.38);
+          ctx.beginPath(); ctx.moveTo(W*0.35, H); ctx.quadraticCurveTo(W*0.45, H*0.75, W*0.52, H*0.62);
+          ctx.quadraticCurveTo(W*0.55, H*0.75, W*0.62, H); ctx.closePath();
+          ctx.fillStyle = `rgba(196,149,106,${progress * 0.8})`; ctx.fill();
+          for (let i = 0; i < 14; i++) {
+            const gx = W * (0.05 + i * 0.065), gy = H * (0.62 + Math.sin(i)*0.03);
+            ctx.strokeStyle = `rgba(80,160,100,${progress * 0.9})`; ctx.lineWidth = 2;
+            for (let g = -1; g <= 1; g++) {
+              ctx.beginPath(); ctx.moveTo(gx, gy);
+              ctx.quadraticCurveTo(gx + g*8, gy - 14, gx + g*12, gy - 18); ctx.stroke();
+            }
+          }
+        }
+      },
+      {
+        id:"reflection", label:"Reflection", icon:"💧", order:4,
+        hint:"Add shimmering lake reflections at the bottom",
+        instructions:"Paint a peaceful lake reflection at the bottom. Mirror the colors of the sky.",
+        color:"#7aaec8", altColor:"#b0a0d8",
+        draw(ctx, W, H, progress) {
+          ctx.beginPath(); ctx.ellipse(W*0.5, H*0.85, W*0.36, H*0.1, 0, 0, Math.PI*2);
+          const lake = ctx.createRadialGradient(W*0.5, H*0.85, 0, W*0.5, H*0.85, W*0.36);
+          lake.addColorStop(0, `rgba(137,180,212,${progress * 0.8})`);
+          lake.addColorStop(1, `rgba(100,140,190,${progress * 0.6})`);
+          ctx.fillStyle = lake; ctx.fill();
+          for (let i = 0; i < 5; i++) {
+            ctx.beginPath();
+            ctx.ellipse(W*0.5, H*(0.82 + i*0.015), W*(0.15 + i*0.04), H*0.007, 0, 0, Math.PI);
+            ctx.strokeStyle = `rgba(200,230,255,${(0.6 - i*0.1) * progress})`; ctx.lineWidth = 1.5; ctx.stroke();
+          }
+          ctx.beginPath(); ctx.ellipse(W*0.72, H*0.84, 14*progress, 5*progress, 0, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(255,230,120,${0.6*progress})`; ctx.fill();
+        }
+      },
+    ];
+
+    function LayerBuilder({ achDispatch, calmMode }) {
+      const canvasRef = useRef(null);
+      const [step, setStep] = useState(0);
+      const [progress, setProg] = useState(Array(LAYER_STEPS.length).fill(0));
+      const [painting, setPaint] = useState(false);
+      const [brushColor, setBrushColor] = useState(LAYER_STEPS[0].color);
+      const [feedback, setFeedback] = useState(null);
+      const [completed, setCompleted] = useState(false);
+      const isDrawing = useRef(false);
+      const lastPoint = useRef(null);
+      const strokeCount = useRef(0);
+      const [brushSize, setBrushSize] = useState(18);
+
+      const currentStep = LAYER_STEPS[step];
+
+      const redrawAll = useCallback((prog = progress) => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const W = canvas.width, H = canvas.height;
+        ctx.clearRect(0, 0, W, H);
+        LAYER_STEPS.forEach((ls, i) => {
+          if (prog[i] > 0) ls.draw(ctx, W, H, Math.min(prog[i], 1));
+        });
+      }, [progress]);
+
+      useEffect(() => { redrawAll(); }, []);
+
+      useEffect(() => {
+        speak(currentStep.instructions);
+        setBrushColor(currentStep.color);
+      }, [step]);
+
+      function getPos(e, canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const src = e.touches ? e.touches[0] : e;
+        return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+      }
+
+      function startDraw(e) {
+        e.preventDefault();
+        isDrawing.current = true;
+        lastPoint.current = getPos(e, canvasRef.current);
+        playBrush();
+        if (strokeCount.current === 0) achDispatch({ type:"STROKE" });
+        strokeCount.current++;
+      }
+
+      function draw(e) {
+        e.preventDefault();
+        if (!isDrawing.current) return;
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const pos = getPos(e, canvas);
+        const last = lastPoint.current;
+
+        ctx.beginPath();
+        ctx.moveTo(last.x, last.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = brushColor;
+        ctx.lineWidth = brushSize;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.globalAlpha = 0.6;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        lastPoint.current = pos;
+
+        const dist = Math.hypot(pos.x - last.x, pos.y - last.y);
+        const newProg = [...progress];
+        newProg[step] = Math.min(1, newProg[step] + dist / (canvas.width * 0.8));
+        setProg(newProg);
+
+        if (newProg[step] >= 0.4 && !painting) {
+          setPaint(true);
+          completeStep(newProg);
+        }
+      }
+
+      function completeStep(prog) {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const finalProg = [...prog];
+        finalProg[step] = 1;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        LAYER_STEPS.forEach((ls, i) => {
+          if (finalProg[i] > 0) ls.draw(ctx, canvas.width, canvas.height, 1);
+        });
+        setProg(finalProg);
+        playSuccess();
+        achDispatch({ type:"POINTS", val:30 });
+        achDispatch({ type:"LAYER" });
+        setFeedback({ ok:true, msg:`✨ Beautiful ${currentStep.label}! +30 points! ${step < LAYER_STEPS.length - 1 ? "Ready for the next layer?" : "You completed the whole scene!"}` });
+        speak(`Wonderful! You painted the ${currentStep.label}. ${step < LAYER_STEPS.length - 1 ? `Next up: ${LAYER_STEPS[step+1].label}.` : "You completed the whole painting scene!"}`);
+        setTimeout(() => {
+          setFeedback(null);
+          setPaint(false);
+          if (step < LAYER_STEPS.length - 1) {
+            setStep(s => s + 1);
+          } else {
+            setCompleted(true);
+            achDispatch({ type:"SCENE" });
+            achDispatch({ type:"POINTS", val:50 });
+          }
+        }, 2800);
+      }
+
+      function stopDraw() { isDrawing.current = false; }
+
+      return (
+        <div style={{ display:"flex", height:"calc(100vh - 64px)", background:"var(--cream)" }}>
+          <div style={{ width:240, background:"var(--card)", borderRight:"2px solid var(--border)", overflowY:"auto", padding:"16px 14px", display:"flex", flexDirection:"column", gap:10, flexShrink:0 }}>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:16, fontWeight:900, color:"var(--textMid)", marginBottom:6, paddingLeft:4 }}>
+              🌅 Scene Layers
+            </div>
+            {LAYER_STEPS.map((ls, i) => {
+              const done = progress[i] >= 0.4;
+              const active = i === step;
+              const locked = i > step;
+              return (
+                <div key={ls.id} style={{
+                  background: active ? ls.color + "60" : done ? "#f0f7f0" : locked ? "#f8f5f0" : "var(--warm)",
+                  border:`2px solid ${active ? ls.color : done ? "var(--sage)" : "var(--border)"}`,
+                  borderRadius:16, padding:"12px 14px",
+                  opacity: locked ? 0.5 : 1, cursor: locked ? "not-allowed" : "default",
+                  transition:"all 0.3s ease",
+                }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:22 }}>{done ? "✅" : active ? ls.icon : "🔒"}</span>
+                    <div>
+                      <div style={{ fontWeight:700, fontSize:14, color:"var(--text)" }}>{ls.label}</div>
+                      <div style={{ fontSize:11, color:"var(--textSoft)", marginTop:2 }}>{locked ? "Complete previous layer" : done ? "Completed! +30 pts" : ls.hint}</div>
+                    </div>
+                  </div>
+                  {active && (
+                    <div style={{ marginTop:10 }}>
+                      <div style={{ height:6, background:"#e0e0e0", borderRadius:6, overflow:"hidden" }}>
+                        <div style={{ height:"100%", background:ls.color, borderRadius:6, width:`${Math.min(progress[i]/0.4*100,100)}%`, transition:"width 0.3s ease" }} />
+                      </div>
+                      <div style={{ fontSize:10, color:"var(--textSoft)", marginTop:4 }}>{Math.round(Math.min(progress[i]/0.4*100,100))}% complete</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20, gap:16 }}>
+            {feedback && (
+              <div style={{
+                background: feedback.ok ? "#e8f5e9" : "#fff3e0",
+                border:`2.5px solid ${feedback.ok ? "var(--sage)" : "var(--gold)"}`,
+                borderRadius:16, padding:"12px 22px", fontSize:15, fontWeight:700,
+                color: feedback.ok ? "#2d6a4a" : "#7a4a00",
+                animation:"fadeUp 0.3s ease", maxWidth:520, textAlign:"center",
+              }}>{feedback.msg}</div>
+            )}
+
+            <div style={{ position:"relative" }}>
+              <canvas
+                ref={canvasRef} width={560} height={400}
+                className="canvas-cursor"
+                onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+                onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
+                style={{ borderRadius:20, border:"3px solid var(--border)", boxShadow:"var(--shadowLg)", display:"block", maxWidth:"100%", touchAction:"none", background:"#faf7f2" }}
+                aria-label={`Painting canvas. Currently painting layer: ${currentStep.label}. ${currentStep.instructions}`}
+              />
+              {completed && (
+                <div style={{ position:"absolute", inset:0, background:"rgba(255,255,255,0.88)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:12, animation:"softPop 0.5s ease" }}>
+                  <div style={{ fontSize:56 }}>🎨</div>
+                  <div style={{ fontFamily:"var(--fontHead)", fontSize:28, fontWeight:900, color:"var(--slate)" }}>Scene Complete!</div>
+                  <div style={{ fontSize:16, color:"var(--textMid)" }}>You painted all 5 layers! +150 points total 🌟</div>
+                  <button onClick={() => { setProg(Array(5).fill(0)); setStep(0); setCompleted(false); setPaint(false); const ctx = canvasRef.current?.getContext("2d"); ctx?.clearRect(0,0,canvasRef.current.width,canvasRef.current.height); speak("Starting over! Let's paint a new scene."); }}
+                    style={{ background:"var(--sage)", color:"#fff", border:"none", borderRadius:14, padding:"12px 26px", fontFamily:"var(--fontHead)", fontSize:16, fontWeight:800, cursor:"pointer", marginTop:4 }}>
+                    🔄 Paint Again
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ background:"var(--card)", borderRadius:18, padding:"14px 20px", border:`2px solid ${currentStep.color}`, maxWidth:540, width:"100%", display:"flex", alignItems:"center", gap:14 }}>
+              <span style={{ fontSize:28, flexShrink:0 }}>{currentStep.icon}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"var(--fontHead)", fontWeight:800, fontSize:16, color:"var(--text)", marginBottom:4 }}>Step {step+1}: Paint the {currentStep.label}</div>
+                <div style={{ fontSize:14, color:"var(--textMid)", lineHeight:1.5 }}>{currentStep.instructions}</div>
+              </div>
+              <button onClick={() => speak(currentStep.instructions)}
+                style={{ background:"var(--skyL)", border:"2px solid var(--sky)", borderRadius:10, padding:"7px 12px", fontSize:13, cursor:"pointer", fontWeight:700, color:"var(--slate)", flexShrink:0 }}>
+                🔊
+              </button>
+            </div>
+          </div>
+
+          <div style={{ width:180, background:"var(--card)", borderLeft:"2px solid var(--border)", padding:"16px 12px", display:"flex", flexDirection:"column", gap:14, flexShrink:0 }}>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:14, fontWeight:900, color:"var(--textMid)" }}>🖌️ Brush</div>
+            <div>
+              <label style={{ fontSize:12, color:"var(--textSoft)", marginBottom:4, display:"block" }}>Size: {brushSize}px</label>
+              <input type="range" min={6} max={40} value={brushSize} onChange={e=>setBrushSize(+e.target.value)}
+                style={{ width:"100%", accentColor:"var(--slate)", cursor:"pointer" }} aria-label={`Brush size: ${brushSize} pixels`}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize:12, color:"var(--textSoft)", marginBottom:6 }}>Color</div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:5 }}>
+                {SAFE_PALETTE.slice(0,9).map(c => (
+                  <button key={c.hex} onClick={() => { setBrushColor(c.hex); speak(c.name); }}
+                    title={c.name} aria-label={`Color: ${c.name}`}
+                    style={{ width:"100%", aspectRatio:"1", borderRadius:9, background:c.hex, border:`3px solid ${brushColor===c.hex?"var(--text)":"transparent"}`, cursor:"pointer", transition:"transform 0.15s" }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div style={{ marginTop:"auto", background:"var(--warm)", borderRadius:14, padding:"12px", textAlign:"center", border:"1.5px solid var(--border)" }}>
+              <div style={{ fontSize:22 }}>⭐</div>
+              <div style={{ fontFamily:"var(--fontHead)", fontSize:13, fontWeight:800, color:"var(--gold)" }}>Step {step+1} of {LAYER_STEPS.length}</div>
+              <div style={{ fontSize:11, color:"var(--textSoft)", marginTop:4 }}>Paint each layer to complete the scene</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MODE B: GUIDED TRACING
+    // ═══════════════════════════════════════════════════════════════════════
+    const TRACE_SUBJECTS = [
+      {
+        id:"house", label:"🏠 House", color:"#e8957a",
+        paths:[
+          { type:"rect", x:160, y:200, w:230, h:160 },
+          { type:"triangle", pts:[[155,200],[395,200],[275,90]] },
+          { type:"rect", x:240, y:280, w:70, h:80 },
+          { type:"rect", x:180, y:225, w:60, h:55 },
+          { type:"rect", x:310, y:225, w:60, h:55 },
+        ],
+        hint:"Trace the house outline: walls, roof, door and windows",
+      },
+      {
+        id:"tree", label:"🌳 Tree", color:"#7ab89a",
+        paths:[
+          { type:"circle", cx:275, cy:180, r:100 },
+          { type:"rect", x:255, y:270, w:40, h:120 },
+          { type:"circle", cx:200, cy:220, r:65 },
+          { type:"circle", cx:350, cy:210, r:70 },
+        ],
+        hint:"Trace the big tree: the round leafy top and the trunk",
+      },
+      {
+        id:"sun", label:"☀️ Sun & Sky", color:"#e8b86d",
+        paths:[
+          { type:"circle", cx:275, cy:200, r:70 },
+          { type:"line", pts:[[275,70],[275,100]] },
+          { type:"line", pts:[[275,300],[275,330]] },
+          { type:"line", pts:[[145,200],[175,200]] },
+          { type:"line", pts:[[375,200],[405,200]] },
+          { type:"line", pts:[[177,102],[200,125]] },
+          { type:"line", pts:[[350,275],[373,298]] },
+          { type:"line", pts:[[177,298],[200,275]] },
+          { type:"line", pts:[[350,125],[373,102]] },
+        ],
+        hint:"Trace the sun circle and all of its rays",
+      },
+    ];
+
+    function drawOutline(ctx, subject, alpha = 0.15) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(100,100,100,${alpha})`;
+      ctx.fillStyle   = `rgba(200,200,200,${alpha * 0.5})`;
+      ctx.lineWidth = 4;
+      ctx.setLineDash([10, 6]);
+      subject.paths.forEach(p => {
+        ctx.beginPath();
+        if (p.type === "rect") { ctx.rect(p.x, p.y, p.w, p.h); }
+        else if (p.type === "circle") { ctx.arc(p.cx, p.cy, p.r, 0, Math.PI*2); }
+        else if (p.type === "triangle") { ctx.moveTo(p.pts[0][0],p.pts[0][1]); p.pts.slice(1).forEach(pt=>ctx.lineTo(pt[0],pt[1])); ctx.closePath(); }
+        else if (p.type === "line") { ctx.moveTo(p.pts[0][0],p.pts[0][1]); ctx.lineTo(p.pts[1][0],p.pts[1][1]); }
+        ctx.stroke(); ctx.fill();
+      });
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+
+    function GuidedTracing({ achDispatch }) {
+      const canvasRef    = useRef(null);
+      const [subject, setSubject] = useState(TRACE_SUBJECTS[0]);
+      const [brushColor, setBrushColor] = useState("#e8957a");
+      const [brushSize, setBrushSize]   = useState(12);
+      const [accuracy, setAccuracy]     = useState(0);
+      const [done, setDone]     = useState(false);
+      const [showOutline, setShowOutline] = useState(true);
+      const isDrawing = useRef(false);
+      const lastPoint = useRef(null);
+      const pixelsDrawn = useRef(0);
+
+      useEffect(() => { initCanvas(); speak(`Let's trace a ${subject.label.replace(/[^\w\s]/g,'').trim()}. ${subject.hint}`); }, [subject]);
+
+      function initCanvas() {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#faf7f2"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        if (showOutline) drawOutline(ctx, subject, 0.18);
+        pixelsDrawn.current = 0; setAccuracy(0); setDone(false);
+      }
+
+      useEffect(() => { initCanvas(); }, [showOutline]);
+
+      function getPos(e) {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+        const src = e.touches ? e.touches[0] : e;
+        return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+      }
+
+      function checkProximityToOutline(x, y) {
+        let minDist = Infinity;
+        subject.paths.forEach(p => {
+          if (p.type === "circle") {
+            const d = Math.abs(Math.hypot(x - p.cx, y - p.cy) - p.r);
+            minDist = Math.min(minDist, d);
+          } else if (p.type === "rect") {
+            const edges = [
+              Math.abs(y - p.y), Math.abs(y - (p.y+p.h)),
+              Math.abs(x - p.x), Math.abs(x - (p.x+p.w)),
+            ];
+            if (x >= p.x-20 && x <= p.x+p.w+20 && y >= p.y-20 && y <= p.y+p.h+20)
+              minDist = Math.min(minDist, Math.min(...edges));
+          } else if (p.type === "line") {
+            const [x1,y1] = p.pts[0], [x2,y2] = p.pts[1];
+            const len = Math.hypot(x2-x1, y2-y1);
+            const t = Math.max(0, Math.min(1, ((x-x1)*(x2-x1)+(y-y1)*(y2-y1)) / (len*len)));
+            minDist = Math.min(minDist, Math.hypot(x-(x1+t*(x2-x1)), y-(y1+t*(y2-y1))));
+          }
+        });
+        return minDist < 22;
+      }
+
+      function startDraw(e) { e.preventDefault(); isDrawing.current = true; lastPoint.current = getPos(e); playBrush(); }
+
+      function draw(e) {
+        e.preventDefault();
+        if (!isDrawing.current) return;
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const pos = getPos(e);
+        const last = lastPoint.current;
+        const onOutline = checkProximityToOutline(pos.x, pos.y);
+
+        ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = onOutline ? brushColor : brushColor + "88";
+        ctx.lineWidth = brushSize; ctx.lineCap = "round"; ctx.lineJoin = "round";
+        ctx.globalAlpha = onOutline ? 0.85 : 0.45;
+        ctx.stroke(); ctx.globalAlpha = 1;
+        lastPoint.current = pos;
+
+        const dist = Math.hypot(pos.x - last.x, pos.y - last.y);
+        if (onOutline) pixelsDrawn.current += dist;
+
+        const totalOutlineLen = subject.paths.reduce((s, p) => {
+          if (p.type === "circle") return s + 2 * Math.PI * p.r;
+          if (p.type === "rect")   return s + 2*(p.w+p.h);
+          if (p.type === "line")   return s + Math.hypot(p.pts[1][0]-p.pts[0][0], p.pts[1][1]-p.pts[0][1]);
+          if (p.type === "triangle") return s + p.pts.reduce((t,pt,i)=>{const n=p.pts[(i+1)%3]; return t+Math.hypot(n[0]-pt[0],n[1]-pt[1]);},0);
+          return s;
+        }, 0);
+        const acc = Math.min(100, Math.round((pixelsDrawn.current / totalOutlineLen) * 100));
+        setAccuracy(acc);
+
+        if (acc >= 65 && !done) {
+          setDone(true);
+          playSuccess();
+          achDispatch({ type:"TRACING" });
+          achDispatch({ type:"POINTS", val:40 });
+          achDispatch({ type:"ACCURACY", val:acc });
+          if (acc >= 80) achDispatch({ type:"POINTS", val:20 });
+          speak(`Great tracing! You achieved ${acc} percent accuracy. ${acc >= 80 ? "Excellent precision!" : "Well done, keep practicing!"}`);
+        }
+      }
+
+      function stopDraw() { isDrawing.current = false; }
+
+      const accColor = accuracy < 40 ? "var(--coral)" : accuracy < 70 ? "var(--gold)" : "var(--sage)";
+      const accLabel = accuracy < 40 ? "Keep going!" : accuracy < 70 ? "Good effort!" : accuracy < 85 ? "Great work!" : "Excellent!";
+
+      return (
+        <div style={{ display:"flex", height:"calc(100vh - 64px)", background:"var(--cream)" }}>
+          <div style={{ width:200, background:"var(--card)", borderRight:"2px solid var(--border)", padding:"16px 12px", display:"flex", flexDirection:"column", gap:10, flexShrink:0 }}>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:15, fontWeight:900, color:"var(--textMid)", marginBottom:4 }}>✏️ Choose to Trace</div>
+            {TRACE_SUBJECTS.map(s => (
+              <button key={s.id} onClick={() => { setSubject(s); setBrushColor(s.color); }}
+                style={{
+                  background: subject.id===s.id ? s.color+"40" : "var(--warm)",
+                  border:`2px solid ${subject.id===s.id ? s.color : "var(--border)"}`,
+                  borderRadius:14, padding:"12px 14px", cursor:"pointer",
+                  textAlign:"left", fontFamily:"var(--font)", transition:"all 0.2s",
+                }}>
+                <div style={{ fontSize:22, marginBottom:4 }}>{s.label.split(" ")[0]}</div>
+                <div style={{ fontWeight:700, fontSize:14, color:"var(--text)" }}>{s.label.split(" ").slice(1).join(" ")}</div>
+                <div style={{ fontSize:11, color:"var(--textSoft)", marginTop:3, lineHeight:1.4 }}>{s.hint}</div>
+              </button>
+            ))}
+            <div style={{ marginTop:"auto" }}>
+              <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer", fontSize:13, fontWeight:700, color:"var(--textMid)", padding:"8px 0" }}>
+                <input type="checkbox" checked={showOutline} onChange={e=>{setShowOutline(e.target.checked); initCanvas();}} style={{ width:18, height:18, accentColor:"var(--slate)", cursor:"pointer" }} />
+                Show Outline
+              </label>
+            </div>
+          </div>
+
+          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:20, gap:16 }}>
+            <div style={{ width:"100%", maxWidth:560, background:"var(--card)", borderRadius:16, padding:"12px 18px", border:"2px solid var(--border)", display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ fontSize:22 }}>{accuracy < 40 ? "✏️" : accuracy < 70 ? "🎯" : "⭐"}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:"var(--textMid)" }}>Tracing Accuracy</span>
+                  <span style={{ fontSize:14, fontWeight:900, color:accColor }}>{accuracy}% — {accLabel}</span>
+                </div>
+                <div style={{ height:10, background:"var(--border)", borderRadius:8, overflow:"hidden" }}>
+                  <div style={{ height:"100%", background:`linear-gradient(90deg, ${accColor}, ${accColor}cc)`, width:`${accuracy}%`, borderRadius:8, transition:"width 0.4s ease" }} />
+                </div>
+              </div>
+            </div>
+
+            <div style={{ position:"relative" }}>
+              <canvas ref={canvasRef} width={560} height={400}
+                className="canvas-cursor"
+                onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+                onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
+                style={{ borderRadius:20, border:"3px solid var(--border)", boxShadow:"var(--shadowLg)", display:"block", maxWidth:"100%", touchAction:"none" }}
+                aria-label={`Tracing canvas. Trace the ${subject.label} outline. Current accuracy: ${accuracy} percent.`}
+              />
+              {done && (
+                <div style={{ position:"absolute", inset:0, background:"rgba(255,255,255,0.85)", borderRadius:20, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:10, animation:"softPop 0.5s ease" }}>
+                  <div style={{ fontSize:52 }}>{accuracy >= 80 ? "🎯" : "🌟"}</div>
+                  <div style={{ fontFamily:"var(--fontHead)", fontSize:26, fontWeight:900, color:"var(--slate)" }}>
+                    {accuracy >= 80 ? "Precision Master!" : "Great Tracing!"}
+                  </div>
+                  <div style={{ fontSize:16, color:"var(--textMid)" }}>Accuracy: <strong style={{color:accColor}}>{accuracy}%</strong></div>
+                  <div style={{ fontSize:15, color:"var(--gold)", fontWeight:700 }}>+{accuracy >= 80 ? 60 : 40} points earned!</div>
+                  <button onClick={() => { initCanvas(); setDone(false); speak("Let's trace again!"); }}
+                    style={{ background:"var(--slate)", color:"#fff", border:"none", borderRadius:14, padding:"10px 24px", fontFamily:"var(--fontHead)", fontSize:15, fontWeight:800, cursor:"pointer", marginTop:6 }}>
+                    🔄 Trace Again
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div style={{ background:"var(--card)", borderRadius:18, padding:"12px 20px", border:`2.5px solid ${subject.color}`, maxWidth:540, width:"100%", display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ fontSize:24 }}>{subject.label.split(" ")[0]}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"var(--fontHead)", fontWeight:800, fontSize:15, color:"var(--text)", marginBottom:3 }}>Trace the {subject.label.split(" ").slice(1).join(" ")}</div>
+                <div style={{ fontSize:13, color:"var(--textMid)" }}>{subject.hint}</div>
+              </div>
+              <button onClick={() => speak(subject.hint)} style={{ background:"var(--skyL)", border:"2px solid var(--sky)", borderRadius:10, padding:"7px 12px", fontSize:13, cursor:"pointer", fontWeight:700, color:"var(--slate)" }}>🔊</button>
+            </div>
+          </div>
+
+          <div style={{ width:170, background:"var(--card)", borderLeft:"2px solid var(--border)", padding:"16px 12px", display:"flex", flexDirection:"column", gap:14, flexShrink:0 }}>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:14, fontWeight:900, color:"var(--textMid)" }}>🖌️ Brush</div>
+            <div>
+              <label style={{ fontSize:12, color:"var(--textSoft)", marginBottom:4, display:"block" }}>Size: {brushSize}px</label>
+              <input type="range" min={4} max={28} value={brushSize} onChange={e=>setBrushSize(+e.target.value)}
+                style={{ width:"100%", accentColor:"var(--slate)", cursor:"pointer" }} />
+            </div>
+            <div>
+              <div style={{ fontSize:12, color:"var(--textSoft)", marginBottom:6 }}>Color</div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:5 }}>
+                {SAFE_PALETTE.slice(0,9).map(c=>(
+                  <button key={c.hex} onClick={()=>setBrushColor(c.hex)} title={c.name}
+                    style={{ width:"100%", aspectRatio:"1", borderRadius:9, background:c.hex, border:`3px solid ${brushColor===c.hex?"var(--text)":"transparent"}`, cursor:"pointer" }} />
+                ))}
+              </div>
+            </div>
+            <button onClick={() => { const ctx = canvasRef.current?.getContext("2d"); if(ctx){ctx.clearRect(0,0,canvasRef.current.width,canvasRef.current.height); ctx.fillStyle="#faf7f2"; ctx.fillRect(0,0,canvasRef.current.width,canvasRef.current.height); if(showOutline)drawOutline(ctx,subject,0.18); pixelsDrawn.current=0; setAccuracy(0); setDone(false);} speak("Canvas cleared. Let's try again!"); }}
+              style={{ background:"var(--coralL)", border:"2px solid var(--coral)", borderRadius:12, padding:"9px", fontFamily:"var(--font)", fontSize:13, cursor:"pointer", fontWeight:700, color:"#6a1a0a" }}>
+              🗑️ Clear
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MODE C: FREE STUDIO
+    // ═══════════════════════════════════════════════════════════════════════
+    const TEXTURES = [
+      { id:"smooth",  name:"Smooth",  icon:"—",  apply:(ctx,x,y,r,c,a)=>{ ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fillStyle=c; ctx.globalAlpha=a; ctx.fill(); } },
+      { id:"rough",   name:"Rough",   icon:"≈",  apply:(ctx,x,y,r,c,a)=>{ for(let i=0;i<8;i++){const ox=(Math.random()-0.5)*r*1.4,oy=(Math.random()-0.5)*r*1.4; ctx.beginPath(); ctx.arc(x+ox,y+oy,r*0.35,0,Math.PI*2); ctx.fillStyle=c; ctx.globalAlpha=a*0.7; ctx.fill(); } } },
+      { id:"splatter",name:"Splatter",icon:"*",  apply:(ctx,x,y,r,c,a)=>{ for(let i=0;i<12;i++){const angle=Math.random()*Math.PI*2,dist=Math.random()*r*2; ctx.beginPath(); ctx.arc(x+Math.cos(angle)*dist,y+Math.sin(angle)*dist,r*0.15,0,Math.PI*2); ctx.fillStyle=c; ctx.globalAlpha=a*0.6; ctx.fill(); } } },
+      { id:"watercolor",name:"Water", icon:"≋",  apply:(ctx,x,y,r,c,a)=>{ for(let i=0;i<3;i++){ctx.beginPath(); ctx.arc(x+(Math.random()-0.5)*r*0.5,y+(Math.random()-0.5)*r*0.5,r*(0.8+Math.random()*0.5),0,Math.PI*2); ctx.fillStyle=c; ctx.globalAlpha=a*0.25; ctx.fill();} } },
+    ];
+
+    function FreeStudio({ achDispatch }) {
+      const canvasRef   = useRef(null);
+      const historyRef  = useRef([]);
+      const redoRef     = useRef([]);
+      const [color, setColor]     = useState("#89b4d4");
+      const [brushSize, setBrushSize] = useState(16);
+      const [texture, setTexture] = useState(TEXTURES[0]);
+      const [opacity, setOpacity] = useState(0.8);
+      const [strokes, setStrokes] = useState(0);
+      const [colorsUsed, setColorsUsed] = useState(new Set());
+      const [saved, setSaved]     = useState(false);
+      const [creativityScore, setCreativityScore] = useState(0);
+      const isDrawing = useRef(false);
+      const lastPoint = useRef(null);
+      const strokeRef = useRef(0);
+
+      useEffect(() => {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#faf7f2"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        speak("Welcome to the Free Studio! Pick a color, choose your brush, and create anything you imagine!");
+      }, []);
+
+      useEffect(() => {
+        const score = Math.min(100, (colorsUsed.size * 8) + (strokes * 2));
+        setCreativityScore(score);
+        if (colorsUsed.size >= 8) achDispatch({ type:"COLOR", color:"8colors" });
+      }, [strokes, colorsUsed.size]);
+
+      function getPos(e) {
+        const canvas = canvasRef.current;
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+        const src = e.touches ? e.touches[0] : e;
+        return { x: (src.clientX - rect.left) * scaleX, y: (src.clientY - rect.top) * scaleY };
+      }
+
+      function saveSnapshot() {
+        const canvas = canvasRef.current; if (!canvas) return;
+        historyRef.current.push(canvas.toDataURL());
+        if (historyRef.current.length > 20) historyRef.current.shift();
+        redoRef.current = [];
+      }
+
+      function startDraw(e) {
+        e.preventDefault();
+        saveSnapshot();
+        isDrawing.current = true;
+        lastPoint.current = getPos(e);
+        achDispatch({ type:"STROKE" });
+        setColorsUsed(s => new Set([...s, color]));
+        achDispatch({ type:"COLOR", color });
+        playBrush();
+      }
+
+      function draw(e) {
+        e.preventDefault();
+        if (!isDrawing.current) return;
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const pos = getPos(e);
+        const last = lastPoint.current;
+
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = brushSize; ctx.lineCap = "round"; ctx.lineJoin = "round";
+
+        if (texture.id === "smooth" || texture.id === "watercolor") {
+          ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(pos.x, pos.y);
+          ctx.strokeStyle = color; ctx.globalAlpha = texture.id === "watercolor" ? opacity * 0.3 : opacity;
+          ctx.stroke();
+        }
+
+        const dist = Math.hypot(pos.x - last.x, pos.y - last.y);
+        const steps = Math.max(1, Math.floor(dist / 4));
+        for (let i = 0; i < steps; i++) {
+          const t = i / steps;
+          const px = last.x + (pos.x - last.x) * t;
+          const py = last.y + (pos.y - last.y) * t;
+          texture.apply(ctx, px, py, brushSize * 0.5, color, opacity);
+        }
+        ctx.globalAlpha = 1;
+        lastPoint.current = pos;
+        strokeRef.current++;
+        if (strokeRef.current % 8 === 0) setStrokes(s => s + 1);
+      }
+
+      function stopDraw() { isDrawing.current = false; }
+
+      function undo() {
+        if (historyRef.current.length === 0) return;
+        const canvas = canvasRef.current; if (!canvas) return;
+        redoRef.current.push(canvas.toDataURL());
+        const prev = historyRef.current.pop();
+        const img = new Image(); img.src = prev;
+        img.onload = () => { const ctx = canvas.getContext("2d"); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+        speak("Undo!");
+      }
+
+      function redo() {
+        if (redoRef.current.length === 0) return;
+        const canvas = canvasRef.current; if (!canvas) return;
+        historyRef.current.push(canvas.toDataURL());
+        const next = redoRef.current.pop();
+        const img = new Image(); img.src = next;
+        img.onload = () => { const ctx = canvas.getContext("2d"); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); };
+        speak("Redo!");
+      }
+
+      function clearCanvas() {
+        saveSnapshot();
+        const canvas = canvasRef.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#faf7f2"; ctx.fillRect(0,0,canvas.width,canvas.height);
+        setStrokes(0); setColorsUsed(new Set()); setCreativityScore(0);
+        speak("Canvas cleared! Start fresh.");
+      }
+
+      function saveArtwork() {
+        const canvas = canvasRef.current; if (!canvas) return;
+        const dataURL = canvas.toDataURL("image/png");
+        const a = document.createElement("a"); a.href = dataURL; a.download = "my-artflow-painting.png"; a.click();
+        setSaved(true);
+        achDispatch({ type:"SAVE" }); achDispatch({ type:"STUDIO" }); achDispatch({ type:"POINTS", val:20 });
+        speak("Your artwork has been saved! Wonderful creation!");
+        setTimeout(() => setSaved(false), 3000);
+      }
+
+      const scoreColor = creativityScore < 30 ? "var(--slate)" : creativityScore < 65 ? "var(--gold)" : "var(--sage)";
+
+      return (
+        <div style={{ display:"flex", height:"calc(100vh - 64px)", background:"var(--cream)" }}>
+          <div style={{ width:200, background:"var(--card)", borderRight:"2px solid var(--border)", padding:"14px 12px", display:"flex", flexDirection:"column", gap:12, overflowY:"auto", flexShrink:0 }}>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:15, fontWeight:900, color:"var(--textMid)" }}>🎨 Colors</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:5 }}>
+              {SAFE_PALETTE.map(c => (
+                <button key={c.hex} onClick={() => { setColor(c.hex); setColorsUsed(s=>new Set([...s,c.hex])); speak(c.name); }}
+                  title={c.name} aria-label={`Color: ${c.name}`}
+                  style={{ width:"100%", aspectRatio:"1", borderRadius:8, background:c.hex, border:`3px solid ${color===c.hex?"var(--text)":"rgba(0,0,0,0.06)"}`, cursor:"pointer", transition:"transform 0.15s", transform: color===c.hex?"scale(1.1)":"scale(1)" }}
+                />
+              ))}
+            </div>
+            <div style={{ height:1, background:"var(--border)" }} />
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:14, fontWeight:900, color:"var(--textMid)" }}>🖌️ Texture</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:6 }}>
+              {TEXTURES.map(t => (
+                <button key={t.id} onClick={() => { setTexture(t); speak(`${t.name} brush`); }}
+                  style={{ background: texture.id===t.id ? "var(--skyL)" : "var(--warm)", border:`2px solid ${texture.id===t.id?"var(--sky)":"var(--border)"}`, borderRadius:10, padding:"8px 6px", cursor:"pointer", fontSize:13, fontWeight:700, color: texture.id===t.id?"var(--slate)":"var(--textMid)" }}>
+                  <div style={{ fontSize:18 }}>{t.icon}</div>
+                  <div style={{ fontSize:11, marginTop:3 }}>{t.name}</div>
+                </button>
+              ))}
+            </div>
+            <div style={{ height:1, background:"var(--border)" }} />
+            <div>
+              <label style={{ fontSize:12, color:"var(--textSoft)", marginBottom:4, display:"block", fontWeight:700 }}>Size: {brushSize}px</label>
+              <input type="range" min={2} max={60} value={brushSize} onChange={e=>setBrushSize(+e.target.value)}
+                style={{ width:"100%", accentColor:"var(--slate)", cursor:"pointer" }} aria-label={`Brush size: ${brushSize}`} />
+            </div>
+            <div>
+              <label style={{ fontSize:12, color:"var(--textSoft)", marginBottom:4, display:"block", fontWeight:700 }}>Opacity: {Math.round(opacity*100)}%</label>
+              <input type="range" min={0.1} max={1} step={0.05} value={opacity} onChange={e=>setOpacity(+e.target.value)}
+                style={{ width:"100%", accentColor:"var(--lavender)", cursor:"pointer" }} aria-label={`Opacity: ${Math.round(opacity*100)} percent`} />
+            </div>
+          </div>
+
+          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"16px", gap:14 }}>
+            <div style={{ width:"100%", maxWidth:580, background:"var(--card)", borderRadius:16, padding:"10px 18px", border:"2px solid var(--border)", display:"flex", alignItems:"center", gap:14 }}>
+              <span style={{ fontSize:20 }}>🌟</span>
+              <div style={{ flex:1 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                  <span style={{ fontSize:13, fontWeight:700, color:"var(--textMid)" }}>Creativity Score</span>
+                  <span style={{ fontSize:13, fontWeight:900, color:scoreColor }}>{creativityScore}/100</span>
+                </div>
+                <div style={{ height:8, background:"var(--border)", borderRadius:6, overflow:"hidden" }}>
+                  <div style={{ height:"100%", background:`linear-gradient(90deg, var(--skyL), ${scoreColor})`, width:`${creativityScore}%`, borderRadius:6, transition:"width 0.5s ease" }} />
+                </div>
+              </div>
+              <div style={{ fontSize:12, color:"var(--textSoft)", textAlign:"right", minWidth:80 }}>
+                <div>{colorsUsed.size} colors</div>
+                <div>{strokes} strokes</div>
+              </div>
+            </div>
+
+            <canvas ref={canvasRef} width={580} height={400}
+              className="canvas-cursor"
+              onMouseDown={startDraw} onMouseMove={draw} onMouseUp={stopDraw} onMouseLeave={stopDraw}
+              onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={stopDraw}
+              style={{ borderRadius:20, border:"3px solid var(--border)", boxShadow:"var(--shadowLg)", display:"block", maxWidth:"100%", touchAction:"none" }}
+              aria-label="Free Studio canvas. Draw anything you like!"
+            />
+
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"center" }}>
+              {[
+                { icon:"↩️", label:"Undo",  action:undo,       bg:"var(--warm)",   border:"var(--border)" },
+                { icon:"↪️", label:"Redo",  action:redo,       bg:"var(--warm)",   border:"var(--border)" },
+                { icon:"🗑️", label:"Clear", action:clearCanvas,bg:"var(--coralL)", border:"var(--coral)"  },
+              ].map(b=>(
+                <button key={b.label} onClick={b.action}
+                  style={{ background:b.bg, border:`2px solid ${b.border}`, borderRadius:14, padding:"10px 18px", fontFamily:"var(--fontHead)", fontSize:15, fontWeight:800, cursor:"pointer", display:"flex", alignItems:"center", gap:7, color:"var(--text)" }}>
+                  {b.icon} {b.label}
+                </button>
+              ))}
+              <button onClick={saveArtwork}
+                style={{ background: saved ? "var(--sageL)" : "linear-gradient(135deg, var(--sage), var(--teal,#4db6ac))", border:`2px solid var(--sage)`, borderRadius:14, padding:"10px 22px", fontFamily:"var(--fontHead)", fontSize:15, fontWeight:800, cursor:"pointer", color:"#fff", display:"flex", alignItems:"center", gap:7, boxShadow:"0 4px 16px rgba(122,184,154,0.4)" }}>
+                {saved ? "✅ Saved!" : "💾 Save Artwork"}
+              </button>
+              <button onClick={() => speak("In the free studio, pick any color and brush. Draw whatever you imagine. Your creativity score goes up when you use more colors and strokes!")}
+                style={{ background:"var(--skyL)", border:"2px solid var(--sky)", borderRadius:14, padding:"10px 16px", fontFamily:"var(--fontHead)", fontSize:14, fontWeight:800, cursor:"pointer", color:"var(--slate)" }}>
+                🔊
+              </button>
+            </div>
+          </div>
+
+          <div style={{ width:180, background:"var(--card)", borderLeft:"2px solid var(--border)", padding:"14px 12px", display:"flex", flexDirection:"column", gap:10, overflowY:"auto", flexShrink:0 }}>
+            <div style={{ fontFamily:"var(--fontHead)", fontSize:14, fontWeight:900, color:"var(--textMid)" }}>🌿 Stamp</div>
+            <div style={{ fontSize:12, color:"var(--textSoft)", lineHeight:1.5 }}>Click a stamp to add it to your painting!</div>
+            {[
+              {emoji:"☀️",label:"Sun"},{emoji:"🌙",label:"Moon"},{emoji:"⭐",label:"Star"},
+              {emoji:"☁️",label:"Cloud"},{emoji:"🌸",label:"Flower"},{emoji:"🦋",label:"Butterfly"},
+              {emoji:"🌳",label:"Tree"},{emoji:"🏔️",label:"Mountain"},{emoji:"🌊",label:"Wave"},
+              {emoji:"🌈",label:"Rainbow"},{emoji:"🦜",label:"Bird"},{emoji:"❤️",label:"Heart"},
+            ].map(stamp=>(
+              <button key={stamp.emoji}
+                draggable
+                onClick={() => {
+                  const canvas = canvasRef.current; if(!canvas) return;
+                  const ctx = canvas.getContext("2d");
+                  saveSnapshot();
+                  ctx.font = `${brushSize + 24}px serif`;
+                  ctx.globalAlpha = opacity;
+                  ctx.fillText(stamp.emoji, Math.random()*(canvas.width-80)+20, Math.random()*(canvas.height-80)+60);
+                  ctx.globalAlpha = 1;
+                  speak(`Added ${stamp.label} stamp!`);
+                  setStrokes(s=>s+2);
+                }}
+                style={{ display:"flex", alignItems:"center", gap:10, background:"var(--warm)", border:"1.5px solid var(--border)", borderRadius:12, padding:"8px 10px", cursor:"pointer", fontSize:14, fontWeight:700, color:"var(--text)", textAlign:"left" }}>
+                <span style={{ fontSize:22 }}>{stamp.emoji}</span> {stamp.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // ROOT APP
+    // ═══════════════════════════════════════════════════════════════════════
+    const INIT_ACH = { earned:[], justEarned:null, totalPts:0, strokes:0, layers:0, scenes:0, tracings:0, accuracy:0, studio:0, colors:[], saves:0 };
+
+    function ArtFlow() {
+      useEffect(() => { injectStyles(); }, []);
+
+      const [achState, achDispatch] = useReducer(achReducer, INIT_ACH);
+      const [screen, setScreen]     = useState("home"); // home | layer | tracing | studio
+      const [calmMode, setCalmMode]   = useState(true);
+      const [focusMode, setFocusMode] = useState(false);
+
+      const modeLabel = { home:"", layer:"Layer Builder", tracing:"Guided Tracing", studio:"Free Studio" };
+
+      function goHome() { setScreen("home"); speak("Back to the gallery. Choose your next adventure!"); }
+      function goMode(m) { setScreen(m); achDispatch({ type:"POINTS", val:0 }); }
+
+      return (
+        <div style={{ minHeight:"100vh", fontFamily:"var(--font)", background:"var(--cream)", fontSize: "clamp(14px,1.6vw,17px)" }}>
+          {screen !== "home" && (
+            <ScoreHeader
+              state={achState} onMenu={goHome} mode={modeLabel[screen]}
+              calmMode={calmMode} setCalmMode={setCalmMode}
+              focusMode={focusMode} setFocusMode={setFocusMode}
+            />
+          )}
+
+          {screen === "home"    && <HomeScreen achState={achState} onSelect={goMode} />}
+          {screen === "layer"   && <LayerBuilder   achDispatch={achDispatch} calmMode={calmMode} />}
+          {screen === "tracing" && <GuidedTracing   achDispatch={achDispatch} />}
+          {screen === "studio"  && <FreeStudio      achDispatch={achDispatch} />}
+
+          {achState.justEarned && (
+            <BadgeToast achId={achState.justEarned} onClose={() => achDispatch({ type:"CLEAR_JUST" })} />
+          )}
+        </div>
+      );
+    }
+
+    // Render the React app into the DOM
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<ArtFlow />);
+  </script>
+</body>
+</html>

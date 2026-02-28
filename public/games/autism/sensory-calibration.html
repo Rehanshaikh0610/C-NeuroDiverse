@@ -2,779 +2,606 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sensory Calibration Challenge</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --success: #38b000;
+            --warning: #f4a261;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
             transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
         }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
+            position: absolute; top: 20px; width: 100%; max-width: 900px;
+            display: flex; justify-content: space-between; padding: 0 20px;
+            z-index: 100;
         }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 16px; font-family: var(--font-head); font-size: 1rem;
+            cursor: pointer; color: inherit; transition: all 0.3s ease; font-weight: 800;
         }
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
         h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 900; margin: 40px 0 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
         #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
+            display: flex; gap: 20px; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 10px; background: rgba(0,0,0,0.05);
+            padding: 10px 25px; border-radius: 20px;
         }
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+        .streak-text { color: #ff9f1c; font-weight: 900; animation: pulse 1.5s infinite; }
+
+        /* Main Container */
         #game-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
+            width: 95%; max-width: 900px; background: var(--card-bg);
+            padding: 25px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+            display: flex; flex-direction: column; align-items: center;
         }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
+        body.dark #game-container { background: var(--card-dark); border-color: rgba(255,255,255,0.1); }
+
+        /* Scenario Box Layout */
+        .scenario-box {
+            display: flex; flex-direction: column; gap: 10px; width: 100%;
+            background: rgba(0, 0, 0, 0.04); padding: 20px; border-radius: 16px;
+            margin-bottom: 15px; position: relative;
         }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
-        }
-        .instructions {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.1em;
-        }
-        .sensory-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .sensory-title {
-            font-size: 1.3em;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        .sensory-description {
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
+        body.dark .scenario-box { background: rgba(255, 255, 255, 0.05); }
+
+        .scenario-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .scenario-title { font-family: var(--font-head); font-size: 1.6rem; font-weight: 800; color: var(--primary); text-align: left;}
+        
+        .read-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s; margin-left: 10px; }
+        .read-btn:hover { transform: scale(1.15); }
+        
+        .scenario-description { font-size: 1.15rem; line-height: 1.6; text-align: left; }
+        
         .sensory-image {
-            width: 100%;
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            border-radius: 10px;
-            margin-bottom: 15px;
+            width: 100%; height: 120px; border-radius: 12px; margin-top: 10px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+            transition: background 0.5s ease, opacity 0.3s ease;
         }
-        .sensory-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 20px 0;
+
+        /* Sliders Layout */
+        .sliders-wrapper {
+            display: flex; flex-direction: column; gap: 15px; width: 100%;
+            margin-bottom: 25px;
         }
-        .slider-container {
-            width: 100%;
-            margin: 10px 0;
+        @media(min-width: 650px) {
+            .sliders-wrapper { flex-direction: row; }
         }
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
+
+        .slider-card {
+            background: rgba(0,0,0,0.03); border-radius: 16px; padding: 18px;
+            flex: 1; border: 1px solid rgba(0,0,0,0.05); text-align: left;
         }
-        .slider {
-            width: 100%;
-            height: 20px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            outline: none;
+        body.dark .slider-card { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+        
+        .slider-label { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 12px; font-size: 1.1rem; flex-wrap: wrap; gap: 5px; }
+        .slider-hint { font-size: 0.9rem; font-style: italic; opacity: 0.7; margin-top: 8px; }
+        
+        input[type=range] {
+            width: 100%; -webkit-appearance: none; background: transparent; margin: 10px 0;
         }
-        .slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #4CAF50;
-            cursor: pointer;
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 14px; border-radius: 7px;
+            background: linear-gradient(90deg, #4facfe, #4caf50, #f4a261, #e63946);
         }
+        input[type=range]::-webkit-slider-thumb {
+            height: 28px; width: 28px; border-radius: 50%; background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4); cursor: pointer;
+            -webkit-appearance: none; margin-top: -7px;
+        }
+
+        /* Strategy Cards Grid */
+        .section-title { font-family: var(--font-head); font-size: 1.4rem; font-weight: 800; width: 100%; text-align: left; margin-bottom: 15px; }
+
         .strategies-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px 0;
+            display: grid; grid-template-columns: 1fr; gap: 15px; width: 100%; margin-bottom: 20px;
         }
+        @media(min-width: 650px) {
+            .strategies-container { grid-template-columns: repeat(2, 1fr); }
+        }
+        
         .strategy-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background: rgba(0, 0, 0, 0.03); border: 2px solid transparent; border-radius: 16px;
+            padding: 18px; cursor: pointer; text-align: left; height: 100%;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; align-items: flex-start; gap: 15px;
         }
+        body.dark .strategy-card { background: rgba(255, 255, 255, 0.05); }
+        
         .strategy-card:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-5px);
+            transform: translateY(-4px); background: rgba(74, 144, 226, 0.1); border-color: rgba(74, 144, 226, 0.5);
         }
         .strategy-card.selected {
-            background: rgba(76, 175, 80, 0.3);
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+            background: rgba(74, 144, 226, 0.2); border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.2); transform: scale(1.02);
         }
-        .strategy-card.correct {
-            background: rgba(76, 175, 80, 0.3);
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+        .strategy-card.correct-ans { background: rgba(56, 176, 0, 0.15) !important; border-color: var(--success); }
+        .strategy-card.wrong-ans { background: rgba(230, 57, 70, 0.15) !important; border-color: var(--error); opacity: 0.6; }
+
+        .strategy-icon { font-size: 2.2rem; flex-shrink: 0; margin-top: -5px; }
+        .strategy-info { display: flex; flex-direction: column; gap: 5px; }
+        .strategy-title { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; }
+        .strategy-desc { font-size: 1rem; opacity: 0.9; line-height: 1.4; }
+
+        /* Buttons & Feedback */
+        .btn-row { display: flex; width: 100%; justify-content: center; margin-top: 10px; }
+        
+        .action-btn {
+            padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
-        .strategy-card.incorrect {
-            background: rgba(244, 67, 54, 0.3);
-            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
-        }
-        .strategy-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        .strategy-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .strategy-description {
-            font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        .timer-container {
-            margin: 20px 0;
-            position: relative;
-        }
-        .timer-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .timer-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #ff9800, #f44336);
-            transition: width 0.1s linear;
-            width: 100%;
-        }
-        .timer-text {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            line-height: 20px;
-            font-weight: bold;
-        }
-        .button {
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: rgba(33, 150, 243, 0.7);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            margin: 10px;
-        }
-        .button:hover {
-            background: rgba(33, 150, 243, 0.9);
-        }
-        .button.start {
-            background: rgba(76, 175, 80, 0.7);
-        }
-        .button.start:hover {
-            background: rgba(76, 175, 80, 0.9);
-        }
+        #start-button { background: linear-gradient(135deg, #4A90E2, #0072ff); display: block; margin: 0 auto; }
+        #submit-button { background: linear-gradient(135deg, var(--warning), #e76f51); display: none; }
+        #next-button { background: linear-gradient(135deg, #38b000, #008000); display: none; }
+        #restart-btn { background: var(--error); display:none; margin-top: 20px; }
+        .action-btn:hover { transform: translateY(-3px); }
+
         .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            display: none;
+            margin-top: 20px; padding: 15px; border-radius: 14px; width: 100%;
+            font-size: 1.2rem; font-weight: 700; display: none;
+            animation: slideUp 0.3s ease forwards;
         }
-        .feedback.correct {
-            background: rgba(76, 175, 80, 0.2);
+        .feedback.correct { background: rgba(56, 176, 0, 0.15); color: #2b8a00; border: 2px solid rgba(56,176,0,0.3);}
+        .feedback.incorrect { background: rgba(230, 57, 70, 0.15); color: #c1121f; border: 2px solid rgba(230,57,70,0.3);}
+        body.dark .feedback.correct { color: #80ed99; }
+        body.dark .feedback.incorrect { color: #ffb3c1; }
+
+        /* Timer & Progress */
+        .timer-bar {
+            width: 100%; height: 10px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; margin-bottom: 20px; overflow: hidden;
         }
-        .feedback.incorrect {
-            background: rgba(244, 67, 54, 0.2);
+        body.dark .timer-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .timer-progress { height: 100%; width: 100%; background: linear-gradient(90deg, #4A90E2, #f4a261); transition: width 1s linear; }
+
+        .level-progress-bar {
+            width: 100%; height: 8px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; margin-top: 25px; overflow: hidden;
         }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            transition: width 0.5s ease;
-        }
-        #theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
-        }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
-        }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #restart:hover {
-            background: #cc0000;
-        }
-        .stats-container {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-        }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 10px;
-            min-width: 120px;
-        }
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.8;
-        }
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
-        }
+        body.dark .level-progress-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .level-progress { height: 100%; width: 0%; background: linear-gradient(90deg, #38b000, #4facfe); transition: width 0.5s; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
-    <h1>Sensory Calibration Challenge</h1>
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
+    <h1>Sensory Calibration</h1>
     <div id="game-info">
-        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+        <div>Level: <span id="level">1</span>/5</div>
+        <div>Score: <span id="score">0</span></div>
+        <div id="streak-container" style="display:none;" class="streak-text">🔥 Streak: <span id="streak">0</span></div>
     </div>
+
     <div id="game-container">
-        <div class="instructions" id="instructions">Adjust the sensory inputs to a comfortable level, then select the best coping strategy for each sensory challenge.</div>
         
-        <div class="timer-container">
-            <div class="timer-bar">
-                <div class="timer-progress" id="timer-progress"></div>
-            </div>
-            <div class="timer-text" id="timer-text">Time: 60s</div>
+        <div id="welcome-screen">
+            <h2 style="font-family: var(--font-head); margin-bottom: 15px;">Regulate and Respond!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                Read the sensory scenario. First, adjust the sliders to match how intense you think it feels. Then, pick the best strategy to cope with the situation!
+            </p>
+            <button class="action-btn" id="start-button" onclick="startGame()">Start Playing ▶</button>
         </div>
-        
-        <div class="sensory-container" id="sensory-container">
-            <div class="sensory-title" id="sensory-title">Loading sensory challenge...</div>
-            <div class="sensory-description" id="sensory-description"></div>
+
+        <div id="play-area" style="display: none; width: 100%;">
+            <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
             
-            <div class="sensory-image" id="sensory-image"></div>
-            
-            <div class="sensory-controls">
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Intensity:</span>
-                        <span id="intensity-value">50%</span>
-                    </div>
-                    <input type="range" min="0" max="100" value="50" class="slider" id="intensity-slider">
+            <div class="scenario-box">
+                <div class="scenario-header">
+                    <div class="scenario-title" id="scenario-title">Loading...</div>
+                    <button class="read-btn" onclick="readScenario()" title="Read Aloud">📢</button>
                 </div>
-                
-                <div class="slider-container">
-                    <div class="slider-label">
-                        <span>Comfort Level:</span>
-                        <span id="comfort-value">50%</span>
-                    </div>
-                    <input type="range" min="0" max="100" value="50" class="slider" id="comfort-slider">
+                <div class="scenario-description" id="scenario-description"></div>
+                <div class="sensory-image" id="sensory-image"></div>
+            </div>
+            
+            <div class="sliders-wrapper">
+                <div class="slider-card">
+                    <div class="slider-label"><span>Sensory Intensity:</span><span id="intensity-val" style="color:var(--primary);">50%</span></div>
+                    <input type="range" id="intensity-slider" min="0" max="100" value="50" oninput="updateSliders()">
+                    <div class="slider-hint">How overwhelming does this feel?</div>
+                </div>
+                <div class="slider-card">
+                    <div class="slider-label"><span>Comfort Effort:</span><span id="comfort-val" style="color:var(--primary);">50%</span></div>
+                    <input type="range" id="comfort-slider" min="0" max="100" value="50" oninput="updateSliders()">
+                    <div class="slider-hint">How much effort is needed to cope?</div>
                 </div>
             </div>
+            
+            <div class="section-title">Select the Best Coping Strategy:</div>
+            <div class="strategies-container" id="strategies-container"></div>
+            
+            <div class="feedback" id="feedback"></div>
+            
+            <div class="btn-row">
+                <button class="action-btn" id="submit-button" onclick="submitAnswer()">Submit Answer ✔</button>
+                <button class="action-btn" id="next-button" onclick="nextLevel()">Next Scenario ➔</button>
+            </div>
+            
+            <div class="level-progress-bar">
+                <div class="level-progress" id="progress"></div>
+            </div>
         </div>
-        
-        <div class="strategies-container" id="strategies-container">
-            <!-- Strategy cards will be generated here -->
-        </div>
-        
-        <button class="button start" id="start-button">Start Game</button>
-        <button class="button" id="submit-button" style="display: none;">Submit Answer</button>
-        <div class="feedback" id="feedback"></div>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
-        </div>
+
     </div>
-    <button id="restart" onclick="startGame()">Restart Game</button>
+    
+    <button class="action-btn" id="restart-btn" onclick="location.reload()">↺ Restart Game</button>
 
     <script>
-        // Game variables
-        let level = 1;
-        let score = 0;
-        let timeLeft = 60;
-        let timerInterval;
-        let gameActive = false;
-        let currentChallenge = null;
-        let selectedStrategy = null;
-        let challengesCompleted = 0;
-        
-        // Sensory challenges database
         const challenges = [
             {
                 title: "Noisy Classroom",
-                description: "You're in a classroom where multiple conversations are happening at once, chairs are scraping on the floor, and someone is tapping a pencil loudly.",
-                image: "linear-gradient(135deg, #3498db, #2c3e50)", // Blue gradient representing noise
-                optimalIntensity: 30,
+                description: "The classroom is loud. People are talking, chairs are scraping, and someone is tapping a pencil.",
+                image: "linear-gradient(135deg, #3498db, #2c3e50)",
+                optimalIntensity: 85, // It's very intense!
                 strategies: [
-                    {
-                        icon: "🎧",
-                        title: "Noise-Canceling Headphones",
-                        description: "Use headphones to block out distracting sounds.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🙋",
-                        title: "Request Quiet Area",
-                        description: "Ask the teacher if you can move to a quieter spot.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "😡",
-                        title: "Yell at Classmates",
-                        description: "Tell everyone to be quiet because they're bothering you.",
-                        effectiveness: 20
-                    },
-                    {
-                        icon: "🏃",
-                        title: "Leave the Room",
-                        description: "Walk out without telling anyone where you're going.",
-                        effectiveness: 15
-                    }
+                    { icon: "🎧", title: "Noise-Canceling Headphones", description: "Use headphones to block out distracting sounds.", effectiveness: 95 },
+                    { icon: "🙋", title: "Request Quiet Area", description: "Ask the teacher to move to a quieter spot.", effectiveness: 85 },
+                    { icon: "😡", title: "Yell at Classmates", description: "Tell everyone to be quiet.", effectiveness: 10 },
+                    { icon: "🏃", title: "Leave the Room", description: "Walk out without telling anyone.", effectiveness: 15 }
                 ]
             },
             {
                 title: "Bright Fluorescent Lights",
-                description: "The fluorescent lights in the room are very bright and seem to flicker slightly, causing visual discomfort.",
-                image: "linear-gradient(135deg, #f1c40f, #ffffff)", // Yellow-white gradient for bright lights
-                optimalIntensity: 40,
+                description: "The overhead lights are very bright and seem to flicker slightly, hurting your eyes.",
+                image: "linear-gradient(135deg, #f1c40f, #ffffff)",
+                optimalIntensity: 75,
                 strategies: [
-                    {
-                        icon: "🕶️",
-                        title: "Wear Tinted Glasses",
-                        description: "Use lightly tinted glasses to reduce light sensitivity.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🧢",
-                        title: "Wear a Cap",
-                        description: "Use a cap with a brim to block overhead lights.",
-                        effectiveness: 80
-                    },
-                    {
-                        icon: "💡",
-                        title: "Turn Off All Lights",
-                        description: "Switch off all the lights without asking permission.",
-                        effectiveness: 30
-                    },
-                    {
-                        icon: "😖",
-                        title: "Cover Eyes and Rock",
-                        description: "Cover your eyes with your hands and rock back and forth.",
-                        effectiveness: 25
-                    }
+                    { icon: "🕶️", title: "Wear Tinted Glasses", description: "Use lightly tinted glasses to reduce glare.", effectiveness: 90 },
+                    { icon: "🧢", title: "Wear a Cap", description: "Use a cap with a brim to block overhead lights.", effectiveness: 85 },
+                    { icon: "💡", title: "Turn Off All Lights", description: "Switch off all lights without asking.", effectiveness: 20 },
+                    { icon: "😖", title: "Cover Eyes", description: "Cover your eyes and put your head on the desk.", effectiveness: 30 }
                 ]
             },
             {
                 title: "Itchy Clothing Tag",
-                description: "The tag on your shirt is scratchy and irritating against your skin, making it hard to focus on anything else.",
-                image: "linear-gradient(135deg, #e74c3c, #c0392b)", // Red gradient for irritation
-                optimalIntensity: 20,
+                description: "The tag on your shirt is scratchy and irritating against your skin, making it hard to focus.",
+                image: "linear-gradient(135deg, #e74c3c, #c0392b)",
+                optimalIntensity: 80,
                 strategies: [
-                    {
-                        icon: "✂️",
-                        title: "Remove the Tag",
-                        description: "Carefully cut or remove the tag from your clothing.",
-                        effectiveness: 95
-                    },
-                    {
-                        icon: "👕",
-                        title: "Wear Tag-Free Clothing",
-                        description: "Choose clothes without tags in the future.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "😫",
-                        title: "Constantly Scratch",
-                        description: "Keep scratching at the tag throughout the day.",
-                        effectiveness: 15
-                    },
-                    {
-                        icon: "👚",
-                        title: "Take Off Your Shirt",
-                        description: "Remove your shirt to get rid of the tag sensation.",
-                        effectiveness: 10
-                    }
+                    { icon: "✂️", title: "Remove the Tag", description: "Carefully cut or remove the tag.", effectiveness: 95 },
+                    { icon: "👕", title: "Wear an Undershirt", description: "Add a soft cotton layer between the tag and skin.", effectiveness: 90 },
+                    { icon: "😫", title: "Constantly Scratch", description: "Keep scratching at the tag all day.", effectiveness: 15 },
+                    { icon: "👚", title: "Take Off Shirt", description: "Remove your shirt in public.", effectiveness: 5 }
                 ]
             },
             {
                 title: "Strong Food Smells",
-                description: "Someone nearby is eating food with a very strong smell that you find overwhelming.",
-                image: "linear-gradient(135deg, #9b59b6, #8e44ad)", // Purple gradient for strong smells
-                optimalIntensity: 35,
+                description: "Someone nearby is eating food with a very strong smell that makes you feel overwhelmed.",
+                image: "linear-gradient(135deg, #9b59b6, #8e44ad)",
+                optimalIntensity: 70,
                 strategies: [
-                    {
-                        icon: "🍃",
-                        title: "Move to Fresh Air",
-                        description: "Politely excuse yourself and move to an area with better air circulation.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "👃",
-                        title: "Use a Scent Blocker",
-                        description: "Apply a small amount of a preferred scent under your nose.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🤢",
-                        title: "Complain Loudly",
-                        description: "Tell the person their food smells disgusting.",
-                        effectiveness: 20
-                    },
-                    {
-                        icon: "🚫",
-                        title: "Throw Away Their Food",
-                        description: "Take their food and dispose of it.",
-                        effectiveness: 5
-                    }
+                    { icon: "🍃", title: "Move Away", description: "Politely excuse yourself to an area with fresh air.", effectiveness: 95 },
+                    { icon: "👃", title: "Scent Blocker", description: "Smell something you like, like an essential oil.", effectiveness: 85 },
+                    { icon: "🤢", title: "Complain Loudly", description: "Tell the person their food smells disgusting.", effectiveness: 10 },
+                    { icon: "🚫", title: "Throw it Away", description: "Take their food and throw it in the trash.", effectiveness: 0 }
                 ]
             },
             {
                 title: "Crowded Hallway",
-                description: "You need to walk through a crowded hallway where people might bump into you and there's lots of movement in your peripheral vision.",
-                image: "linear-gradient(135deg, #34495e, #2c3e50)", // Dark blue gradient for crowded space
-                optimalIntensity: 30,
+                description: "You need to walk through a crowded hallway where people might bump into you.",
+                image: "linear-gradient(135deg, #34495e, #1a252f)",
+                optimalIntensity: 85,
                 strategies: [
-                    {
-                        icon: "⏰",
-                        title: "Time Your Travel",
-                        description: "Wait for a less busy time or leave class a minute early.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🧱",
-                        title: "Walk Near the Wall",
-                        description: "Stay close to the wall to minimize contact on one side.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🏃",
-                        title: "Run Through Quickly",
-                        description: "Sprint through the hallway pushing past people.",
-                        effectiveness: 25
-                    },
-                    {
-                        icon: "😱",
-                        title: "Freeze and Panic",
-                        description: "Stand still and become overwhelmed by the situation.",
-                        effectiveness: 5
-                    }
-                ]
-            },
-            {
-                title: "Unexpected Touch",
-                description: "A classmate unexpectedly puts their hand on your shoulder while talking to you.",
-                image: "linear-gradient(135deg, #e67e22, #d35400)", // Orange gradient for touch sensation
-                optimalIntensity: 25,
-                strategies: [
-                    {
-                        icon: "🗣️",
-                        title: "Communicate Boundary",
-                        description: "Calmly say, 'I prefer not to be touched, thank you.'",
-                        effectiveness: 95
-                    },
-                    {
-                        icon: "👐",
-                        title: "Step Back Slightly",
-                        description: "Create a little more personal space without making a scene.",
-                        effectiveness: 80
-                    },
-                    {
-                        icon: "😨",
-                        title: "Freeze Up",
-                        description: "Become very uncomfortable but say nothing.",
-                        effectiveness: 20
-                    },
-                    {
-                        icon: "👋",
-                        title: "Push Their Hand Away",
-                        description: "Forcefully remove their hand from your shoulder.",
-                        effectiveness: 30
-                    }
-                ]
-            },
-            {
-                title: "Rough Fabric Texture",
-                description: "You're wearing a sweater made of a fabric that feels scratchy and uncomfortable against your skin.",
-                image: "linear-gradient(135deg, #95a5a6, #7f8c8d)", // Gray gradient for fabric texture
-                optimalIntensity: 20,
-                strategies: [
-                    {
-                        icon: "👕",
-                        title: "Wear an Undershirt",
-                        description: "Add a soft cotton layer between the rough fabric and your skin.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🧥",
-                        title: "Change Clothes",
-                        description: "Switch to a more comfortable garment when possible.",
-                        effectiveness: 95
-                    },
-                    {
-                        icon: "😖",
-                        title: "Constantly Fidget",
-                        description: "Keep adjusting and pulling at your sweater all day.",
-                        effectiveness: 25
-                    },
-                    {
-                        icon: "✂️",
-                        title: "Cut Holes in the Sweater",
-                        description: "Make holes in the sweater to reduce contact with skin.",
-                        effectiveness: 15
-                    }
-                ]
-            },
-            {
-                title: "Echoing Gymnasium",
-                description: "You're in a gymnasium where sounds echo loudly, making it difficult to filter out specific voices or instructions.",
-                image: "linear-gradient(135deg, #3498db, #2980b9)", // Blue gradient for echoing sounds
-                optimalIntensity: 35,
-                strategies: [
-                    {
-                        icon: "👂",
-                        title: "Earplugs or Ear Defenders",
-                        description: "Use hearing protection to reduce the overall volume.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "👤",
-                        title: "Position Near Speaker",
-                        description: "Stand closer to the person giving instructions.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🙉",
-                        title: "Cover Ears and Rock",
-                        description: "Cover your ears and rock back and forth.",
-                        effectiveness: 30
-                    },
-                    {
-                        icon: "🏃",
-                        title: "Leave the Gym",
-                        description: "Walk out without permission because it's too loud.",
-                        effectiveness: 20
-                    }
-                ]
-            },
-            {
-                title: "Multiple Conversations",
-                description: "You're in a group setting where multiple people are talking at once, making it hard to focus on any single conversation.",
-                image: "linear-gradient(135deg, #2ecc71, #27ae60)", // Green gradient for multiple inputs
-                optimalIntensity: 40,
-                strategies: [
-                    {
-                        icon: "🔍",
-                        title: "Focus on One Person",
-                        description: "Deliberately focus your attention on just one speaker at a time.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🙋",
-                        title: "Ask for Turn-Taking",
-                        description: "Politely suggest that people speak one at a time.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "😵",
-                        title: "Zone Out Completely",
-                        description: "Mentally check out of all conversations.",
-                        effectiveness: 25
-                    },
-                    {
-                        icon: "🔊",
-                        title: "Talk Louder Than Everyone",
-                        description: "Raise your voice to be heard above everyone else.",
-                        effectiveness: 15
-                    }
-                ]
-            },
-            {
-                title: "Strong Chemical Smell",
-                description: "The room has just been cleaned with strong-smelling chemicals that are irritating your nose and throat.",
-                image: "linear-gradient(135deg, #1abc9c, #16a085)", // Teal gradient for chemical smell
-                optimalIntensity: 25,
-                strategies: [
-                    {
-                        icon: "🪟",
-                        title: "Open Windows",
-                        description: "Ask if windows can be opened to improve ventilation.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🍃",
-                        title: "Move to Another Area",
-                        description: "Politely ask to work in a different space until the smell dissipates.",
-                        effectiveness: 95
-                    },
-                    {
-                        icon: "😷",
-                        title: "Hold Your Nose",
-                        description: "Pinch your nose closed for extended periods.",
-                        effectiveness: 30
-                    },
-                    {
-                        icon: "🚪",
-                        title: "Leave Without Explanation",
-                        description: "Walk out of the room without telling anyone why.",
-                        effectiveness: 25
-                    }
+                    { icon: "⏰", title: "Time Your Travel", description: "Wait a minute for the hallway to clear out.", effectiveness: 95 },
+                    { icon: "🧱", title: "Walk Near Wall", description: "Stay close to the wall to minimize bumping.", effectiveness: 85 },
+                    { icon: "🏃", title: "Run Through", description: "Sprint through pushing past people.", effectiveness: 10 },
+                    { icon: "😱", title: "Panic", description: "Stand still and become completely overwhelmed.", effectiveness: 5 }
                 ]
             }
         ];
-        
-        // Function to toggle theme
+
+        let level = 1;
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let currentScenario = null;
+        let currentStrategies = []; // Cached array
+        let selectedStrategyIdx = null;
+        let audioEnabled = true;
+
+        // --- Audio System ---
+        function playTone(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc.start(); osc.stop(ctx.currentTime + 0.2);
+                } else if (type === 'levelup') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+                    osc.start(); osc.stop(ctx.currentTime + 0.5);
+                }
+            } catch(e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function readScenario() {
+            if(currentScenario) speakText(`${currentScenario.title}. ${currentScenario.description}`);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
-        
-        // Function to update game info
-        function updateGameInfo() {
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
+        }
+
+        // --- Core UI Updates ---
+        function updateUI() {
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
-            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('progress').style.width = `${(level / 5) * 100}%`;
+            
+            const streakEl = document.getElementById('streak-container');
+            if(streak >= 2) {
+                streakEl.style.display = 'block';
+                document.getElementById('streak').textContent = streak;
+            } else {
+                streakEl.style.display = 'none';
+            }
         }
-        
-        // Function to start the timer
+
+        function updateSliders() {
+            const intVal = document.getElementById('intensity-slider').value;
+            const comVal = document.getElementById('comfort-slider').value;
+            document.getElementById('intensity-val').textContent = intVal + '%';
+            document.getElementById('comfort-val').textContent = comVal + '%';
+            
+            // Alter image opacity based on user's perceived intensity
+            const img = document.getElementById('sensory-image');
+            img.style.opacity = (intVal / 100) * 0.8 + 0.2; 
+        }
+
         function startTimer() {
             clearInterval(timerInterval);
             timeLeft = 60;
-            document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
             document.getElementById('timer-progress').style.width = '100%';
             
             timerInterval = setInterval(() => {
                 timeLeft--;
-                document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
                 document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    endGame();
+                    handleTimeout();
                 }
             }, 1000);
         }
-        
-        // Function to load a random challenge
-        function loadRandomChallenge() {
-            // Get challenges appropriate for current level
-            const levelChallenges = challenges.filter((_, index) => {
-                if (level <= 3) return index < 3;
-                if (level <= 6) return index >= 3 && index < 7;
-                return index >= 7;
-            });
+
+        // --- Game Flow ---
+        function startGame() {
+            try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume(); } catch(e){}
             
-            // Select a random challenge
-            const randomIndex = Math.floor(Math.random() * levelChallenges.length);
-            currentChallenge = levelChallenges[randomIndex];
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('play-area').style.display = 'flex';
+            document.getElementById('restart-btn').style.display = 'block';
             
-            // Display challenge
-            document.getElementById('sensory-title').textContent = currentChallenge.title;
-            document.getElementById('sensory-description').textContent = currentChallenge.description;
-            document.getElementById('sensory-image').style.backgroundImage = currentChallenge.image;
+            level = 1;
+            score = 0;
+            loadScenario();
+        }
+
+        function loadScenario() {
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            document.getElementById('submit-button').style.display = 'none';
+            selectedStrategyIdx = null;
             
-            // Reset sliders
+            currentScenario = challenges[level - 1];
+            
+            document.getElementById('scenario-title').textContent = currentScenario.title;
+            document.getElementById('scenario-description').textContent = currentScenario.description;
+            document.getElementById('sensory-image').style.background = currentScenario.image;
+            
+            // Reset Sliders
             document.getElementById('intensity-slider').value = 50;
             document.getElementById('comfort-slider').value = 50;
-            document.getElementById('intensity-value').textContent = '50%';
-            document.getElementById('comfort-value').textContent = '50%';
+            updateSliders();
             
-            // Display strategies
-            renderStrategies();
+            // Generate Strategy Cards
+            const container = document.getElementById('strategies-container');
+            container.innerHTML = '';
             
-            // Show submit button
-            document.getElementById('submit-button').style.display = 'block';
-        }
-        
-        // Function to render strategies
-        function renderStrategies() {
-            const strategiesContainer = document.getElementById('strategies-container');
-            strategiesContainer.innerHTML = '';
+            currentStrategies = [...currentScenario.strategies].sort(() => 0.5 - Math.random());
             
-            // Shuffle strategies to randomize their order
-            const shuffledStrategies = [...currentChallenge.strategies].sort(() => Math.random() - 0.5);
-            
-            shuffledStrategies.forEach((strategy, index) => {
-                const strategyCard = document.createElement('div');
-                strategyCard.className = 'strategy-card';
-                strategyCard.dataset.index = index;
-                
-                strategyCard.innerHTML = `
-                    <div class="strategy-icon">${strategy.icon}</div>
-                    <div class="strategy-title">${strategy.title}</div>
-                    <div class="strategy-description">${strategy.description}</div>
+            currentStrategies.forEach((strat, idx) => {
+                const card = document.createElement('div');
+                card.className = 'strategy-card';
+                card.innerHTML = `
+                    <div class="strategy-icon">${strat.icon}</div>
+                    <div class="strategy-info">
+                        <div class="strategy-title">${strat.title}</div>
+                        <div class="strategy-desc">${strat.description}</div>
+                    </div>
                 `;
                 
-                strategyCard.addEventListener('click', () => selectStrategy(strategyCard, index));
+                card.onclick = () => selectStrategy(card, idx);
+                card.onmouseenter = () => speakText(strat.title);
+                container.appendChild(card);
+            });
+            
+            updateUI();
+            startTimer();
+            setTimeout(readScenario, 500);
+        }
+
+        function selectStrategy(cardElement, idx) {
+            // Lock selection if already submitted
+            if (document.getElementById('next-button').style.display === 'block') return;
+
+            document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('selected'));
+            cardElement.classList.add('selected');
+            selectedStrategyIdx = idx;
+            document.getElementById('submit-button').style.display = 'block';
+        }
+
+        function submitAnswer() {
+            if(selectedStrategyIdx === null) return;
+            clearInterval(timerInterval);
+            document.getElementById('submit-button').style.display = 'none';
+            
+            const strategy = currentStrategies[selectedStrategyIdx];
+            const isCorrect = strategy.effectiveness >= 80;
+            
+            // Calculate slider accuracy bonus
+            const userInt = parseInt(document.getElementById('intensity-slider').value);
+            const optimalInt = currentScenario.optimalIntensity;
+            const diff = Math.abs(userInt - optimalInt);
+            let sliderBonus = diff < 15 ? 10 : 0; // Bonus if they calibrated intensity correctly
+            
+            const feedback = document.getElementById('feedback');
+            const cards = document.querySelectorAll('.strategy-card');
+
+            cards.forEach((card, idx) => {
+                card.style.pointerEvents = 'none'; // Lock cards
+                if(currentStrategies[idx].effectiveness >= 80) {
+                    card.classList.add('correct-ans');
+                } else if(idx === selectedStrategyIdx && !isCorrect) {
+                    card.classList.add('wrong-ans');
+                }
+            });
+
+            if (isCorrect) {
+                streak++;
+                let pts = 20 + sliderBonus + (streak * 5);
+                score += pts;
                 
-                strategiesContainer.appendChild(strategyCard);
-            });
+                playTone('correct');
+                feedback.textContent = `🌟 Great Strategy! ${sliderBonus ? "(+10 Calibration Bonus!)" : ""} Total: +${pts} pts`;
+                feedback.className = 'feedback correct';
+                speakText("Great Strategy!");
+            } else {
+                streak = 0;
+                playTone('wrong');
+                feedback.textContent = `That strategy might not be safe or helpful here. The green card shows a better option.`;
+                feedback.className = 'feedback incorrect';
+                speakText("Not the best strategy.");
+            }
+            
+            updateUI();
+            feedback.style.display = 'block';
+            document.getElementById('next-button').style.display = 'block';
         }
-        
-        // Function to select a strategy
-        function selectStrategy(card, index) {
-            if (!gameActive) return;
+
+        function handleTimeout() {
+            document.getElementById('submit-button').style.display = 'none';
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = `⏳ Time's up! Let's try this scenario again.`;
+            feedback.className = 'feedback incorrect';
+            feedback.style.display = 'block';
+            playTone('wrong');
             
-            // Clear previous selection
-            document.querySelectorAll('.strategy-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Add selected class to clicked card
-            card.classList.add('selected');
-            
-            // Update selected strategy
-            selectedStrategy = index;
+            setTimeout(() => loadScenario(), 3000);
         }
+
+        function nextLevel() {
+            if (level < 5) {
+                level++;
+                loadScenario();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('play-area').innerHTML = `
+                <div style="font-size: 5rem; margin-bottom:20px;">🏆</div>
+                <h2 style="font-family: var(--font-head); font-size: 2.5rem; color: var(--primary);">Calibration Complete!</h2>
+                <p style="font-size: 1.5rem; margin-top: 10px;">Final Score: <strong>${score}</strong></p>
+                <p style="font-size: 1.2rem; color: var(--success); margin-top: 10px;">You are doing great at finding healthy coping strategies!</p>
+            `;
+            document.getElementById('restart-btn').style.display = 'block';
+            playTone('levelup');
+            speakText("Calibration complete! You did great!");
+        }
+
+        // Initialize UI
+        updateUI();
+    </script>
+</body>
+</html>

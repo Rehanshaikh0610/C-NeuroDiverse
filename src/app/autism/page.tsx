@@ -121,10 +121,43 @@ const AutismResourcePage = () => {
           <div className="mt-6 bg-indigo-50 p-4 rounded-lg">
             <h4 className="font-medium text-indigo-700">How it works</h4>
             <p>
-              When you select your interests, our system will customize examples, 
-              activities, and rewards to match what you love, making learning more 
+              When you select your interests, our system will customize examples,
+              activities, and rewards to match what you love, making learning more
               engaging and meaningful.
             </p>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 'creative-expression',
+      title: 'Creative & Art Therapy',
+      description: 'Interactive painting and tracing activities for creative expression',
+      content: (
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-xl font-semibold mb-4">Art & Painting</h3>
+          <p className="mb-4">
+            Express yourself in a calm, structured environment:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="border-2 border-pink-300 rounded-lg p-4 hover:bg-pink-50 transition">
+              <h4 className="font-medium text-pink-700 mb-2">ArtFlow Studio</h4>
+              <p className="text-gray-600 mb-3">
+                A step-by-step painting game with calming feedback and guided tracing.
+              </p>
+              <div className="flex items-center text-sm text-pink-600">
+                <span className="mr-2">Focus:</span>
+                <div className="flex space-x-2">
+                  <span className="bg-pink-100 px-2 py-0.5 rounded">Creativity</span>
+                  <span className="bg-pink-100 px-2 py-0.5 rounded">Calm</span>
+                </div>
+              </div>
+              <Link href="/games/autism/art.html" target="_blank">
+                <button className="mt-3 bg-pink-600 text-white px-4 py-1 rounded-md text-sm">
+                  Play ArtFlow
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       ),
@@ -139,7 +172,7 @@ const AutismResourcePage = () => {
             Interactive Learning for Autism
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Personalized, adaptive learning experiences designed to support the unique 
+            Personalized, adaptive learning experiences designed to support the unique
             strengths and learning styles of individuals with autism.
           </p>
         </div>
@@ -193,6 +226,41 @@ const AutismResourcePage = () => {
             {sections.find((section) => section.id === selectedSection)?.content}
           </motion.div>
         )}
+
+        {/* Interactive Games Section - Directly Visible */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-10" id="games">
+          <h2 className="text-2xl font-bold text-purple-800 mb-2">Interactive Games & Activities</h2>
+          <p className="text-gray-600 mb-6">Explore our collection of specialized games designed to support various skills.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { title: "ArtFlow Studio", desc: "Creative painting and tracing game", file: "art.html", icon: "🎨", color: "pink" },
+              { title: "Emotion Regulation", desc: "Learn to manage and understand emotions", file: "emotion-regulation.html", icon: "🧘", color: "blue" },
+              { title: "Facial Expressions", desc: "Match and identify facial expressions", file: "facial-expression-matcher.html", icon: "😊", color: "yellow" },
+              { title: "Joint Attention", desc: "Train focus and shared attention", file: "joint-attention-training.html", icon: "👀", color: "purple" },
+              { title: "Pattern Recognition", desc: "Identify and complete visual patterns", file: "pattern-recognition.html", icon: "🧩", color: "green" },
+              { title: "Sensory Calibration", desc: "Calibrate and balance sensory inputs", file: "sensory-calibration.html", icon: "⚖️", color: "teal" },
+              { title: "Sensory Detective", desc: "Find clues using sensory integration", file: "sensory-detective.html", icon: "🕵️", color: "orange" },
+              { title: "Sensory Matching", desc: "Match different sensory inputs", file: "sensory-matching.html", icon: "🎴", color: "red" },
+              { title: "Overload Manager", desc: "Practice managing sensory overload", file: "sensory-overload-manager.html", icon: "🛡️", color: "indigo" },
+              { title: "Social Cues", desc: "Learn to interpret social cues", file: "social-cues-match.html", icon: "🤝", color: "cyan" },
+              { title: "Social Scenarios", desc: "Navigate interactive social situations", file: "social-scenario.html", icon: "💬", color: "lime" },
+              { title: "Story Sequencer", desc: "Order sequences in social stories", file: "social-story-sequencer.html", icon: "📖", color: "rose" },
+              { title: "Visual Sequencing", desc: "Practice visual ordering and sequencing", file: "visual-sequencing.html", icon: "🔢", color: "fuchsia" },
+            ].map((game) => (
+              <div key={game.file} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition bg-gray-50 hover:bg-white flex flex-col h-full">
+                <div className="text-3xl mb-3">{game.icon}</div>
+                <h3 className="font-semibold text-lg text-gray-800 mb-1">{game.title}</h3>
+                <p className="text-gray-600 text-sm mb-4 flex-grow">{game.desc}</p>
+                <Link href={`/games/autism/${game.file}`} target="_blank">
+                  <button className="w-full bg-purple-100 hover:bg-purple-200 text-purple-700 font-medium py-2 rounded-md transition text-sm">
+                    Play Game
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* Additional Resources */}
         <div className="bg-white rounded-xl shadow-md p-6 mb-10">

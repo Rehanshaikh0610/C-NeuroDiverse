@@ -2,583 +2,544 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Joint Attention Training</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --success: #38b000;
+            --warning: #f4a261;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
-            transition: background 0.5s ease, color 0.5s ease;
-        }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-        }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
-        }
-        h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-        #game-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
-        }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
-        }
-        .instructions {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.1em;
-        }
-        .scene-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            position: relative;
-            height: 300px;
-            overflow: hidden;
-        }
-        .scene {
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            border-radius: 10px;
-            position: relative;
-        }
-        .character {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 150px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: bottom center;
-            transition: all 0.3s ease;
-        }
-        .character-eyes {
-            position: absolute;
-            width: 40px;
-            height: 10px;
-            background-color: white;
-            border-radius: 5px;
-            top: 50px;
-            left: 30px;
-            transition: transform 0.5s ease;
-        }
-        .target {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            opacity: 0.8;
-        }
-        .target:hover {
-            transform: scale(1.1);
-            opacity: 1;
-        }
-        .target.highlighted {
-            animation: pulse 1s infinite alternate;
-        }
-        @keyframes pulse {
-            from { transform: scale(1); box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
-            to { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
-        }
-        .timer-container {
-            margin: 20px 0;
-            position: relative;
-        }
-        .timer-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .timer-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #ff9800, #f44336);
-            transition: width 0.1s linear;
-            width: 100%;
-        }
-        .timer-text {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            line-height: 20px;
-            font-weight: bold;
-        }
-        .button {
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: rgba(33, 150, 243, 0.7);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            margin: 10px;
-        }
-        .button:hover {
-            background: rgba(33, 150, 243, 0.9);
-        }
-        .button.start {
-            background: rgba(76, 175, 80, 0.7);
-        }
-        .button.start:hover {
-            background: rgba(76, 175, 80, 0.9);
-        }
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            display: none;
-        }
-        .feedback.correct {
-            background: rgba(76, 175, 80, 0.2);
-        }
-        .feedback.incorrect {
-            background: rgba(244, 67, 54, 0.2);
-        }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            transition: width 0.5s ease;
-        }
-        #theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
-        }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
-        }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #restart:hover {
-            background: #cc0000;
-        }
-        .stats-container {
+            min-height: 100vh;
             display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
+            transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
         }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 10px;
-            min-width: 120px;
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
+            position: absolute; top: 20px; width: 100%; max-width: 900px;
+            display: flex; justify-content: space-between; padding: 0 20px;
         }
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.8;
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 16px; font-family: var(--font-head); font-size: 1rem;
+            cursor: pointer; color: inherit; transition: all 0.3s ease; font-weight: 800;
         }
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
+        h1 {
+            font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900; margin: 40px 0 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
+        #game-info {
+            display: flex; gap: 20px; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 20px; background: rgba(0,0,0,0.05);
+            padding: 10px 25px; border-radius: 20px;
+        }
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+        .streak-text { color: #ff9f1c; font-weight: 900; animation: pulse 1.5s infinite; }
+
+        /* Main Container */
+        #game-container {
+            width: 95%; max-width: 800px; background: var(--card-bg);
+            padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+        }
+        body.dark #game-container { background: var(--card-dark); border-color: rgba(255,255,255,0.1); }
+
+        /* Timer */
+        .timer-container { margin-bottom: 20px; position: relative; }
+        .timer-bar {
+            width: 100%; height: 16px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; overflow: hidden;
+        }
+        body.dark .timer-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .timer-progress {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #4A90E2, #f4a261, #e63946);
+            transition: width 1s linear;
+        }
+        .timer-text { font-family: var(--font-head); font-weight: 900; margin-top: 5px; font-size: 1.1rem; }
+
+        /* Scene & Character */
+        .scene-container {
+            background: linear-gradient(to bottom, #87CEEB 0%, #e0f6ff 100%);
+            border-radius: 16px; padding: 20px; margin-bottom: 20px;
+            position: relative; height: 350px; overflow: hidden;
+            border: 4px solid rgba(0,0,0,0.05); box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+        body.dark .scene-container { background: linear-gradient(to bottom, #1a2a6c, #b21f1f, #fdbb2d); }
+
+        .bot-character {
+            position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+            width: 140px; height: 140px; background: #e0e0e0;
+            border-radius: 40px 40px 20px 20px; border: 6px solid #b0b0b0;
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 10;
+        }
+        body.dark .bot-character { background: #2c3e50; border-color: #1a252f; }
+        
+        /* Antenna */
+        .bot-character::before {
+            content: ''; position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            width: 6px; height: 30px; background: #b0b0b0;
+        }
+        .bot-character::after {
+            content: ''; position: absolute; top: -38px; left: 50%; transform: translateX(-50%);
+            width: 16px; height: 16px; background: var(--primary); border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .eye {
+            width: 38px; height: 45px; background: white; border-radius: 50%;
+            position: relative; overflow: hidden; border: 3px solid #999;
+            box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+        }
+        .pupil {
+            width: 18px; height: 18px; background: #2b2b2b; border-radius: 50%;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Targets */
+        .target {
+            position: absolute; width: 50px; height: 50px;
+            background: rgba(255, 255, 255, 0.8); border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 30px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); z-index: 5;
+        }
+        .target:hover { transform: scale(1.15); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .target.correct-highlight { background: var(--success); color: white; animation: popIn 0.5s ease; box-shadow: 0 0 20px var(--success); }
+        .target.wrong-highlight { background: var(--error); animation: shake 0.4s ease; }
+
+        /* Stats & Controls */
+        .stats-container {
+            display: flex; justify-content: space-around; margin: 20px 0;
+            background: rgba(0,0,0,0.05); padding: 15px; border-radius: 16px;
+        }
+        body.dark .stats-container { background: rgba(255,255,255,0.05); }
+        .stat-box { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { font-size: 0.9rem; font-weight: 700; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-family: var(--font-head); font-size: 1.8rem; font-weight: 900; color: var(--primary); }
+
+        .action-btn {
+            padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15); margin: 10px;
+        }
+        #start-button { background: linear-gradient(135deg, #4A90E2, #0072ff); display: block; margin: 0 auto; }
+        #next-level-btn { background: linear-gradient(135deg, #38b000, #008000); display: none; margin: 0 auto; }
+        .action-btn:hover { transform: translateY(-3px); }
+
+        .feedback {
+            margin-top: 15px; padding: 12px; border-radius: 14px;
+            font-size: 1.2rem; font-weight: 700; display: none;
+        }
+
+        @keyframes pulse { 0%, 100% { transform: scale(1) translateX(-50%); } 50% { transform: scale(1.2) translateX(-40%); } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
     <h1>Joint Attention Training</h1>
     <div id="game-info">
-        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+        <div>Level: <span id="level">1</span>/10</div>
+        <div>Score: <span id="score">0</span></div>
+        <div id="streak-container" style="display:none;" class="streak-text">🔥 Streak: <span id="streak">0</span></div>
     </div>
+
     <div id="game-container">
-        <div class="instructions" id="instructions">Follow the character's gaze to find what they're looking at. Click on the object they are focusing on!</div>
         
-        <div class="timer-container">
-            <div class="timer-bar">
-                <div class="timer-progress" id="timer-progress"></div>
-            </div>
-            <div class="timer-text" id="timer-text">Time: 30s</div>
+        <div id="welcome-screen">
+            <h2 style="font-family: var(--font-head); margin-bottom: 15px;">Follow the ZephyrBot's Gaze!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                Look closely at the robot's eyes. Click on the exact object it is looking at before the time runs out. The faster you are, the more points you get!
+            </p>
+            <button class="action-btn" id="start-button" onclick="startGame()">Start Game ▶</button>
         </div>
-        
-        <div class="scene-container">
-            <div class="scene" id="scene">
-                <div class="character" id="character">
-                    <div class="character-eyes" id="character-eyes"></div>
+
+        <div id="play-area" style="display: none;">
+            <div class="timer-container">
+                <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
+                <div class="timer-text" id="timer-text">Time: 45s</div>
+            </div>
+            
+            <div class="scene-container" id="scene">
+                <div class="bot-character" id="character">
+                    <div class="eye" id="left-eye"><div class="pupil" id="left-pupil"></div></div>
+                    <div class="eye" id="right-eye"><div class="pupil" id="right-pupil"></div></div>
                 </div>
-                <!-- Targets will be added dynamically -->
+                </div>
+            
+            <div class="stats-container">
+                <div class="stat-box"><div class="stat-label">Correct</div><div class="stat-value" id="correct-count">0</div></div>
+                <div class="stat-box"><div class="stat-label">Attempts</div><div class="stat-value" id="attempts-count">0</div></div>
+                <div class="stat-box"><div class="stat-label">Accuracy</div><div class="stat-value" id="accuracy">0%</div></div>
             </div>
+            
+            <button class="action-btn" id="next-level-btn" onclick="startLevel()">Next Level ➔</button>
+            <div class="feedback" id="feedback"></div>
         </div>
-        
-        <div class="stats-container">
-            <div class="stat-box">
-                <div class="stat-label">Correct</div>
-                <div class="stat-value" id="correct-count">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Attempts</div>
-                <div class="stat-value" id="attempts-count">0</div>
-            </div>
-            <div class="stat-box">
-                <div class="stat-label">Accuracy</div>
-                <div class="stat-value" id="accuracy">0%</div>
-            </div>
-        </div>
-        
-        <button class="button start" id="start-button">Start Game</button>
-        <div class="feedback" id="feedback"></div>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
-        </div>
+
     </div>
-    <button id="restart" onclick="startGame()">Restart Game</button>
+    
+    <button class="action-btn" id="restart-btn" style="background: var(--error); display:none; margin-top: 20px;" onclick="location.reload()">↺ Restart Entire Game</button>
 
     <script>
-        // Game variables
+        // Database of Objects
+        const targetObjects = [
+            '🎈','🚗','🐶','🌟','🎁','🏀','🍎','🦋','🚂','🌈','🐱','🐘','🦁','🦒','🐢',
+            '🍕','🎸','🚀','🚲','🍦','🧸','📚','🎨','⚽','🚁'
+        ];
+
+        // Game State
         let level = 1;
         let score = 0;
-        let timeLeft = 30;
-        let timerInterval;
-        let gameActive = false;
+        let streak = 0;
         let correctCount = 0;
         let attemptsCount = 0;
-        let currentTargetIndex = -1;
+        let correctNeeded = 5; // How many right to beat the level
         
-        // Scene backgrounds
-        const sceneBackgrounds = [
-            'linear-gradient(135deg, #3498db, #2c3e50)', // Blue gradient
-            'linear-gradient(135deg, #2ecc71, #27ae60)', // Green gradient
-            'linear-gradient(135deg, #e74c3c, #c0392b)', // Red gradient
-            'linear-gradient(135deg, #9b59b6, #8e44ad)', // Purple gradient
-            'linear-gradient(135deg, #f1c40f, #f39c12)', // Yellow gradient
-            'linear-gradient(135deg, #1abc9c, #16a085)', // Teal gradient
-            'linear-gradient(135deg, #e67e22, #d35400)', // Orange gradient
-            'linear-gradient(135deg, #34495e, #2c3e50)', // Dark blue gradient
-            'linear-gradient(135deg, #95a5a6, #7f8c8d)', // Gray gradient
-            'linear-gradient(135deg, #ecf0f1, #bdc3c7)'  // Light gray gradient
-        ];
-        
-        // Target objects
-        const targetObjects = [
-            { emoji: '🎈', name: 'balloon' },
-            { emoji: '🚗', name: 'car' },
-            { emoji: '🐶', name: 'dog' },
-            { emoji: '🌟', name: 'star' },
-            { emoji: '🎁', name: 'gift' },
-            { emoji: '🏀', name: 'basketball' },
-            { emoji: '🍎', name: 'apple' },
-            { emoji: '🦋', name: 'butterfly' },
-            { emoji: '🚂', name: 'train' },
-            { emoji: '🌈', name: 'rainbow' },
-            { emoji: '🐱', name: 'cat' },
-            { emoji: '🐘', name: 'elephant' },
-            { emoji: '🦁', name: 'lion' },
-            { emoji: '🦒', name: 'giraffe' },
-            { emoji: '🐢', name: 'turtle' }
-        ];
-        
-        // Function to toggle theme
+        let timeLeft = 45;
+        let totalTime = 45;
+        let timerInterval;
+        let gameActive = false;
+        let currentTargetNode = null;
+        let audioEnabled = true;
+
+        // Audio System
+        function playTone(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                } else if (type === 'levelup') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(440, ctx.currentTime);
+                    osc.frequency.setValueAtTime(554.37, ctx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+                }
+                osc.start(); osc.stop(ctx.currentTime + 0.5);
+            } catch(e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
-        
-        // Function to update game info
-        function updateGameInfo() {
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
+        }
+
+        // Core UI Updaters
+        function updateStats() {
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
-            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
-            document.getElementById('correct-count').textContent = correctCount;
+            document.getElementById('correct-count').textContent = `${correctCount}/${correctNeeded}`;
             document.getElementById('attempts-count').textContent = attemptsCount;
-            document.getElementById('accuracy').textContent = attemptsCount > 0 ? 
-                Math.round((correctCount / attemptsCount) * 100) + '%' : '0%';
+            
+            const acc = attemptsCount > 0 ? Math.round((correctCount / attemptsCount) * 100) : 0;
+            document.getElementById('accuracy').textContent = acc + '%';
+
+            const streakEl = document.getElementById('streak-container');
+            if(streak >= 3) {
+                streakEl.style.display = 'block';
+                document.getElementById('streak').textContent = streak;
+            } else {
+                streakEl.style.display = 'none';
+            }
         }
-        
-        // Function to start the timer
+
         function startTimer() {
             clearInterval(timerInterval);
-            timeLeft = 30;
+            
+            // Difficulty Scaling
+            if(level <= 3) totalTime = 45;
+            else if(level <= 7) totalTime = 30;
+            else totalTime = 20;
+            
+            timeLeft = totalTime;
             document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
             document.getElementById('timer-progress').style.width = '100%';
             
             timerInterval = setInterval(() => {
+                if(!gameActive) return;
                 timeLeft--;
                 document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
-                document.getElementById('timer-progress').style.width = `${(timeLeft / 30) * 100}%`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / totalTime) * 100}%`;
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    endRound();
+                    handleTimeOut();
                 }
             }, 1000);
         }
-        
-        // Function to set up the scene
-        function setupScene() {
+
+        // Game Logic
+        function startGame() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('play-area').style.display = 'block';
+            document.getElementById('restart-btn').style.display = 'block';
+            speakText("Follow my eyes and click what I am looking at!");
+            startLevel();
+        }
+
+        function startLevel() {
+            gameActive = true;
+            correctCount = 0;
+            attemptsCount = 0;
+            streak = 0;
+            correctNeeded = 3 + Math.floor(level/2); // Progressively need more correct
+            
+            document.getElementById('next-level-btn').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
+            
+            updateStats();
+            startTimer();
+            generateScene();
+        }
+
+        function generateScene() {
             const scene = document.getElementById('scene');
-            const character = document.getElementById('character');
-            const characterEyes = document.getElementById('character-eyes');
+            // Remove old targets
+            document.querySelectorAll('.target').forEach(t => t.remove());
             
-            // Set scene background
-            const backgroundIndex = (level - 1) % sceneBackgrounds.length;
-            scene.style.background = sceneBackgrounds[backgroundIndex];
-            
-            // Clear previous targets
-            const oldTargets = document.querySelectorAll('.target');
-            oldTargets.forEach(target => target.remove());
-            
-            // Determine number of targets based on level
-            const numTargets = Math.min(3 + Math.floor(level / 2), 8);
-            
-            // Create targets at random positions
-            const usedTargets = [];
-            const targetPositions = [];
-            
+            // Reset Eyes
+            document.getElementById('left-pupil').style.transform = `translate(-50%, -50%)`;
+            document.getElementById('right-pupil').style.transform = `translate(-50%, -50%)`;
+
+            // Difficulty: Number of targets
+            let numTargets = 3;
+            if(level > 3) numTargets = 5;
+            if(level > 7) numTargets = 8;
+
+            const usedIndices = [];
+            const positions = [];
+            const targets = [];
+
             for (let i = 0; i < numTargets; i++) {
-                // Select a random target that hasn't been used yet
-                let targetIndex;
-                do {
-                    targetIndex = Math.floor(Math.random() * targetObjects.length);
-                } while (usedTargets.includes(targetIndex) && usedTargets.length < targetObjects.length);
-                
-                usedTargets.push(targetIndex);
-                const targetObject = targetObjects[targetIndex];
-                
-                // Create target element
+                let objIdx;
+                do { objIdx = Math.floor(Math.random() * targetObjects.length); } 
+                while (usedIndices.includes(objIdx));
+                usedIndices.push(objIdx);
+
                 const target = document.createElement('div');
                 target.className = 'target';
-                target.textContent = targetObject.emoji;
-                target.dataset.name = targetObject.name;
-                target.dataset.index = i;
+                target.textContent = targetObjects[objIdx];
                 
-                // Position target randomly (avoiding overlaps)
-                let left, top;
-                let validPosition = false;
-                
-                while (!validPosition) {
-                    // Keep targets away from the edges and the character
-                    left = Math.random() * 70 + 15; // 15% to 85% of width
-                    top = Math.random() * 60 + 10;  // 10% to 70% of height
+                // Position logic (Avoid bottom center where character is)
+                let left, top, valid = false;
+                while(!valid) {
+                    left = Math.random() * 80 + 10; // 10% to 90%
+                    top = Math.random() * 60 + 5;   // 5% to 65% (keeps away from bottom)
                     
-                    // Check if position overlaps with existing targets
-                    validPosition = true;
-                    for (const pos of targetPositions) {
-                        const distance = Math.sqrt(
-                            Math.pow(left - pos.left, 2) + 
-                            Math.pow(top - pos.top, 2)
-                        );
-                        if (distance < 20) { // Minimum distance between targets
-                            validPosition = false;
-                            break;
-                        }
+                    // Collision check
+                    valid = true;
+                    for(let p of positions) {
+                        const dist = Math.hypot(left - p.left, top - p.top);
+                        if(dist < 18) { valid = false; break; } // Keep spaced out
                     }
                 }
-                
-                targetPositions.push({ left, top });
+                positions.push({left, top});
                 
                 target.style.left = `${left}%`;
                 target.style.top = `${top}%`;
-                
-                // Add click event
-                target.addEventListener('click', () => {
-                    if (!gameActive) return;
-                    handleTargetClick(i);
-                });
-                
+                target.addEventListener('click', () => handleTargetClick(target));
                 scene.appendChild(target);
+                targets.push(target);
             }
-            
-            // Select a random target for the character to look at
-            currentTargetIndex = Math.floor(Math.random() * numTargets);
-            const targetPosition = targetPositions[currentTargetIndex];
-            
-            // Calculate angle for character to look at target
-            const characterLeft = 50; // Character is at 50% horizontally
-            const characterTop = 80;  // Character is at bottom (80%)
-            
-            const deltaX = targetPosition.left - characterLeft;
-            const deltaY = targetPosition.top - characterTop;
-            const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-            
-            // Rotate character eyes to look at target
-            characterEyes.style.transform = `rotate(${angle}deg) translateX(10px)`;
+
+            // Pick the answer
+            currentTargetNode = targets[Math.floor(Math.random() * targets.length)];
+
+            // Give the DOM a tiny moment to render the new targets before calculating bounding boxes
+            setTimeout(() => {
+                if(!gameActive) return;
+                pointEyesAt(currentTargetNode);
+            }, 50);
         }
-        
-        // Function to handle target clicks
-        function handleTargetClick(targetIndex) {
+
+        function pointEyesAt(targetElement) {
+            const leftPupil = document.getElementById('left-pupil');
+            const rightPupil = document.getElementById('right-pupil');
+            const leftEye = document.getElementById('left-eye');
+            const rightEye = document.getElementById('right-eye');
+            
+            const targetRect = targetElement.getBoundingClientRect();
+            const tx = targetRect.left + (targetRect.width / 2);
+            const ty = targetRect.top + (targetRect.height / 2);
+
+            // Calculate angle for Left Eye
+            const leRect = leftEye.getBoundingClientRect();
+            const lex = leRect.left + (leRect.width / 2);
+            const ley = leRect.top + (leRect.height / 2);
+            const leftAngle = Math.atan2(ty - ley, tx - lex);
+
+            // Calculate angle for Right Eye
+            const reRect = rightEye.getBoundingClientRect();
+            const rex = reRect.left + (reRect.width / 2);
+            const rey = reRect.top + (reRect.height / 2);
+            const rightAngle = Math.atan2(ty - rey, tx - rex);
+
+            // Move pupils (max distance ~8px from center)
+            const maxRadius = 8;
+            const lpx = Math.cos(leftAngle) * maxRadius;
+            const lpy = Math.sin(leftAngle) * maxRadius;
+            const rpx = Math.cos(rightAngle) * maxRadius;
+            const rpy = Math.sin(rightAngle) * maxRadius;
+
+            // Apply transform (adding the -50% -50% base offset)
+            leftPupil.style.transform = `translate(calc(-50% + ${lpx}px), calc(-50% + ${lpy}px))`;
+            rightPupil.style.transform = `translate(calc(-50% + ${rpx}px), calc(-50% + ${rpy}px))`;
+        }
+
+        function handleTargetClick(clickedTarget) {
+            if (!gameActive) return;
             attemptsCount++;
-            
-            if (targetIndex === currentTargetIndex) {
-                // Correct target
+
+            if (clickedTarget === currentTargetNode) {
+                // Correct!
                 correctCount++;
-                score += 10 * level;
+                streak++;
+                score += 10 + (streak * 2); // Streak bonus
+                playTone('correct');
                 
-                const feedbackElement = document.getElementById('feedback');
-                feedbackElement.textContent = 'Great job! You correctly identified where the character was looking!';
-                feedbackElement.className = 'feedback correct';
-                feedbackElement.style.display = 'block';
+                clickedTarget.classList.add('correct-highlight');
                 
-                // Highlight the correct target
-                const targets = document.querySelectorAll('.target');
-                targets[targetIndex].classList.add('highlighted');
-                
-                // Move to next round after a short delay
-                setTimeout(() => {
-                    if (correctCount >= 5) {
-                        // Advance to next level after 5 correct answers
-                        if (level < 10) {
-                            level++;
-                        }
-                        correctCount = 0;
-                        attemptsCount = 0;
-                    }
-                    
-                    updateGameInfo();
-                    setupScene();
-                    feedbackElement.style.display = 'none';
-                }, 1500);
+                if (correctCount >= correctNeeded) {
+                    handleLevelComplete();
+                } else {
+                    // Next round immediately
+                    gameActive = false;
+                    setTimeout(() => {
+                        gameActive = true;
+                        generateScene();
+                        updateStats();
+                    }, 800);
+                }
             } else {
-                // Incorrect target
-                const feedbackElement = document.getElementById('feedback');
-                feedbackElement.textContent = 'Not quite! Try to follow the character\'s gaze more carefully.';
-                feedbackElement.className = 'feedback incorrect';
-                feedbackElement.style.display = 'block';
-                
-                // Briefly show the correct target
-                const targets = document.querySelectorAll('.target');
-                targets[currentTargetIndex].classList.add('highlighted');
-                
-                setTimeout(() => {
-                    feedbackElement.style.display = 'none';
-                    targets[currentTargetIndex].classList.remove('highlighted');
-                    setupScene();
-                }, 2000);
+                // Wrong
+                streak = 0;
+                playTone('wrong');
+                clickedTarget.classList.add('wrong-highlight');
+                setTimeout(() => clickedTarget.classList.remove('wrong-highlight'), 400);
             }
-            
-            updateGameInfo();
+            updateStats();
         }
-        
-        // Function to end the round
-        function endRound() {
+
+        function handleLevelComplete() {
             gameActive = false;
             clearInterval(timerInterval);
+            playTone('levelup');
             
-            const feedbackElement = document.getElementById('feedback');
-            const accuracy = attemptsCount > 0 ? Math.round((correctCount / attemptsCount) * 100) : 0;
+            const feedback = document.getElementById('feedback');
+            feedback.style.color = "var(--success)";
+            feedback.textContent = `🎉 Level ${level} Complete! Awesome job following my gaze!`;
+            feedback.style.display = 'block';
             
-            feedbackElement.textContent = `Time's up! You correctly identified ${correctCount} targets with ${accuracy}% accuracy.`;
-            feedbackElement.className = 'feedback';
-            feedbackElement.style.display = 'block';
-            
-            document.getElementById('start-button').textContent = 'Play Again';
-            document.getElementById('start-button').style.display = 'block';
-        }
-        
-        // Function to start a round
-        function startRound() {
-            gameActive = true;
-            document.getElementById('start-button').style.display = 'none';
-            document.getElementById('feedback').style.display = 'none';
-            
-            setupScene();
-            startTimer();
-            
-            // Update instructions based on level
-            if (level <= 3) {
-                document.getElementById('instructions').textContent = 
-                    'Follow the character\'s gaze and click on what they\'re looking at!';
-            } else if (level <= 6) {
-                document.getElementById('instructions').textContent = 
-                    'Pay close attention to where the character is looking and identify the target quickly!';
+            if(level < 10) {
+                document.getElementById('next-level-btn').style.display = 'block';
+                level++;
             } else {
-                document.getElementById('instructions').textContent = 
-                    'Expert level! Quickly identify where the character is looking among multiple objects!';
+                feedback.textContent = `🏆 You beat all 10 Levels! Incredible focus!`;
+                document.getElementById('next-level-btn').style.display = 'none';
+                speakText("You won the game! Incredible focus!");
             }
         }
-        
-        // Function to start game
-        function startGame() {
-            level = 1;
-            score = 0;
-            correctCount = 0;
-            attemptsCount = 0;
-            updateGameInfo();
+
+        function handleTimeOut() {
+            gameActive = false;
+            playTone('wrong');
+            const feedback = document.getElementById('feedback');
+            feedback.style.color = "var(--error)";
+            feedback.textContent = `⏳ Time's up! Let's try this level again.`;
+            feedback.style.display = 'block';
             
-            // Reset UI
-            document.getElementById('feedback').style.display = 'none';
-            document.getElementById('start-button').style.display = 'block';
-            document.getElementById('start-button').textContent = 'Start Game';
-            
-            // Set up initial scene
-            setupScene();
-            
-            // Add start button event listener
-            document.getElementById('start-button').addEventListener('click', startRound);
+            const retryBtn = document.getElementById('next-level-btn');
+            retryBtn.textContent = "Retry Level ↺";
+            retryBtn.style.display = 'block';
+            retryBtn.onclick = () => {
+                retryBtn.textContent = "Next Level ➔";
+                retryBtn.onclick = startLevel;
+                startLevel();
+            };
         }
-        
-        // Initialize the game when the page loads
-        window.onload = startGame;
+
     </script>
 </body>
 </html>

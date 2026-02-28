@@ -2,607 +2,604 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sensory Matching Challenge</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --success: #38b000;
+            --warning: #f4a261;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
             transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
         }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
+            position: absolute; top: 20px; width: 100%; max-width: 900px;
+            display: flex; justify-content: space-between; padding: 0 20px;
         }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 16px; font-family: var(--font-head); font-size: 1rem;
+            cursor: pointer; color: inherit; transition: all 0.3s ease; font-weight: 800;
         }
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
         h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900; margin: 40px 0 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
         #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
+            display: flex; gap: 20px; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 20px; background: rgba(0,0,0,0.05);
+            padding: 10px 25px; border-radius: 20px;
         }
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+        .streak-text { color: #ff9f1c; font-weight: 900; animation: pulse 1.5s infinite; }
+
+        /* Main Container */
         #game-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
+            width: 95%; max-width: 800px; background: var(--card-bg);
+            padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+            display: flex; flex-direction: column; align-items: center;
         }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
-        }
+        body.dark #game-container { background: var(--card-dark); border-color: rgba(255,255,255,0.1); }
+
         .instructions {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.1em;
+            background: rgba(0, 0, 0, 0.03); border-radius: 12px; padding: 15px 25px;
+            margin-bottom: 25px; font-size: 1.2rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
         }
+        body.dark .instructions { background: rgba(255, 255, 255, 0.05); }
+
+        .read-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; transition: transform 0.2s; }
+        .read-btn:hover { transform: scale(1.15); }
+
+        /* Sensory Display Area */
         .sensory-display {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 30px 0;
-            height: 150px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            margin: 10px 0 25px; width: 100%; min-height: 160px;
+            background: rgba(0,0,0,0.02); border-radius: 20px; border: 2px dashed rgba(0,0,0,0.1);
         }
+        body.dark .sensory-display { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); }
+
         .sensory-item {
-            width: 120px;
-            height: 120px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3em;
-            background: rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-            margin: 0 auto;
+            font-size: 4rem; font-weight: 900; letter-spacing: 5px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.1); animation: float 4s ease-in-out infinite;
         }
-        .sensory-item.active {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+
+        .play-sound-btn {
+            margin-top: 15px; padding: 12px 25px; background: linear-gradient(135deg, var(--warning), #e76f51);
+            border: none; border-radius: 50px; color: white; font-family: var(--font-head);
+            font-size: 1.2rem; font-weight: 800; cursor: pointer;
+            box-shadow: 0 6px 15px rgba(244, 162, 97, 0.3); transition: transform 0.2s;
+            animation: pulse-attention 2s infinite; display: none;
         }
+        .play-sound-btn:hover { transform: scale(1.05); }
+
+        /* Options */
         .options-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 30px auto;
-            max-width: 600px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px; width: 100%; margin-bottom: 20px;
         }
+        
         .option {
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            font-size: 1.2em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            min-height: 80px;
+            padding: 15px 20px; border-radius: 16px; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: rgba(0,0,0,0.04); color: inherit; border: 2px solid transparent;
+            display: flex; align-items: center; gap: 15px; text-align: left;
         }
+        body.dark .option { background: rgba(255,255,255,0.05); }
+        
         .option:hover {
-            transform: scale(1.03);
-            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-4px); background: rgba(74, 144, 226, 0.1);
+            border-color: rgba(74, 144, 226, 0.5);
         }
+        .option:disabled { pointer-events: none; opacity: 0.6; }
+        
         .option-icon {
-            font-size: 2em;
-            margin-right: 15px;
+            background: var(--primary); color: white; width: 35px; height: 35px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-head); font-weight: 900; flex-shrink: 0;
         }
-        .option-text {
-            text-align: left;
-            flex-grow: 1;
-        }
+
+        .option.correct-ans { background: rgba(56, 176, 0, 0.2) !important; border-color: var(--success); animation: popIn 0.5s ease; }
+        .option.wrong-ans { background: rgba(230, 57, 70, 0.2) !important; border-color: var(--error); animation: shake 0.4s ease; opacity: 0.5; }
+
+        /* Feedback & Buttons */
         .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            display: none;
+            margin-top: 15px; padding: 15px 25px; border-radius: 14px;
+            font-size: 1.1rem; font-weight: 800; display: none; width: 100%;
+            animation: slideUp 0.3s ease forwards; line-height: 1.4;
         }
-        .feedback.correct {
-            background: rgba(76, 175, 80, 0.2);
+        .feedback.correct { background: rgba(56, 176, 0, 0.15); color: #2b8a00; border: 2px solid rgba(56,176,0,0.3);}
+        .feedback.incorrect { background: rgba(230, 57, 70, 0.15); color: #c1121f; border: 2px solid rgba(230,57,70,0.3);}
+        body.dark .feedback.correct { color: #80ed99; }
+        body.dark .feedback.incorrect { color: #ffb3c1; }
+
+        .action-btn {
+            margin-top: 20px; padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
-        .feedback.incorrect {
-            background: rgba(244, 67, 54, 0.2);
+        #start-button { background: linear-gradient(135deg, #4A90E2, #0072ff); display: block; }
+        #next-button { background: linear-gradient(135deg, #38b000, #008000); display: none; }
+        #restart-btn { background: var(--error); display:none; margin-top: 20px; }
+        .action-btn:hover { transform: translateY(-3px); }
+
+        .level-progress-bar {
+            width: 100%; height: 10px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; margin-top: 30px; overflow: hidden;
         }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin-top: 20px;
-            overflow: hidden;
+        body.dark .level-progress-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .level-progress {
+            height: 100%; background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            transition: width 0.5s ease;
-        }
-        .next-button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            display: none;
-        }
-        .next-button:hover {
-            background: #388E3C;
-        }
-        #theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
-        }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
-        }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #restart:hover {
-            background: #cc0000;
-        }
-        .play-sound {
-            margin-top: 10px;
-            padding: 10px 20px;
-            background: rgba(33, 150, 243, 0.7);
-            border: none;
-            border-radius: 20px;
-            color: white;
-            font-size: 1em;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        .play-sound:hover {
-            background: rgba(33, 150, 243, 0.9);
-        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 50% { transform: translateX(5px); } 75% { transform: translateX(-5px); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes pulse-attention { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(244,162,97, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(244,162,97, 0); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
     <h1>Sensory Matching Challenge</h1>
     <div id="game-info">
-        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+        <div>Level: <span id="level">1</span>/10</div>
+        <div>Score: <span id="score">0</span></div>
+        <div id="streak-container" style="display:none;" class="streak-text">🔥 Streak: <span id="streak">0</span></div>
     </div>
+
     <div id="game-container">
-        <div class="instructions" id="instructions">Match the sensory stimulus with its correct description. Pay attention to details!</div>
-        <div class="sensory-display">
-            <div class="sensory-item" id="sensory-item">🔊</div>
+        
+        <div id="welcome-screen">
+            <h2 style="font-family: var(--font-head); margin-bottom: 15px;">Welcome to Sensory Matching!</h2>
+            <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                Sometimes we see things, and sometimes we hear things. Let's practice recognizing different sensory inputs and describing exactly what they are!
+            </p>
+            <button class="action-btn" id="start-button" onclick="startGame()">Unlock Audio & Start ▶</button>
         </div>
-        <button class="play-sound" id="play-stimulus">Play Stimulus</button>
-        <div class="options-container" id="options-container">
-            <!-- Options will be generated here -->
+
+        <div id="play-area" style="display: none; width: 100%;">
+            <div class="instructions">
+                <button class="read-btn" onclick="speakText(document.getElementById('instruction-text').textContent)" title="Read Aloud">📢</button>
+                <span id="instruction-text">Observe the clue and find the correct description.</span>
+            </div>
+            
+            <div class="sensory-display">
+                <div class="sensory-item" id="sensory-item">❓</div>
+                <button class="play-sound-btn" id="play-stimulus">🔊 Play Sound</button>
+            </div>
+            
+            <div class="options-container" id="options-container"></div>
+            
+            <div class="feedback" id="feedback"></div>
+            <button class="action-btn" id="next-button" onclick="nextLevel()">Next Challenge ➔</button>
+            
+            <div class="level-progress-bar">
+                <div class="level-progress" id="progress"></div>
+            </div>
         </div>
-        <div class="feedback" id="feedback"></div>
-        <button class="next-button" id="next-button">Next Challenge</button>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
-        </div>
+
     </div>
-    <button id="restart" onclick="startGame()">Restart Game</button>
+    
+    <button class="action-btn" id="restart-btn" onclick="location.reload()">↺ Restart Game</button>
 
     <script>
-        // Game variables
-        let level = 1;
-        let score = 0;
-        let currentChallenge = {};
-        let challengeAnswered = false;
-        
-        // Audio context for sound generation
-        let audioContext;
-        let currentSound = null;
-        
-        // Challenge data with increasing complexity
+        // Database of 10 Levels
         const challenges = [
-            // Level 1-3: Basic sensory matching
             {
-                type: 'visual',
-                stimulus: '🔴',
-                correctAnswer: 'A red circle',
-                options: [
-                    { text: 'A red circle', correct: true },
-                    { text: 'A blue square', correct: false },
-                    { text: 'A yellow triangle', correct: false },
-                    { text: 'A green star', correct: false }
-                ],
-                feedback: 'This is a red circle. Recognizing colors and shapes is an important visual skill.'
+                type: 'visual', visual: '🔴', 
+                prompt: 'Look at the shape above. What is it?',
+                answer: 'A red circle',
+                distractors: ['A blue square', 'A yellow triangle', 'A green star'],
+                feedback: 'Recognizing colors and shapes is a foundational visual skill.'
             },
             {
-                type: 'audio',
-                stimulus: 'high',  // high pitch tone
-                correctAnswer: 'A high-pitched sound',
-                options: [
-                    { text: 'A high-pitched sound', correct: true },
-                    { text: 'A low-pitched sound', correct: false },
-                    { text: 'A buzzing sound', correct: false },
-                    { text: 'A clicking sound', correct: false }
-                ],
-                feedback: 'This is a high-pitched sound. Distinguishing between different pitches helps with auditory processing.'
+                type: 'audio', audio: 'high', 
+                prompt: 'Listen carefully. What kind of sound is this?',
+                answer: 'A high-pitched continuous tone',
+                distractors: ['A low, deep rumble', 'A rhythmic drum beat', 'A sequence of changing notes'],
+                feedback: 'Distinguishing between high and low pitches helps with auditory processing and recognizing emotions in voices.'
             },
             {
-                type: 'pattern',
-                stimulus: '🔴🔵🔴🔵',
-                correctAnswer: 'Red, blue, red, blue pattern',
-                options: [
-                    { text: 'Red, blue, red, blue pattern', correct: true },
-                    { text: 'Blue, red, blue, red pattern', correct: false },
-                    { text: 'Red, red, blue, blue pattern', correct: false },
-                    { text: 'Blue, blue, red, red pattern', correct: false }
-                ],
-                feedback: 'This is a red, blue, red, blue pattern. Recognizing patterns helps with visual sequencing skills.'
-            },
-            
-            // Level 4-6: More complex sensory challenges
-            {
-                type: 'audio',
-                stimulus: 'rhythm',  // rhythmic pattern
-                correctAnswer: 'A rhythm with 3 beats',
-                options: [
-                    { text: 'A rhythm with 3 beats', correct: true },
-                    { text: 'A rhythm with 4 beats', correct: false },
-                    { text: 'A continuous tone', correct: false },
-                    { text: 'A random sequence of sounds', correct: false }
-                ],
-                feedback: 'This is a rhythm with 3 beats. Recognizing rhythmic patterns is important for auditory processing.'
+                type: 'visual', visual: '🟦🟨🟩🟥🟪', 
+                prompt: 'Look at the sequence above. Describe it.',
+                answer: 'Five squares of different colors',
+                distractors: ['A repeating pattern of red and blue', 'Four identical blue circles', 'A single large purple square'],
+                feedback: 'Visual discrimination helps us tell the difference between multiple objects.'
             },
             {
-                type: 'visual',
-                stimulus: '🟦🟨🟩🟥🟪',
-                correctAnswer: 'Five colored squares in a row',
-                options: [
-                    { text: 'Five colored squares in a row', correct: true },
-                    { text: 'Four colored circles', correct: false },
-                    { text: 'Colored shapes in a circle', correct: false },
-                    { text: 'Three colored triangles', correct: false }
-                ],
-                feedback: 'These are five colored squares in a row. Visual discrimination helps with recognizing differences in objects.'
+                type: 'audio', audio: 'fast_rhythm', 
+                prompt: 'Listen to the timing of this sound.',
+                answer: 'A fast, tapping rhythm',
+                distractors: ['A slow, relaxing beat', 'A single continuous beep', 'A high-pitched squeak'],
+                feedback: 'Recognizing the speed of rhythms helps us understand pacing in music and speech.'
             },
             {
-                type: 'pattern',
-                stimulus: '🔼⏺️🔽⏺️🔼',
-                correctAnswer: 'Up, circle, down, circle, up pattern',
-                options: [
-                    { text: 'Up, circle, down, circle, up pattern', correct: true },
-                    { text: 'Circle, up, circle, down, circle pattern', correct: false },
-                    { text: 'Up, down, up, down, up pattern', correct: false },
-                    { text: 'Circle, circle, up, down, up pattern', correct: false }
-                ],
-                feedback: 'This is an up, circle, down, circle, up pattern. Complex pattern recognition is important for visual processing.'
-            },
-            
-            // Level 7-10: Advanced sensory integration
-            {
-                type: 'audio',
-                stimulus: 'complex',  // complex sound pattern
-                correctAnswer: 'A sequence of high, low, high sounds',
-                options: [
-                    { text: 'A sequence of high, low, high sounds', correct: true },
-                    { text: 'A sequence of low, high, low sounds', correct: false },
-                    { text: 'A continuous changing pitch', correct: false },
-                    { text: 'A series of identical beeps', correct: false }
-                ],
-                feedback: 'This is a sequence of high, low, high sounds. Recognizing complex auditory patterns helps with language processing.'
+                type: 'pattern', visual: '🔼⏺️🔽⏺️🔼', 
+                prompt: 'Identify the pattern you see above.',
+                answer: 'Up arrow, circle, down arrow, circle',
+                distractors: ['Circle, up arrow, circle, down arrow', 'Up arrow, down arrow, up arrow', 'All circles in a row'],
+                feedback: 'Complex pattern recognition is critical for reading and logical thinking.'
             },
             {
-                type: 'visual',
-                stimulus: '🔴🔵🟡🟢🟣',
-                correctAnswer: 'Five circles in different colors',
-                options: [
-                    { text: 'Five circles in different colors', correct: true },
-                    { text: 'Five shapes in the same color', correct: false },
-                    { text: 'A rainbow pattern', correct: false },
-                    { text: 'A color gradient', correct: false }
-                ],
-                feedback: 'These are five circles in different colors. Visual discrimination of multiple attributes is an advanced skill.'
+                type: 'audio', audio: 'low', 
+                prompt: 'Listen carefully. Describe the tone.',
+                answer: 'A low, deep, continuous tone',
+                distractors: ['A high-pitched beep', 'A fast rhythm', 'A melody going up'],
+                feedback: 'Identifying low frequencies is a great auditory discrimination exercise.'
             },
             {
-                type: 'pattern',
-                stimulus: '🔶🔷🔸🔹🔶🔷',
-                correctAnswer: 'A repeating pattern of orange and blue diamonds',
-                options: [
-                    { text: 'A repeating pattern of orange and blue diamonds', correct: true },
-                    { text: 'A random arrangement of shapes', correct: false },
-                    { text: 'A symmetrical pattern of triangles', correct: false },
-                    { text: 'A gradient of colors from orange to blue', correct: false }
-                ],
-                feedback: 'This is a repeating pattern of orange and blue diamonds. Recognizing complex patterns helps with visual processing and prediction.'
+                type: 'visual', visual: '🔶🔷🔸🔹🔶🔷', 
+                prompt: 'What pattern is repeating here?',
+                answer: 'Large and small orange and blue diamonds',
+                distractors: ['A random assortment of circles', 'Only orange triangles', 'A color gradient from dark to light'],
+                feedback: 'You successfully identified multiple attributes (size, color, and shape) at once!'
             },
             {
-                type: 'audio',
-                stimulus: 'sequence',  // complex sequence
-                correctAnswer: 'A sequence of three different sounds',
-                options: [
-                    { text: 'A sequence of three different sounds', correct: true },
-                    { text: 'A sequence of two alternating sounds', correct: false },
-                    { text: 'A single sound changing in volume', correct: false },
-                    { text: 'A continuous sound with varying pitch', correct: false }
-                ],
-                feedback: 'This is a sequence of three different sounds. Auditory sequencing is important for language and music processing.'
+                type: 'audio', audio: 'ascending', 
+                prompt: 'Listen to the movement of the sound.',
+                answer: 'A sequence of notes going UP in pitch',
+                distractors: ['A sequence of notes going DOWN', 'One steady note', 'A rhythmic drum beat'],
+                feedback: 'Tracking whether sounds ascend or descend is key to understanding intonation and questions in conversation.'
+            },
+            {
+                type: 'pattern', visual: '⭐🌙⭐☀️⭐🌙', 
+                prompt: 'What sequence of celestial bodies is this?',
+                answer: 'Star, Moon, Star, Sun, Star, Moon',
+                distractors: ['Sun, Sun, Moon, Moon, Star', 'Star, Star, Moon, Sun, Star', 'Moon, Sun, Star, Moon, Sun'],
+                feedback: 'Excellent job tracking a complex visual sequence.'
+            },
+            {
+                type: 'audio', audio: 'complex', 
+                prompt: 'This is the final challenge. Describe the audio sequence.',
+                answer: 'Three distinct notes: high, low, high',
+                distractors: ['Three distinct notes: low, high, low', 'A continuous changing pitch', 'A series of identical fast beeps'],
+                feedback: 'Auditory sequencing of different tones is an advanced skill used in language processing!'
             }
         ];
-        
-        // Function to initialize audio context
+
+        // Game State
+        let level = 1;
+        let score = 0;
+        let streak = 0;
+        let currentChallenge = null;
+        let audioEnabled = true;
+        let audioContext = null;
+        let activeOscillators = [];
+
+        // --- Audio Engine ---
         function initAudio() {
-            try {
+            if (!audioContext) {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            } catch (e) {
-                console.error('Web Audio API is not supported in this browser');
+            }
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
             }
         }
-        
-        // Function to play different types of sounds
-        function playSound(type) {
+
+        function stopAllAudio() {
+            activeOscillators.forEach(osc => {
+                try { osc.stop(); } catch(e){}
+            });
+            activeOscillators = [];
+        }
+
+        function createTone(freq, type = 'sine') {
+            if (!audioContext) return null;
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = type;
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            return { osc, gain };
+        }
+
+        function playStimulusSound(type) {
+            stopAllAudio();
             if (!audioContext) initAudio();
-            
-            // Stop any currently playing sound
-            if (currentSound) {
-                currentSound.stop();
-                currentSound = null;
+
+            if (type === 'high') {
+                const { osc, gain } = createTone(880, 'sine'); // A5
+                osc.start();
+                gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+                osc.stop(audioContext.currentTime + 1.5);
+                activeOscillators.push(osc);
+            } 
+            else if (type === 'low') {
+                const { osc, gain } = createTone(150, 'triangle'); 
+                osc.start();
+                gain.gain.setValueAtTime(0.4, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+                osc.stop(audioContext.currentTime + 1.5);
+                activeOscillators.push(osc);
             }
-            
-            switch (type) {
-                case 'high':
-                    playTone(880, 1); // A5 note
-                    break;
-                case 'low':
-                    playTone(220, 1); // A3 note
-                    break;
-                case 'rhythm':
-                    playRhythm([0.2, 0.2, 0.2], [0.1, 0.1]);
-                    break;
-                case 'complex':
-                    playSequence([880, 220, 880], [0.3, 0.3, 0.3], [0.1, 0.1]);
-                    break;
-                case 'sequence':
-                    playSequence([440, 587, 659], [0.3, 0.3, 0.3], [0.1, 0.1]);
-                    break;
-                default:
-                    console.log('Unknown sound type');
+            else if (type === 'fast_rhythm') {
+                let time = audioContext.currentTime;
+                for(let i=0; i<6; i++) {
+                    const { osc, gain } = createTone(400, 'square');
+                    osc.start(time);
+                    gain.gain.setValueAtTime(0.2, time);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                    osc.stop(time + 0.1);
+                    activeOscillators.push(osc);
+                    time += 0.2;
+                }
             }
-        }
-        
-        // Function to play a simple tone
-        function playTone(frequency, duration) {
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.type = 'sine';
-            oscillator.frequency.value = frequency;
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.start();
-            currentSound = oscillator;
-            
-            // Fade out at the end
-            gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
-            
-            // Stop after duration
-            setTimeout(() => {
-                oscillator.stop();
-                currentSound = null;
-            }, duration * 1000);
-        }
-        
-        // Function to play a rhythmic pattern
-        function playRhythm(durations, gaps) {
-            let time = 0;
-            
-            for (let i = 0; i < durations.length; i++) {
-                setTimeout(() => {
-                    playTone(440, durations[i]); // A4 note
-                }, time * 1000);
-                
-                time += durations[i];
-                if (i < gaps.length) time += gaps[i];
+            else if (type === 'ascending') {
+                const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+                let time = audioContext.currentTime;
+                notes.forEach(freq => {
+                    const { osc, gain } = createTone(freq, 'sine');
+                    osc.start(time);
+                    gain.gain.setValueAtTime(0.3, time);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+                    osc.stop(time + 0.3);
+                    activeOscillators.push(osc);
+                    time += 0.35;
+                });
+            }
+            else if (type === 'complex') {
+                const notes = [880, 220, 880]; // High, Low, High
+                let time = audioContext.currentTime;
+                notes.forEach(freq => {
+                    const { osc, gain } = createTone(freq, 'sine');
+                    osc.start(time);
+                    gain.gain.setValueAtTime(0.3, time);
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4);
+                    osc.stop(time + 0.4);
+                    activeOscillators.push(osc);
+                    time += 0.5;
+                });
             }
         }
-        
-        // Function to play a sequence of tones
-        function playSequence(frequencies, durations, gaps) {
-            let time = 0;
+
+        // Standard UI sounds
+        function playFX(type) {
+            if (!audioEnabled || !audioContext) return;
+            const { osc, gain } = createTone(440, 'sine');
             
-            for (let i = 0; i < frequencies.length; i++) {
-                setTimeout(() => {
-                    playTone(frequencies[i], durations[i]);
-                }, time * 1000);
-                
-                time += durations[i];
-                if (i < gaps.length) time += gaps[i];
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1046.50, audioContext.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                osc.start(); osc.stop(audioContext.currentTime + 0.3);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioContext.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                osc.start(); osc.stop(audioContext.currentTime + 0.2);
             }
         }
-        
-        // Function to toggle theme
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
-        
-        // Function to update game info
-        function updateGameInfo() {
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
+        }
+
+        // --- Core Game Logic ---
+        function updateUI() {
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
             document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
-        }
-        
-        // Function to set up challenge
-        function setupChallenge() {
-            // Select challenge based on level
-            const challengeIndex = Math.min(level - 1, challenges.length - 1);
-            currentChallenge = challenges[challengeIndex];
             
-            // Update UI with challenge details
+            const streakEl = document.getElementById('streak-container');
+            if(streak >= 2) {
+                streakEl.style.display = 'block';
+                document.getElementById('streak').textContent = streak;
+            } else {
+                streakEl.style.display = 'none';
+            }
+        }
+
+        function startGame() {
+            initAudio(); // Required security unlock on user click
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('play-area').style.display = 'flex';
+            document.getElementById('play-area').style.flexDirection = 'column';
+            document.getElementById('play-area').style.alignItems = 'center';
+            document.getElementById('restart-btn').style.display = 'block';
+            
+            level = 1;
+            score = 0;
+            streak = 0;
+            loadChallenge();
+        }
+
+        function loadChallenge() {
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            
+            currentChallenge = challenges[level - 1];
+            
+            // Update Prompt
+            document.getElementById('instruction-text').textContent = currentChallenge.prompt;
+            
+            // Update Sensory Display
             const sensoryItem = document.getElementById('sensory-item');
-            const playButton = document.getElementById('play-stimulus');
+            const playBtn = document.getElementById('play-stimulus');
             
             if (currentChallenge.type === 'audio') {
                 sensoryItem.textContent = '🔊';
-                playButton.style.display = 'block';
-                playButton.onclick = () => playSound(currentChallenge.stimulus);
+                playBtn.style.display = 'block';
+                playBtn.onclick = () => playStimulusSound(currentChallenge.audio);
             } else {
-                sensoryItem.textContent = currentChallenge.stimulus;
-                playButton.style.display = 'none';
+                sensoryItem.textContent = currentChallenge.visual;
+                playBtn.style.display = 'none';
             }
+
+            // Generate Options
+            const optContainer = document.getElementById('options-container');
+            optContainer.innerHTML = '';
             
-            // Generate options
-            const optionsContainer = document.getElementById('options-container');
-            optionsContainer.innerHTML = '';
+            let options = [currentChallenge.answer, ...currentChallenge.distractors];
+            options = options.sort(() => 0.5 - Math.random()); // Shuffle
             
-            // Shuffle options for variety
-            const shuffledOptions = [...currentChallenge.options].sort(() => Math.random() - 0.5);
-            
-            shuffledOptions.forEach((option, index) => {
-                const optionElement = document.createElement('div');
-                optionElement.className = 'option';
+            const letters = ['A', 'B', 'C', 'D'];
+
+            options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
                 
-                // Create icon based on option type
-                const iconElement = document.createElement('div');
-                iconElement.className = 'option-icon';
-                iconElement.textContent = String.fromCharCode(65 + index); // A, B, C, D
+                const icon = document.createElement('div');
+                icon.className = 'option-icon';
+                icon.textContent = letters[index];
                 
-                // Create text element
-                const textElement = document.createElement('div');
-                textElement.className = 'option-text';
-                textElement.textContent = option.text;
+                const text = document.createElement('div');
+                text.textContent = optText;
                 
-                optionElement.appendChild(iconElement);
-                optionElement.appendChild(textElement);
+                btn.appendChild(icon);
+                btn.appendChild(text);
+
+                // Hover TTS
+                btn.onmouseenter = () => speakText(optText);
                 
-                optionElement.addEventListener('click', () => {
-                    if (challengeAnswered) return;
-                    checkAnswer(option, optionElement);
-                });
-                
-                optionsContainer.appendChild(optionElement);
+                btn.onclick = () => checkAnswer(optText, btn);
+                optContainer.appendChild(btn);
             });
+
+            updateUI();
             
-            // Reset UI
-            document.getElementById('feedback').style.display = 'none';
-            document.getElementById('next-button').style.display = 'none';
-            challengeAnswered = false;
+            // Auto read prompt
+            setTimeout(() => speakText(currentChallenge.prompt), 500);
         }
-        
-        // Function to check answer
-        function checkAnswer(option, optionElement) {
-            challengeAnswered = true;
-            const feedbackElement = document.getElementById('feedback');
-            
-            // Disable all options
-            const options = document.querySelectorAll('.option');
-            options.forEach(opt => {
-                opt.style.pointerEvents = 'none';
+
+        function checkAnswer(selectedText, btnElement) {
+            stopAllAudio();
+            const feedback = document.getElementById('feedback');
+            const allBtns = document.querySelectorAll('.option');
+
+            // Disable buttons
+            allBtns.forEach(b => {
+                b.disabled = true;
+                if(b.querySelector('div:last-child').textContent === currentChallenge.answer) {
+                    b.classList.add('correct-ans');
+                }
             });
-            
-            if (option.correct) {
-                // Correct answer
-                optionElement.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
-                feedbackElement.textContent = 'Correct! ' + currentChallenge.feedback;
-                feedbackElement.className = 'feedback correct';
-                score += 10 * level;
+
+            if (selectedText === currentChallenge.answer) {
+                playFX('correct');
+                streak++;
+                let pts = 10 + (streak * 5);
+                score += pts;
+                
+                feedback.textContent = `🌟 Correct! ${currentChallenge.feedback} (+${pts} pts)`;
+                feedback.className = 'feedback correct';
+                speakText("Correct!");
             } else {
-                // Incorrect answer
-                optionElement.style.backgroundColor = 'rgba(244, 67, 54, 0.5)';
-                feedbackElement.textContent = 'Not quite. ' + currentChallenge.feedback;
-                feedbackElement.className = 'feedback incorrect';
+                playFX('wrong');
+                streak = 0;
+                btnElement.classList.add('wrong-ans');
                 
-                // Highlight the correct answer
-                options.forEach(opt => {
-                    const optionText = opt.querySelector('.option-text').textContent;
-                    if (optionText === currentChallenge.correctAnswer) {
-                        opt.style.backgroundColor = 'rgba(76, 175, 80, 0.5)';
-                    }
-                });
+                feedback.textContent = `Oops. ${currentChallenge.feedback}`;
+                feedback.className = 'feedback incorrect';
+                speakText("Not quite.");
             }
+
+            updateUI();
+            feedback.style.display = 'block';
             
-            feedbackElement.style.display = 'block';
-            document.getElementById('next-button').style.display = 'block';
-            
-            updateGameInfo();
-        }
-        
-        // Function to move to next challenge
-        function nextChallenge() {
             if (level < 10) {
-                level++;
-                setupChallenge();
+                document.getElementById('next-button').style.display = 'block';
             } else {
-                // Game completed
-                document.getElementById('sensory-item').textContent = '🏆';
-                document.getElementById('play-stimulus').style.display = 'none';
-                document.getElementById('options-container').innerHTML = '';
-                document.getElementById('feedback').textContent = `Congratulations! You've completed all challenges. Final score: ${score}`;
-                document.getElementById('feedback').className = 'feedback correct';
-                document.getElementById('feedback').style.display = 'block';
-                document.getElementById('next-button').style.display = 'none';
-                document.getElementById('instructions').textContent = 'Game completed! You\'ve mastered sensory matching skills.';
+                setTimeout(endGame, 2000);
             }
+        }
+
+        function nextLevel() {
+            level++;
+            loadChallenge();
+        }
+
+        function endGame() {
+            document.getElementById('sensory-item').textContent = '🏆';
+            document.getElementById('play-stimulus').style.display = 'none';
+            document.getElementById('options-container').innerHTML = '';
+            document.getElementById('next-button').style.display = 'none';
+            document.getElementById('feedback').style.display = 'none';
             
-            updateGameInfo();
+            document.querySelector('.instructions').innerHTML = `
+                <div style="text-align:center; width:100%;">
+                    <h2 style="font-family: var(--font-head); color: var(--primary); margin:0;">Challenge Complete!</h2>
+                    <p style="font-size: 1.5rem; margin-top: 10px;">Final Score: <strong>${score}</strong></p>
+                    <p style="color: var(--success);">You've mastered sensory matching skills!</p>
+                </div>
+            `;
+            
+            speakText("Challenge Complete! You have mastered sensory matching!");
         }
-        
-        // Function to start game
-        function startGame() {
-            level = 1;
-            score = 0;
-            updateGameInfo();
-            setupChallenge();
-            document.getElementById('instructions').textContent = 'Match the sensory stimulus with its correct description. Pay attention to details!';
-        }
-        
-        // Event listeners
-        document.getElementById('next-button').addEventListener('click', nextChallenge);
-        
-        // Initialize audio
-        initAudio();
-        
-        // Initialize game
-        startGame();
+
+        // Initialize display state
+        updateUI();
     </script>
 </body>
 </html>

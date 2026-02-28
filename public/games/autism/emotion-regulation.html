@@ -2,779 +2,647 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Emotion Regulation Challenge</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --success: #38b000;
+            --warning: #f4a261;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
-            transition: background 0.5s ease, color 0.5s ease;
-        }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
-        }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
-        }
-        h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
-        }
-        #game-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
-        }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
-        }
-        .instructions {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.1em;
-        }
-        .scenario-container {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .scenario-title {
-            font-size: 1.3em;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        .scenario-description {
-            font-size: 1.1em;
-            margin-bottom: 15px;
-            line-height: 1.5;
-        }
-        .emotion-meter {
-            width: 100%;
-            height: 30px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            margin: 20px 0;
-            position: relative;
-            overflow: hidden;
-        }
-        .emotion-level {
-            height: 100%;
-            width: 50%;
-            background: linear-gradient(90deg, #4CAF50, #FFEB3B, #FF9800, #F44336);
-            border-radius: 15px;
-            transition: width 0.3s ease;
-        }
-        .emotion-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 5px;
-            font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        .strategies-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .strategy-card {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
+            transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
         }
-        .strategy-card:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-5px);
-        }
-        .strategy-card.selected {
-            background: rgba(76, 175, 80, 0.3);
-            box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
-        }
-        .strategy-card.incorrect {
-            background: rgba(244, 67, 54, 0.3);
-            box-shadow: 0 0 15px rgba(244, 67, 54, 0.5);
-        }
-        .strategy-icon {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        .strategy-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .strategy-description {
-            font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        .timer-container {
-            margin: 20px 0;
-            position: relative;
-        }
-        .timer-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .timer-progress {
-            height: 100%;
-            background: linear-gradient(90deg, #ff9800, #f44336);
-            transition: width 0.1s linear;
-            width: 100%;
-        }
-        .timer-text {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            line-height: 20px;
-            font-weight: bold;
-        }
-        .button {
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: rgba(33, 150, 243, 0.7);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            margin: 10px;
-        }
-        .button:hover {
-            background: rgba(33, 150, 243, 0.9);
-        }
-        .button.start {
-            background: rgba(76, 175, 80, 0.7);
-        }
-        .button.start:hover {
-            background: rgba(76, 175, 80, 0.9);
-        }
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            display: none;
-        }
-        .feedback.correct {
-            background: rgba(76, 175, 80, 0.2);
-        }
-        .feedback.incorrect {
-            background: rgba(244, 67, 54, 0.2);
-        }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin-top: 20px;
-            overflow: hidden;
-        }
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            transition: width 0.5s ease;
-        }
-        #theme-toggle {
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
             position: absolute;
             top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
-        }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
-        }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #restart:hover {
-            background: #cc0000;
-        }
-        .stats-container {
+            width: 100%;
+            max-width: 900px;
             display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
+            justify-content: space-between;
+            padding: 0 20px;
         }
-        .stat-box {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px 20px;
-            border-radius: 10px;
-            min-width: 120px;
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            padding: 8px 16px;
+            font-family: var(--font-head);
+            font-size: 1rem;
+            cursor: pointer;
+            color: inherit;
+            transition: all 0.3s ease;
+            font-weight: 800;
         }
-        .stat-label {
-            font-size: 0.9em;
-            opacity: 0.8;
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
+        h1 {
+            font-family: var(--font-head);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900;
+            margin: 40px 0 10px;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
+
+        #game-info {
+            display: flex;
+            gap: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.05);
+            padding: 10px 25px;
+            border-radius: 20px;
         }
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+        .streak-text { color: #ff9f1c; font-weight: 900; animation: pulse 1.5s infinite; }
+
+        /* Main Container */
+        #game-container {
+            width: 95%;
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        body.dark #game-container {
+            background: var(--card-dark);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Timer */
+        .timer-container { margin-bottom: 20px; position: relative; }
+        .timer-bar {
+            width: 100%; height: 16px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; overflow: hidden;
+        }
+        body.dark .timer-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .timer-progress {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #38b000, #f4a261, #e63946);
+            transition: width 1s linear;
+        }
+        .timer-text { font-family: var(--font-head); font-weight: 900; margin-top: 5px; font-size: 1.1rem; }
+
+        /* Scenario */
+        .scenario-container {
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: left;
+            border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
+        }
+        body.dark .scenario-container { background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.1); }
+        
+        .scenario-title { font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; color: var(--primary); }
+        .scenario-description { font-size: 1.15rem; line-height: 1.6; margin-bottom: 20px; }
+
+        .read-aloud-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: none; border: none; font-size: 1.5rem; cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .read-aloud-btn:hover { transform: scale(1.1); }
+
+        /* Emotion Meter */
+        .emotion-meter-container {
+            background: rgba(255,255,255,0.5);
+            padding: 15px; border-radius: 12px; text-align: center;
+        }
+        body.dark .emotion-meter-container { background: rgba(0,0,0,0.2); }
+        
+        .emotion-emoji { font-size: 3rem; margin-bottom: 10px; transition: all 0.2s; }
+        
+        input[type=range] {
+            width: 100%; margin: 10px 0; -webkit-appearance: none; background: transparent;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 12px; border-radius: 6px;
+            background: linear-gradient(90deg, #4facfe, #4caf50, #f4a261, #e63946);
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 24px; width: 24px; border-radius: 50%; background: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3); cursor: pointer;
+            -webkit-appearance: none; margin-top: -6px;
+        }
+        .emotion-labels {
+            display: flex; justify-content: space-between;
+            font-size: 0.9rem; font-weight: 700; opacity: 0.7;
+        }
+
+        /* Strategies Grid */
+        .strategies-container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px; margin-bottom: 20px;
+        }
+        .strategy-card {
+            background: rgba(0, 0, 0, 0.03);
+            border: 2px solid transparent; border-radius: 16px;
+            padding: 20px; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        body.dark .strategy-card { background: rgba(255, 255, 255, 0.05); }
+        
+        .strategy-card:hover {
+            transform: translateY(-5px);
+            background: rgba(74, 144, 226, 0.1);
+            border-color: rgba(74, 144, 226, 0.5);
+        }
+        .strategy-card.selected {
+            background: rgba(74, 144, 226, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.2);
+            transform: scale(1.02);
+        }
+        .strategy-card.correct-ans { background: rgba(56, 176, 0, 0.2); border-color: var(--success); }
+        .strategy-card.wrong-ans { background: rgba(230, 57, 70, 0.2); border-color: var(--error); opacity: 0.6; }
+        
+        .strategy-icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .strategy-title { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }
+        .strategy-description { font-size: 1rem; opacity: 0.9; line-height: 1.4; }
+
+        /* Buttons & Feedback */
+        .action-btn {
+            padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15); margin-top: 10px;
+        }
+        #start-button { background: linear-gradient(135deg, #4A90E2, #0072ff); }
+        #submit-button { background: linear-gradient(135deg, #f4a261, #e76f51); display: none; margin: 0 auto; }
+        #next-button { background: linear-gradient(135deg, #38b000, #008000); display: none; margin: 0 auto; }
+        .action-btn:hover { transform: translateY(-3px); }
+
+        .feedback {
+            margin-top: 25px; padding: 15px; border-radius: 14px;
+            font-size: 1.25rem; font-weight: 700; display: none;
+            animation: slideUp 0.3s ease forwards;
+        }
+        .feedback.correct { background: rgba(56, 176, 0, 0.15); color: #2b8a00; border: 2px solid rgba(56,176,0,0.3);}
+        .feedback.incorrect { background: rgba(230, 57, 70, 0.15); color: #c1121f; border: 2px solid rgba(230,57,70,0.3);}
+        body.dark .feedback.correct { color: #80ed99; }
+        body.dark .feedback.incorrect { color: #ffb3c1; }
+
+        /* Progress Bar Bottom */
+        .level-progress-bar {
+            width: 100%; height: 8px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; margin-top: 30px; overflow: hidden;
+        }
+        body.dark .level-progress-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .level-progress {
+            height: 100%; background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%; transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
     <h1>Emotion Regulation Challenge</h1>
     <div id="game-info">
-        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+        <div>Level: <span id="level">1</span>/10</div>
+        <div>Score: <span id="score">0</span></div>
+        <div id="streak-container" style="display:none;" class="streak-text">🔥 Streak: <span id="streak">0</span></div>
     </div>
+
     <div id="game-container">
-        <div class="instructions" id="instructions">Read each scenario and identify how you might feel. Then select the best strategy to regulate your emotions in that situation.</div>
         
-        <div class="timer-container">
-            <div class="timer-bar">
-                <div class="timer-progress" id="timer-progress"></div>
+        <div id="welcome-screen">
+            <div class="scenario-container" style="text-align: center; font-size: 1.2rem;">
+                Welcome! Read each scenario and identify how you might feel using the slider. Then, select the best strategy to regulate your emotions before time runs out!
             </div>
-            <div class="timer-text" id="timer-text">Time: 60s</div>
+            <button class="action-btn" id="start-button" onclick="startGame()">Start Challenge ▶</button>
         </div>
-        
-        <div class="scenario-container" id="scenario-container">
-            <div class="scenario-title" id="scenario-title">Loading scenario...</div>
-            <div class="scenario-description" id="scenario-description"></div>
+
+        <div id="play-area" style="display: none;">
+            <div class="timer-container">
+                <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
+                <div class="timer-text" id="timer-text">Time: 60s</div>
+            </div>
             
-            <div class="emotion-meter-container">
-                <div class="emotion-meter">
-                    <div class="emotion-level" id="emotion-level"></div>
+            <div class="scenario-container" id="scenario-container">
+                <button class="read-aloud-btn" onclick="readScenario()" title="Read Aloud">📢</button>
+                <div class="scenario-title" id="scenario-title">Loading...</div>
+                <div class="scenario-description" id="scenario-description"></div>
+                
+                <div class="emotion-meter-container">
+                    <div style="font-weight: 800; margin-bottom: 5px;">How upset would this make you?</div>
+                    <div class="emotion-emoji" id="emotion-emoji">😐</div>
+                    <input type="range" id="emotion-slider" min="0" max="100" value="50" oninput="updateEmoji()">
+                    <div class="emotion-labels">
+                        <span>Calm</span>
+                        <span>Slightly Upset</span>
+                        <span>Overwhelmed</span>
+                    </div>
                 </div>
-                <div class="emotion-labels">
-                    <span>Calm</span>
-                    <span>Slightly Upset</span>
-                    <span>Very Upset</span>
-                    <span>Overwhelmed</span>
-                </div>
-                <input type="range" id="emotion-slider" min="0" max="100" value="50" style="width: 100%; margin-top: 10px;">
             </div>
+            
+            <div class="strategies-container" id="strategies-container"></div>
+            
+            <button class="action-btn" id="submit-button" onclick="submitAnswer()">Submit Strategy ✔</button>
+            <button class="action-btn" id="next-button" onclick="nextScenario()">Next Scenario ➔</button>
+            
+            <div class="feedback" id="feedback"></div>
         </div>
         
-        <div class="strategies-container" id="strategies-container">
-            <!-- Strategy cards will be generated here -->
-        </div>
-        
-        <button class="button start" id="start-button">Start Game</button>
-        <button class="button" id="submit-button" style="display: none;">Submit Answer</button>
-        <div class="feedback" id="feedback"></div>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
+        <div class="level-progress-bar" id="progress-container" style="display: none;">
+            <div class="level-progress" id="progress"></div>
         </div>
     </div>
-    <button id="restart" onclick="startGame()">Restart Game</button>
+
+    <button class="action-btn" id="restart-btn" style="background: var(--error); display:none; margin-top: 20px;" onclick="location.reload()">↺ Restart Game</button>
 
     <script>
-        // Game variables
-        let level = 1;
-        let score = 0;
-        let timeLeft = 60;
-        let timerInterval;
-        let gameActive = false;
-        let currentScenario = null;
-        let selectedStrategy = null;
-        let scenariosCompleted = 0;
-        
-        // Scenarios database
+        // Database
         const scenarios = [
             {
                 title: "Unexpected Schedule Change",
                 description: "Your teacher announces that there will be a surprise test tomorrow instead of the planned activity you were looking forward to.",
-                emotionLevel: 75,
                 strategies: [
-                    {
-                        icon: "🧘",
-                        title: "Deep Breathing",
-                        description: "Take 5 deep breaths to calm your nervous system.",
-                        effectiveness: 80
-                    },
-                    {
-                        icon: "📝",
-                        title: "Make a New Plan",
-                        description: "Write down how you'll prepare for the test tonight.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "😡",
-                        title: "Complain Loudly",
-                        description: "Tell everyone how unfair this change is.",
-                        effectiveness: 20
-                    },
-                    {
-                        icon: "🏃",
-                        title: "Leave the Room",
-                        description: "Walk out to avoid dealing with the change.",
-                        effectiveness: 10
-                    }
+                    { icon: "🧘", title: "Deep Breathing", description: "Take 5 deep breaths to calm your nervous system.", effectiveness: 80 },
+                    { icon: "📝", title: "Make a New Plan", description: "Write down how you'll prepare for the test tonight.", effectiveness: 90 },
+                    { icon: "😡", title: "Complain Loudly", description: "Tell everyone how unfair this change is.", effectiveness: 20 },
+                    { icon: "🏃", title: "Leave the Room", description: "Walk out to avoid dealing with the change.", effectiveness: 10 }
                 ]
             },
             {
                 title: "Sensory Overload",
                 description: "You're in a crowded cafeteria with bright lights, loud conversations, and strong food smells that are becoming overwhelming.",
-                emotionLevel: 85,
                 strategies: [
-                    {
-                        icon: "🎧",
-                        title: "Use Noise-Canceling Headphones",
-                        description: "Block out some of the sensory input with headphones.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🚶",
-                        title: "Find a Quiet Space",
-                        description: "Politely excuse yourself and find a calmer environment.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "😖",
-                        title: "Cover Your Ears and Rock",
-                        description: "Cover your ears and rock back and forth at the table.",
-                        effectiveness: 40
-                    },
-                    {
-                        icon: "🗣️",
-                        title: "Yell at Everyone",
-                        description: "Tell everyone to be quiet because they're too loud.",
-                        effectiveness: 10
-                    }
+                    { icon: "🎧", title: "Use Noise-Canceling Headphones", description: "Block out some of the sensory input.", effectiveness: 85 },
+                    { icon: "🚶", title: "Find a Quiet Space", description: "Politely excuse yourself and find a calmer environment.", effectiveness: 90 },
+                    { icon: "😖", title: "Cover Your Ears", description: "Cover your ears and rock back and forth at the table.", effectiveness: 40 },
+                    { icon: "🗣️", title: "Yell at Everyone", description: "Tell everyone to be quiet because they're too loud.", effectiveness: 10 }
                 ]
             },
             {
                 title: "Misunderstanding a Social Cue",
                 description: "Your classmates are laughing, and you think they might be laughing at something you said or did.",
-                emotionLevel: 70,
                 strategies: [
-                    {
-                        icon: "❓",
-                        title: "Ask for Clarification",
-                        description: "Politely ask what they found funny.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🤔",
-                        title: "Consider Other Explanations",
-                        description: "Think about other reasons they might be laughing that don't involve you.",
-                        effectiveness: 80
-                    },
-                    {
-                        icon: "😢",
-                        title: "Assume the Worst",
-                        description: "Believe they're definitely making fun of you and feel bad.",
-                        effectiveness: 15
-                    },
-                    {
-                        icon: "👊",
-                        title: "Get Defensive",
-                        description: "Tell them to stop laughing at you immediately.",
-                        effectiveness: 20
-                    }
+                    { icon: "❓", title: "Ask for Clarification", description: "Politely ask what they found funny.", effectiveness: 85 },
+                    { icon: "🤔", title: "Consider Other Explanations", description: "Think about other reasons they might be laughing.", effectiveness: 80 },
+                    { icon: "😢", title: "Assume the Worst", description: "Believe they're definitely making fun of you.", effectiveness: 15 },
+                    { icon: "👊", title: "Get Defensive", description: "Tell them to stop laughing at you immediately.", effectiveness: 20 }
                 ]
             },
             {
                 title: "Difficulty with a Task",
                 description: "You're trying to complete a school assignment but are finding it much harder than expected.",
-                emotionLevel: 65,
                 strategies: [
-                    {
-                        icon: "🔍",
-                        title: "Break It Down",
-                        description: "Divide the task into smaller, more manageable steps.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🙋",
-                        title: "Ask for Help",
-                        description: "Reach out to a teacher or classmate for assistance.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "📱",
-                        title: "Distract Yourself",
-                        description: "Take a break to play games on your phone instead.",
-                        effectiveness: 30
-                    },
-                    {
-                        icon: "😠",
-                        title: "Get Frustrated",
-                        description: "Crumple up your paper and give up on the assignment.",
-                        effectiveness: 10
-                    }
+                    { icon: "🔍", title: "Break It Down", description: "Divide the task into smaller, manageable steps.", effectiveness: 90 },
+                    { icon: "🙋", title: "Ask for Help", description: "Reach out to a teacher or classmate for assistance.", effectiveness: 85 },
+                    { icon: "📱", title: "Distract Yourself", description: "Take a break to play games on your phone instead.", effectiveness: 30 },
+                    { icon: "😠", title: "Get Frustrated", description: "Crumple up your paper and give up.", effectiveness: 10 }
                 ]
             },
             {
                 title: "Unexpected Physical Contact",
                 description: "Someone unexpectedly puts their hand on your shoulder while talking to you.",
-                emotionLevel: 80,
                 strategies: [
-                    {
-                        icon: "🗣️",
-                        title: "Communicate Your Boundary",
-                        description: "Politely say, 'I prefer not to be touched, thank you.'",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "👐",
-                        title: "Step Back Slightly",
-                        description: "Create a little more personal space without making a scene.",
-                        effectiveness: 75
-                    },
-                    {
-                        icon: "😨",
-                        title: "Freeze Up",
-                        description: "Become very uncomfortable but say nothing.",
-                        effectiveness: 20
-                    },
-                    {
-                        icon: "👋",
-                        title: "Push Their Hand Away",
-                        description: "Forcefully remove their hand from your shoulder.",
-                        effectiveness: 30
-                    }
+                    { icon: "🗣️", title: "Communicate Boundary", description: "Politely say, 'I prefer not to be touched, thank you.'", effectiveness: 90 },
+                    { icon: "👐", title: "Step Back", description: "Create personal space without making a scene.", effectiveness: 75 },
+                    { icon: "😨", title: "Freeze Up", description: "Become very uncomfortable but say nothing.", effectiveness: 20 },
+                    { icon: "👋", title: "Push Away", description: "Forcefully remove their hand from your shoulder.", effectiveness: 30 }
                 ]
             },
             {
                 title: "Change in Routine",
                 description: "Your favorite after-school activity is canceled today without warning.",
-                emotionLevel: 75,
                 strategies: [
-                    {
-                        icon: "📋",
-                        title: "Create an Alternative Plan",
-                        description: "Think of another enjoyable activity you could do instead.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "⏰",
-                        title: "Use a Visual Schedule",
-                        description: "Update your schedule and review what the rest of your day will look like.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "😭",
-                        title: "Have a Meltdown",
-                        description: "Get very upset because your routine is disrupted.",
-                        effectiveness: 10
-                    },
-                    {
-                        icon: "🛌",
-                        title: "Refuse to Do Anything Else",
-                        description: "Decide your whole day is ruined and give up on doing anything productive.",
-                        effectiveness: 15
-                    }
+                    { icon: "📋", title: "Alternative Plan", description: "Think of another enjoyable activity to do instead.", effectiveness: 85 },
+                    { icon: "⏰", title: "Visual Schedule", description: "Update your schedule and review the rest of your day.", effectiveness: 90 },
+                    { icon: "😭", title: "Meltdown", description: "Get very upset because your routine is disrupted.", effectiveness: 10 },
+                    { icon: "🛌", title: "Give Up", description: "Decide your whole day is ruined and do nothing.", effectiveness: 15 }
                 ]
             },
             {
                 title: "Receiving Criticism",
-                description: "Your teacher gives you feedback on your project and points out several things you need to improve.",
-                emotionLevel: 70,
+                description: "Your teacher points out several things you need to improve on your project.",
                 strategies: [
-                    {
-                        icon: "📝",
-                        title: "Take Notes",
-                        description: "Write down the specific feedback so you can address each point.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🙏",
-                        title: "Thank Them",
-                        description: "Thank your teacher for helping you improve your work.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🙄",
-                        title: "Ignore the Feedback",
-                        description: "Decide the teacher is wrong and your work is already perfect.",
-                        effectiveness: 15
-                    },
-                    {
-                        icon: "😢",
-                        title: "Take It Personally",
-                        description: "Feel that the criticism means you're not smart or capable.",
-                        effectiveness: 10
-                    }
+                    { icon: "📝", title: "Take Notes", description: "Write down the feedback to address each point.", effectiveness: 90 },
+                    { icon: "🙏", title: "Thank Them", description: "Thank your teacher for helping you improve.", effectiveness: 85 },
+                    { icon: "🙄", title: "Ignore Feedback", description: "Decide the teacher is wrong.", effectiveness: 15 },
+                    { icon: "😢", title: "Take It Personally", description: "Feel that the criticism means you're not smart.", effectiveness: 10 }
                 ]
             },
             {
                 title: "Misplaced Item",
-                description: "You can't find your favorite pencil case that you always keep in a specific pocket of your backpack.",
-                emotionLevel: 65,
+                description: "You can't find your favorite pencil case that you always keep in a specific pocket.",
                 strategies: [
-                    {
-                        icon: "🔍",
-                        title: "Systematic Search",
-                        description: "Calmly check each pocket and compartment one by one.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "✏️",
-                        title: "Use an Alternative",
-                        description: "Use another pencil for now and look for your case later.",
-                        effectiveness: 80
-                    },
-                    {
-                        icon: "😡",
-                        title: "Blame Others",
-                        description: "Accuse someone of moving or stealing your pencil case.",
-                        effectiveness: 15
-                    },
-                    {
-                        icon: "😖",
-                        title: "Get Very Upset",
-                        description: "Dump out your entire backpack in frustration.",
-                        effectiveness: 20
-                    }
-                ]
-            },
-            {
-                title: "Group Project Assignment",
-                description: "Your teacher assigns a group project where you'll need to work with three classmates you don't know well.",
-                emotionLevel: 75,
-                strategies: [
-                    {
-                        icon: "📋",
-                        title: "Suggest a Planning Meeting",
-                        description: "Propose that the group meets to assign clear roles and tasks.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "💪",
-                        title: "Focus on Your Strengths",
-                        description: "Volunteer for the parts of the project that match your abilities.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "🙈",
-                        title: "Avoid Participation",
-                        description: "Try to do minimal work and avoid interacting with the group.",
-                        effectiveness: 15
-                    },
-                    {
-                        icon: "👑",
-                        title: "Take Over Everything",
-                        description: "Insist on doing the entire project your way without input from others.",
-                        effectiveness: 20
-                    }
-                ]
-            },
-            {
-                title: "Unexpected Visitor",
-                description: "Your parent tells you that a relative you don't see often will be staying at your house this weekend.",
-                emotionLevel: 70,
-                strategies: [
-                    {
-                        icon: "🗓️",
-                        title: "Preview the Schedule",
-                        description: "Ask about the visit details so you know what to expect.",
-                        effectiveness: 90
-                    },
-                    {
-                        icon: "🏠",
-                        title: "Designate a Quiet Space",
-                        description: "Set up a place in your home where you can go if you need a break.",
-                        effectiveness: 85
-                    },
-                    {
-                        icon: "😠",
-                        title: "Refuse to Interact",
-                        description: "Decide you won't talk to the visitor at all.",
-                        effectiveness: 20
-                    },
-                    {
-                        icon: "🚪",
-                        title: "Run Away",
-                        description: "Make plans to stay at a friend's house to avoid the situation.",
-                        effectiveness: 25
-                    }
+                    { icon: "🔍", title: "Systematic Search", description: "Calmly check each pocket and compartment.", effectiveness: 85 },
+                    { icon: "✏️", title: "Use Alternative", description: "Use another pencil for now and look later.", effectiveness: 80 },
+                    { icon: "😡", title: "Blame Others", description: "Accuse someone of stealing your case.", effectiveness: 15 },
+                    { icon: "😖", title: "Get Upset", description: "Dump out your entire backpack in frustration.", effectiveness: 20 }
                 ]
             }
         ];
-        
-        // Function to toggle theme
+
+        // Game State
+        let level = 1;
+        let score = 0;
+        let streak = 0;
+        let timeLeft = 60;
+        let timerInterval;
+        let currentScenario = null;
+        let currentStrategies = []; // CACHED sorted strategies for grading
+        let selectedStrategyIndex = null;
+        let audioEnabled = true;
+
+        // Audio System
+        function playTone(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                }
+                osc.start(); osc.stop(ctx.currentTime + 0.3);
+            } catch(e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function readScenario() {
+            if(currentScenario) speakText(`${currentScenario.title}. ${currentScenario.description}`);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
-        
-        // Function to update game info
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
+        }
+
+        // Emoji Slider Logic
+        function updateEmoji() {
+            const val = document.getElementById('emotion-slider').value;
+            const emojiEl = document.getElementById('emotion-emoji');
+            if(val < 25) emojiEl.textContent = "😌"; // Calm
+            else if(val < 50) emojiEl.textContent = "😐"; // Neutral
+            else if(val < 75) emojiEl.textContent = "😟"; // Upset
+            else emojiEl.textContent = "😫"; // Overwhelmed
+        }
+
+        // Core Loop
         function updateGameInfo() {
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
-            document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
+            document.getElementById('progress').style.width = `${(level / 8) * 100}%`;
+            
+            const streakEl = document.getElementById('streak-container');
+            if(streak >= 2) {
+                streakEl.style.display = 'block';
+                document.getElementById('streak').textContent = streak;
+            } else {
+                streakEl.style.display = 'none';
+            }
         }
-        
-        // Function to start the timer
+
         function startTimer() {
             clearInterval(timerInterval);
-            timeLeft = 60;
+            timeLeft = Math.max(20, 60 - (level * 3)); // Gets slightly faster each level
+            const totalTime = timeLeft;
+            
             document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
             document.getElementById('timer-progress').style.width = '100%';
             
             timerInterval = setInterval(() => {
                 timeLeft--;
                 document.getElementById('timer-text').textContent = `Time: ${timeLeft}s`;
-                document.getElementById('timer-progress').style.width = `${(timeLeft / 60) * 100}%`;
+                document.getElementById('timer-progress').style.width = `${(timeLeft / totalTime) * 100}%`;
                 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    endGame();
+                    handleTimeOut();
                 }
             }, 1000);
         }
-        
-        // Function to load a random scenario
-        function loadRandomScenario() {
-            // Get scenarios appropriate for current level
-            const levelScenarios = scenarios.filter((_, index) => {
-                if (level <= 3) return index < 3;
-                if (level <= 6) return index >= 3 && index < 7;
-                return index >= 7;
-            });
+
+        function startGame() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('play-area').style.display = 'block';
+            document.getElementById('progress-container').style.display = 'block';
+            document.getElementById('restart-btn').style.display = 'block';
+            loadScenario();
+        }
+
+        function loadScenario() {
+            // Reset UI
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('submit-button').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            selectedStrategyIndex = null;
             
-            // Select a random scenario
-            const randomIndex = Math.floor(Math.random() * levelScenarios.length);
-            currentScenario = levelScenarios[randomIndex];
+            // Get scenario (using level-1 as index since we have 8 scenarios and 8 levels)
+            const scenarioIndex = (level - 1) % scenarios.length;
+            currentScenario = scenarios[scenarioIndex];
             
-            // Display scenario
+            // Cache shuffled strategies to fix the grading bug
+            currentStrategies = [...currentScenario.strategies].sort(() => Math.random() - 0.5);
+            
+            // Update UI
             document.getElementById('scenario-title').textContent = currentScenario.title;
             document.getElementById('scenario-description').textContent = currentScenario.description;
+            document.getElementById('emotion-slider').value = 50;
+            updateEmoji();
             
-            // Set emotion level
-            document.getElementById('emotion-level').style.width = `${currentScenario.emotionLevel}%`;
-            document.getElementById('emotion-slider').value = currentScenario.emotionLevel;
-            
-            // Display strategies
-            renderStrategies();
-        }
-        
-        // Function to render strategies
-        function renderStrategies() {
             const strategiesContainer = document.getElementById('strategies-container');
             strategiesContainer.innerHTML = '';
             
-            // Shuffle strategies to randomize their order
-            const shuffledStrategies = [...currentScenario.strategies].sort(() => Math.random() - 0.5);
-            
-            shuffledStrategies.forEach((strategy, index) => {
-                const strategyCard = document.createElement('div');
-                strategyCard.className = 'strategy-card';
-                strategyCard.dataset.index = index;
-                
-                strategyCard.innerHTML = `
+            currentStrategies.forEach((strategy, index) => {
+                const card = document.createElement('div');
+                card.className = 'strategy-card';
+                card.innerHTML = `
                     <div class="strategy-icon">${strategy.icon}</div>
                     <div class="strategy-title">${strategy.title}</div>
                     <div class="strategy-description">${strategy.description}</div>
                 `;
                 
-                strategyCard.addEventListener('click', () => selectStrategy(strategyCard, index));
-                
-                strategiesContainer.appendChild(strategyCard);
+                card.addEventListener('mouseenter', () => speakText(strategy.title));
+                card.addEventListener('click', () => selectStrategy(card, index));
+                strategiesContainer.appendChild(card);
             });
+            
+            updateGameInfo();
+            startTimer();
+            if(level === 1) setTimeout(readScenario, 500); // Auto-read first level
         }
-        
-        // Function to select a strategy
-        function selectStrategy(card, index) {
-            if (!gameActive) return;
+
+        function selectStrategy(cardElement, index) {
+            if(document.getElementById('submit-button').style.display === 'none' && document.getElementById('next-button').style.display === 'block') return; // Prevent clicking after submit
             
-            // Clear previous selection
-            document.querySelectorAll('.strategy-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            
-            // Select new strategy
-            card.classList.add('selected');
-            selectedStrategy = index;
-            
-            // Show submit button
+            document.querySelectorAll('.strategy-card').forEach(c => c.classList.remove('selected'));
+            cardElement.classList.add('selected');
+            selectedStrategyIndex = index;
             document.getElementById('submit-button').style.display = 'block';
         }
-        
-        // Function to submit answer
+
+        function handleTimeOut() {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = "Time's up! Taking a moment to pause is okay. Let's try the next one.";
+            feedback.className = 'feedback incorrect';
+            feedback.style.display = 'block';
+            
+            document.querySelectorAll('.strategy-card').forEach(c => c.style.pointerEvents = 'none');
+            document.getElementById('submit-button').style.display = 'none';
+            document.getElementById('next-button').style.display = 'block';
+            streak = 0;
+            playTone('wrong');
+        }
+
         function submitAnswer() {
-            if (selectedStrategy === null) return;
+            if (selectedStrategyIndex === null) return;
+            clearInterval(timerInterval); // Stop timer
             
-            const selectedStrategyData = [...currentScenario.strategies].sort(() => Math.random() - 0.5)[selectedStrategy];
-            const effectiveness = selectedStrategyData.effectiveness;
+            const selectedStrategy = currentStrategies[selectedStrategyIndex];
+            const effectiveness = selectedStrategy.effectiveness;
+            const feedback = document.getElementById('feedback');
             
-            // Calculate points based on effectiveness
-            const pointsEarned = Math.floor(effectiveness / 10);
-            score += pointsEarned;
-            
-            // Provide feedback
-            const feedbackElement = document.getElementById('feedback');
-            
+            let pointsEarned = 0;
+
             if (effectiveness >= 80) {
-                feedbackElement.textContent = `Great choice! ${selectedStrategyData.title} is an excellent strategy for this situation. +${pointsEarned} points`;
-                feedbackElement.className = 'feedback correct';
+                streak++;
+                pointsEarned = Math.floor(effectiveness / 10) + (streak * 2); // Bonus for streak
+                feedback.textContent = `🌟 Great choice! ${selectedStrategy.title} is excellent here. +${pointsEarned} points!`;
+                feedback.className = 'feedback correct';
+                playTone('correct');
+                speakText("Great choice!");
             } else if (effectiveness >= 50) {
-                feedbackElement.textContent = `Good try. ${selectedStrategyData.title} might help somewhat, but there are better strategies for this situation. +${pointsEarned} points`;
-                feedbackElement.className = 'feedback correct';
+                streak = 0;
+                pointsEarned = Math.floor(effectiveness / 10);
+                feedback.textContent = `Good try. ${selectedStrategy.title} helps somewhat, but there are better ways. +${pointsEarned} points.`;
+                feedback.className = 'feedback correct';
+                playTone('correct');
             } else {
-                feedbackElement.textContent = `${selectedStrategyData.title} isn't the best choice here. Try to think about strategies that address the emotion more effectively. +${pointsEarned} points`;
-                feedbackElement.className = 'feedback incorrect';
+                streak = 0;
+                pointsEarned = 1;
+                feedback.textContent = `Hmm, ${selectedStrategy.title} might make things worse. Try to find a calming strategy.`;
+                feedback.className = 'feedback incorrect';
+                playTone('wrong');
             }
             
-            feedbackElement.style.display = 'block';
+            score += pointsEarned;
             
-            // Highlight correct answers
-            document.querySelectorAll('.strategy-card').forEach((card, index) => {
-                const strategyData = [...currentScenario.strategies].sort(() => Math.random() - 0.5)[index];
-                if (strategyData.effectiveness >= 80) {
-                    card.classList.add('correct');
-                } else if (strategyData.effectiveness < 30) {
-                    card.classList.add('incorrect');
+            // Highlight cards
+            document.querySelectorAll('.strategy-card').forEach((card, idx) => {
+                card.style.pointerEvents = 'none'; // Lock selections
+                if (currentStrategies[idx].effectiveness >= 80) {
+                    card.classList.add('correct-ans');
+                } else if (idx === selectedStrategyIndex && effectiveness < 50) {
+                    card.classList.add('wrong-ans');
                 }
             });
             
-            // Disable further selection
-            document.querySelectorAll('.strategy-card').forEach(card => {
-                card.style.pointerEvents = 'none';
-            });
+            feedback.style.display = 'block';
+            document.getElementById('submit-button').style.display = 'none';
+            document.getElementById('next-button').style.display = 'block';
+            updateGameInfo();
         }
+
+        function nextScenario() {
+            if (level < 8) {
+                level++;
+                loadScenario();
+            } else {
+                endGame();
+            }
+        }
+
+        function endGame() {
+            document.getElementById('play-area').innerHTML = `
+                <div style="font-size: 5rem; margin-bottom:20px;">🏆</div>
+                <h2 style="font-family: var(--font-head); font-size: 2.5rem; color: var(--primary);">Challenge Complete!</h2>
+                <p style="font-size: 1.5rem; margin-top: 10px;">Final Score: <strong>${score}</strong></p>
+                <p style="font-size: 1.2rem; color: var(--success); margin-top: 10px;">You are becoming an expert at regulating emotions!</p>
+            `;
+            document.getElementById('progress').style.width = '100%';
+            playTone('correct');
+            setTimeout(() => playTone('correct'), 300);
+            speakText("Challenge Complete! Great job learning about your emotions!");
+        }
+
+        // Initialize UI values
+        updateGameInfo();
+        updateEmoji();
+    </script>
+</body>
+</html>

@@ -2,571 +2,523 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Focus Finder Challenge</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Nunito:wght@600;800;900&display=swap');
+
+        :root {
+            --bg-grad-dark: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            --bg-grad-light: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-dark: rgba(20, 30, 40, 0.7);
+            --primary: #4A90E2;
+            --success: #38b000;
+            --warning: #f4a261;
+            --error: #e63946;
+            --text-main: #2b2b2b;
+            --text-light: #ffffff;
+            --font-head: 'Nunito', sans-serif;
+            --font-body: 'Atkinson Hyperlegible', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: var(--font-body);
             text-align: center;
-            padding: 20px;
-            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-grad-light);
+            color: var(--text-main);
             transition: background 0.5s ease, color 0.5s ease;
+            overflow-x: hidden;
+            padding: 20px 0;
+            user-select: none;
         }
-        /* Dark Theme (default) */
-        body.dark {
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            color: white;
+
+        body.dark { background: var(--bg-grad-dark); color: var(--text-light); }
+
+        /* Top Controls */
+        .header-controls {
+            position: absolute; top: 20px; width: 100%; max-width: 900px;
+            display: flex; justify-content: space-between; padding: 0 20px;
+            z-index: 1000;
         }
-        /* Light Theme */
-        body.light {
-            background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
-            color: #333;
+
+        button.icon-btn {
+            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 50px;
+            padding: 8px 16px; font-family: var(--font-head); font-size: 1rem;
+            cursor: pointer; color: inherit; transition: all 0.3s ease; font-weight: 800;
         }
+        button.icon-btn:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.4); }
+
         h1 {
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-family: var(--font-head); font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 900; margin: 40px 0 10px; text-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
         #game-info {
-            font-size: 1.2em;
-            margin: 10px 0;
+            display: flex; gap: 20px; font-size: 1.2rem; font-weight: 700;
+            margin-bottom: 10px; background: rgba(0,0,0,0.05);
+            padding: 10px 25px; border-radius: 20px;
         }
+        body.dark #game-info { background: rgba(255,255,255,0.1); }
+        .streak-text { color: #ff9f1c; font-weight: 900; animation: pulse 1.5s infinite; }
+
+        /* Main Container */
         #game-container {
-            max-width: 900px;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-            transition: background 0.5s ease;
-            position: relative;
+            width: 95%; max-width: 900px; background: var(--card-bg);
+            padding: 25px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5);
+            display: flex; flex-direction: column; align-items: center;
+            transition: transform 0.1s;
         }
-        body.dark #game-container {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        body.light #game-container {
-            background: rgba(0, 0, 0, 0.05);
-        }
+        body.dark #game-container { background: var(--card-dark); border-color: rgba(255,255,255,0.1); }
+
         .instructions {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-size: 1.1em;
+            background: rgba(0, 0, 0, 0.04); padding: 15px 25px; border-radius: 12px;
+            margin-bottom: 20px; font-size: 1.2rem; font-weight: 700; width: 100%;
         }
-        .game-area {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .target {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background-color: #4CAF50;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            color: white;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            user-select: none;
-        }
-        .target:hover {
-            transform: scale(1.1);
-        }
-        .distraction {
-            position: absolute;
-            font-size: 30px;
-            animation: float 3s infinite ease-in-out;
-            cursor: default;
-            user-select: none;
-            z-index: 1;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        .sequence-display {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-        .sequence-item {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-        }
-        .sequence-item.correct {
-            background: rgba(76, 175, 80, 0.5);
-        }
-        .sequence-item.incorrect {
-            background: rgba(244, 67, 54, 0.5);
-        }
+        body.dark .instructions { background: rgba(255, 255, 255, 0.05); }
+
+        /* Timer Bar */
         .timer-bar {
-            width: 100%;
-            height: 10px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            margin-bottom: 20px;
-            overflow: hidden;
+            width: 100%; height: 12px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; overflow: hidden; margin-bottom: 15px;
         }
-        .timer {
-            height: 100%;
-            background: linear-gradient(90deg, #FF5722, #FFC107);
-            width: 100%;
+        body.dark .timer-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .timer-progress {
+            height: 100%; width: 100%; background: linear-gradient(90deg, #4A90E2, #f4a261, #e63946);
             transition: width 0.1s linear;
         }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            margin-top: 20px;
-            overflow: hidden;
+
+        /* Sequence Display */
+        .sequence-display {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+            margin-bottom: 20px; min-height: 50px;
         }
-        .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #00c6ff, #0072ff);
-            transition: width 0.5s ease;
+        .sequence-item {
+            width: 45px; height: 45px; background: rgba(0,0,0,0.05);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-family: var(--font-head); font-weight: 900;
+            color: rgba(0,0,0,0.4); border: 2px dashed rgba(0,0,0,0.2); transition: all 0.3s ease;
         }
-        .feedback {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 1.2em;
-            display: none;
+        body.dark .sequence-item { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.2); }
+        
+        .sequence-item.filled { background: var(--success); color: white; border: 2px solid var(--success); transform: scale(1.1); box-shadow: 0 4px 10px rgba(56, 176, 0, 0.4); }
+        
+        /* Game Area */
+        .game-area {
+            position: relative; width: 100%; height: 450px;
+            background: rgba(0, 0, 0, 0.03); border-radius: 16px; overflow: hidden;
+            border: 2px solid rgba(0,0,0,0.05); box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
         }
-        .feedback.correct {
-            background: rgba(76, 175, 80, 0.2);
+        body.dark .game-area { background: rgba(255, 255, 255, 0.02); border-color: rgba(255,255,255,0.05); box-shadow: inset 0 0 20px rgba(0,0,0,0.2); }
+
+        .target {
+            position: absolute; width: 60px; height: 60px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-head); font-size: 1.8rem; font-weight: 900;
+            color: white; cursor: pointer; transition: transform 0.1s, opacity 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10;
         }
-        .feedback.incorrect {
-            background: rgba(244, 67, 54, 0.2);
-        }
-        .next-button {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            display: none;
-        }
-        .next-button:hover {
-            background: #388E3C;
-        }
-        #theme-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        body.dark #theme-toggle {
-            background: #ffd700;
-            color: #333;
-        }
-        body.light #theme-toggle {
-            background: #333;
-            color: white;
-        }
-        #restart {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 1.2em;
-            background: #ff4444;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        #restart:hover {
-            background: #cc0000;
-        }
-        .start-button {
-            margin-top: 20px;
-            padding: 15px 40px;
-            font-size: 1.3em;
-            background: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        .start-button:hover {
-            background: #1976D2;
+        .target:active { transform: scale(0.9); }
+        .target.clicked { opacity: 0; pointer-events: none; transform: scale(1.5); }
+
+        .distraction {
+            position: absolute; font-size: 2.5rem; user-select: none; z-index: 5; pointer-events: none;
         }
         .distraction-text {
-            position: absolute;
-            font-size: 24px;
-            color: rgba(255, 255, 255, 0.7);
-            pointer-events: none;
-            animation: fadeInOut 4s infinite;
+            position: absolute; font-family: var(--font-head); font-weight: 800; font-size: 1.5rem;
+            color: var(--error); user-select: none; z-index: 6; pointer-events: none;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
         }
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
+        body.dark .distraction-text { text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+
+        /* Buttons & Feedback */
+        .action-btn {
+            margin-top: 15px; padding: 14px 35px; font-family: var(--font-head); font-size: 1.3rem; font-weight: 900;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
+        #start-button { background: linear-gradient(135deg, var(--primary), #0072ff); display: block; z-index: 100;}
+        #next-button { background: linear-gradient(135deg, #38b000, #008000); display: none; margin-top: 20px;}
+        #restart-btn { background: var(--error); display:none; margin-top: 20px; }
+        .action-btn:hover { transform: translateY(-3px); }
+
+        .feedback {
+            margin-top: 20px; padding: 15px 25px; border-radius: 14px; width: 100%;
+            font-size: 1.2rem; font-weight: 800; display: none;
+            animation: slideUp 0.3s ease forwards;
+        }
+        .feedback.correct { background: rgba(56, 176, 0, 0.15); color: #2b8a00; border: 2px solid rgba(56,176,0,0.3);}
+        .feedback.incorrect { background: rgba(230, 57, 70, 0.15); color: #c1121f; border: 2px solid rgba(230,57,70,0.3);}
+        body.dark .feedback.correct { color: #80ed99; }
+        body.dark .feedback.incorrect { color: #ffb3c1; }
+
+        .level-progress-bar {
+            width: 100%; height: 8px; background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px; margin-top: 20px; overflow: hidden;
+        }
+        body.dark .level-progress-bar { background-color: rgba(255, 255, 255, 0.1); }
+        .level-progress { height: 100%; width: 0%; background: linear-gradient(90deg, #38b000, #4facfe); transition: width 0.5s; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        /* Distraction Animations */
+        @keyframes float { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(15px, -15px); } 50% { transform: translate(0, -30px); } 75% { transform: translate(-15px, -15px); } }
+        @keyframes spinFloat { 0% { transform: rotate(0deg) translateY(0); } 50% { transform: rotate(180deg) translateY(-20px); } 100% { transform: rotate(360deg) translateY(0); } }
+        @keyframes popFade { 0% { opacity: 0; transform: scale(0.5); } 20% { opacity: 1; transform: scale(1.2); } 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.8); } }
     </style>
 </head>
-<body class="dark">
-    <button id="theme-toggle" onclick="toggleTheme()">Light Theme</button>
+<body class="light">
+
+    <div class="header-controls">
+        <button class="icon-btn" id="audio-toggle" onclick="toggleAudio()">🔊 Sound: ON</button>
+        <button class="icon-btn" id="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+    </div>
+
     <h1>Focus Finder Challenge</h1>
     <div id="game-info">
-        Level: <span id="level">1</span>/10 | Score: <span id="score">0</span>
+        <div>Level: <span id="level">1</span>/10</div>
+        <div>Score: <span id="score">0</span></div>
+        <div id="streak-container" style="display:none;" class="streak-text">🔥 Streak: <span id="streak">0</span></div>
     </div>
+
     <div id="game-container">
-        <div class="instructions" id="instructions">Focus on finding and clicking the targets in the correct sequence while ignoring distractions!</div>
-        <div class="timer-bar">
-            <div class="timer" id="timer"></div>
+        <div class="instructions" id="instructions">
+            Find and click the numbered targets in order! Ignore everything else.
         </div>
+        
+        <div class="timer-bar"><div class="timer-progress" id="timer-progress"></div></div>
+        
         <div class="sequence-display" id="sequence-display"></div>
+        
         <div class="game-area" id="game-area">
-            <button class="start-button" id="start-button">Start Level</button>
+            <button class="action-btn" id="start-button" onclick="startLevel()">Start Level ▶</button>
         </div>
+        
         <div class="feedback" id="feedback"></div>
-        <button class="next-button" id="next-button">Next Level</button>
-        <div class="progress-bar">
-            <div class="progress" id="progress"></div>
+        <button class="action-btn" id="next-button" onclick="prepNextLevel()">Next Level ➔</button>
+        
+        <div class="level-progress-bar">
+            <div class="level-progress" id="progress"></div>
         </div>
     </div>
-    <button id="restart" onclick="restartGame()">Restart Game</button>
+    
+    <button class="action-btn" id="restart-btn" onclick="location.reload()">↺ Restart Game</button>
 
     <script>
-        // Game variables
         let level = 1;
         let score = 0;
-        let currentSequence = [];
-        let userSequence = [];
+        let streak = 0;
+        let targetSequence = []; // [1, 2, 3...]
+        let currentTargetIndex = 0; // index we are currently looking for
+        
         let gameActive = false;
         let timerInterval = null;
         let timeLeft = 0;
-        let distractionInterval = null;
-        let distractionTexts = [
-            "Look here!", "Distraction!", "Hey!", "Click me!", "Over here!",
-            "Notice me!", "Hello there!", "Psst!", "Attention!", "Focus?"
-        ];
-        let emojis = [
-            "🎈", "🎮", "🎯", "🎪", "🎭", "🎨", "🎬", "🎤", "🎧", "🎸",
-            "🎹", "🎺", "🎻", "🎲", "🎯", "🎮", "🎪", "🎭", "🎨", "🎬"
-        ];
+        let totalTimeForLevel = 0;
         
-        // Function to toggle theme
+        let audioEnabled = true;
+
+        const distractionEmojis = ["🎈", "🎮", "🎯", "🎪", "🎭", "🎨", "🎬", "🎤", "🎧", "🎸", "🚀", "🛸", "🚨", "🔔"];
+        const distractionTexts = ["Look here!", "Hey!", "Click me!", "Over here!", "Psst!", "Notice me!"];
+
+        // --- Audio System ---
+        function playTone(type) {
+            if (!audioEnabled) return;
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                
+                if (type === 'pop') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(800 + (currentTargetIndex * 100), ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                    osc.start(); osc.stop(ctx.currentTime + 0.1);
+                } else if (type === 'correct') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                    osc.start(); osc.stop(ctx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                    osc.start(); osc.stop(ctx.currentTime + 0.2);
+                }
+            } catch(e) {}
+        }
+
+        function speakText(text) {
+            if (!audioEnabled || !window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.2;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Toggles
         function toggleTheme() {
             const body = document.body;
-            const themeButton = document.getElementById('theme-toggle');
+            const btn = document.getElementById('theme-toggle');
             if (body.classList.contains('dark')) {
-                body.classList.remove('dark');
-                body.classList.add('light');
-                themeButton.textContent = 'Dark Theme';
+                body.classList.replace('dark', 'light');
+                btn.textContent = '🌙 Dark Mode';
             } else {
-                body.classList.remove('light');
-                body.classList.add('dark');
-                themeButton.textContent = 'Light Theme';
+                body.classList.replace('light', 'dark');
+                btn.textContent = '☀️ Light Mode';
             }
         }
-        
-        // Function to update game info
-        function updateGameInfo() {
+
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            document.getElementById('audio-toggle').textContent = audioEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+            if(!audioEnabled) window.speechSynthesis.cancel();
+        }
+
+        // --- Core UI & Mechanics ---
+        function updateUI() {
             document.getElementById('level').textContent = level;
             document.getElementById('score').textContent = score;
             document.getElementById('progress').style.width = `${(level / 10) * 100}%`;
-        }
-        
-        // Function to generate a random position within the game area
-        function getRandomPosition(elementWidth, elementHeight) {
-            const gameArea = document.getElementById('game-area');
-            const maxX = gameArea.clientWidth - elementWidth;
-            const maxY = gameArea.clientHeight - elementHeight;
-            return {
-                x: Math.floor(Math.random() * maxX),
-                y: Math.floor(Math.random() * maxY)
-            };
-        }
-        
-        // Function to generate a sequence
-        function generateSequence() {
-            const sequenceLength = Math.min(3 + Math.floor(level / 2), 8);
-            const sequence = [];
             
-            for (let i = 0; i < sequenceLength; i++) {
-                sequence.push(i + 1);
-            }
-            
-            return sequence;
-        }
-        
-        // Function to display the sequence
-        function displaySequence() {
-            const sequenceDisplay = document.getElementById('sequence-display');
-            sequenceDisplay.innerHTML = '';
-            
-            currentSequence.forEach(num => {
-                const item = document.createElement('div');
-                item.className = 'sequence-item';
-                item.textContent = num;
-                sequenceDisplay.appendChild(item);
-            });
-        }
-        
-        // Function to create targets
-        function createTargets() {
-            const gameArea = document.getElementById('game-area');
-            gameArea.innerHTML = ''; // Clear previous targets
-            
-            // Create targets based on the sequence
-            currentSequence.forEach(num => {
-                const target = document.createElement('div');
-                target.className = 'target';
-                target.textContent = num;
-                target.dataset.number = num;
-                
-                // Set random position
-                const position = getRandomPosition(60, 60);
-                target.style.left = `${position.x}px`;
-                target.style.top = `${position.y}px`;
-                
-                // Add click event
-                target.addEventListener('click', () => targetClicked(num));
-                
-                gameArea.appendChild(target);
-            });
-        }
-        
-        // Function to create distractions
-        function createDistractions() {
-            const gameArea = document.getElementById('game-area');
-            const numDistractions = Math.min(level, 10);
-            
-            // Create emoji distractions
-            for (let i = 0; i < numDistractions; i++) {
-                const distraction = document.createElement('div');
-                distraction.className = 'distraction';
-                distraction.textContent = emojis[Math.floor(Math.random() * emojis.length)];
-                
-                // Set random position
-                const position = getRandomPosition(40, 40);
-                distraction.style.left = `${position.x}px`;
-                distraction.style.top = `${position.y}px`;
-                
-                // Add random animation delay
-                distraction.style.animationDelay = `${Math.random() * 2}s`;
-                
-                gameArea.appendChild(distraction);
-            }
-            
-            // Start interval for text distractions
-            distractionInterval = setInterval(() => {
-                if (!gameActive) return;
-                
-                const distraction = document.createElement('div');
-                distraction.className = 'distraction-text';
-                distraction.textContent = distractionTexts[Math.floor(Math.random() * distractionTexts.length)];
-                
-                // Set random position
-                const position = getRandomPosition(100, 30);
-                distraction.style.left = `${position.x}px`;
-                distraction.style.top = `${position.y}px`;
-                
-                gameArea.appendChild(distraction);
-                
-                // Remove after animation completes
-                setTimeout(() => {
-                    if (distraction.parentNode === gameArea) {
-                        gameArea.removeChild(distraction);
-                    }
-                }, 4000);
-                
-            }, 2000 / Math.sqrt(level)); // Distractions appear more frequently at higher levels
-        }
-        
-        // Function to handle target clicks
-        function targetClicked(number) {
-            if (!gameActive) return;
-            
-            userSequence.push(number);
-            
-            // Update sequence display
-            const sequenceItems = document.querySelectorAll('.sequence-item');
-            const index = userSequence.length - 1;
-            
-            if (userSequence[index] === currentSequence[index]) {
-                // Correct selection
-                sequenceItems[index].classList.add('correct');
-                
-                // Check if sequence is complete
-                if (userSequence.length === currentSequence.length) {
-                    endLevel(true);
-                }
+            const streakEl = document.getElementById('streak-container');
+            if(streak >= 2) {
+                streakEl.style.display = 'block';
+                document.getElementById('streak').textContent = streak;
             } else {
-                // Incorrect selection
-                sequenceItems[index].classList.add('incorrect');
-                endLevel(false);
+                streakEl.style.display = 'none';
             }
         }
-        
-        // Function to start the timer
-        function startTimer() {
-            const timerElement = document.getElementById('timer');
-            timeLeft = 100; // 100% of time
-            timerElement.style.width = `${timeLeft}%`;
+
+        // Safe positioning logic to prevent overlapping buttons
+        function getSafePosition(areaWidth, areaHeight, itemSize, existingPositions) {
+            let x, y, isValid;
+            let attempts = 0;
+            do {
+                isValid = true;
+                x = Math.random() * (areaWidth - itemSize - 20) + 10;
+                y = Math.random() * (areaHeight - itemSize - 20) + 10;
+                
+                // Check against existing points
+                for(let pos of existingPositions) {
+                    const dist = Math.hypot(x - pos.x, y - pos.y);
+                    if (dist < itemSize + 10) { // Keep them padded apart
+                        isValid = false;
+                        break;
+                    }
+                }
+                attempts++;
+            } while (!isValid && attempts < 100);
             
-            // Calculate time based on level and sequence length
-            const totalTime = 10000 - (level * 500) + (currentSequence.length * 1000);
-            const interval = 100; // Update every 100ms
-            const decrementPerInterval = (interval / totalTime) * 100;
+            return {x, y};
+        }
+
+        function setupBoard() {
+            const gameArea = document.getElementById('game-area');
+            const seqDisplay = document.getElementById('sequence-display');
+            gameArea.innerHTML = '';
+            seqDisplay.innerHTML = '';
+            
+            // Calculate sequence length (Levels 1-2 = 3 items, up to 8 max)
+            const seqLength = Math.min(3 + Math.floor((level-1) / 2), 8);
+            targetSequence = Array.from({length: seqLength}, (_, i) => i + 1);
+            currentTargetIndex = 0;
+
+            // Render HUD
+            targetSequence.forEach(num => {
+                const box = document.createElement('div');
+                box.className = 'sequence-item';
+                box.id = `seq-box-${num}`;
+                box.textContent = num;
+                seqDisplay.appendChild(box);
+            });
+
+            // Generate Board Elements
+            const areaW = gameArea.clientWidth;
+            const areaH = gameArea.clientHeight;
+            let occupiedPositions = [];
+
+            // 1. Place Targets
+            targetSequence.forEach(num => {
+                const pos = getSafePosition(areaW, areaH, 60, occupiedPositions);
+                occupiedPositions.push(pos);
+
+                const t = document.createElement('div');
+                t.className = 'target';
+                t.textContent = num;
+                // Random Target Colors
+                t.style.background = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                t.style.left = `${pos.x}px`;
+                t.style.top = `${pos.y}px`;
+                
+                t.onclick = () => handleTargetClick(num, t);
+                gameArea.appendChild(t);
+            });
+
+            // 2. Place Distractions (Amount scales with level)
+            const numDistractions = level * 2;
+            for(let i=0; i<numDistractions; i++) {
+                const isText = Math.random() > 0.7; // 30% chance to be text
+                const el = document.createElement('div');
+                
+                if(isText) {
+                    el.className = 'distraction-text';
+                    el.textContent = distractionTexts[Math.floor(Math.random() * distractionTexts.length)];
+                    el.style.animation = `popFade ${2 + Math.random()*2}s infinite ${Math.random()}s`;
+                } else {
+                    el.className = 'distraction';
+                    el.textContent = distractionEmojis[Math.floor(Math.random() * distractionEmojis.length)];
+                    // Harder levels have crazier animations
+                    const anim = level > 5 ? 'spinFloat' : 'float';
+                    el.style.animation = `${anim} ${2 + Math.random()*3}s infinite alternate ease-in-out`;
+                }
+
+                const pos = getSafePosition(areaW, areaH, 40, occupiedPositions);
+                // Don't push distractions into collision array so they can overlap each other safely
+                el.style.left = `${pos.x}px`;
+                el.style.top = `${pos.y}px`;
+                gameArea.appendChild(el);
+            }
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            const timerBar = document.getElementById('timer-progress');
+            
+            // Time scales based on sequence length and level
+            totalTimeForLevel = 10 + (targetSequence.length * 2) - Math.floor(level/2);
+            timeLeft = totalTimeForLevel;
+            
+            timerBar.style.width = '100%';
             
             timerInterval = setInterval(() => {
-                timeLeft -= decrementPerInterval;
-                timerElement.style.width = `${Math.max(0, timeLeft)}%`;
+                if(!gameActive) return;
+                
+                timeLeft -= 0.1;
+                timerBar.style.width = `${(timeLeft / totalTimeForLevel) * 100}%`;
                 
                 if (timeLeft <= 0) {
-                    endLevel(false);
+                    clearInterval(timerInterval);
+                    timerBar.style.width = '0%';
+                    handleGameOver(false);
                 }
-            }, interval);
+            }, 100);
         }
-        
-        // Function to end the level
-        function endLevel(success) {
-            gameActive = false;
-            clearInterval(timerInterval);
-            clearInterval(distractionInterval);
-            
-            const feedbackElement = document.getElementById('feedback');
-            const nextButton = document.getElementById('next-button');
-            
-            if (success) {
-                feedbackElement.textContent = 'Great job! You completed the sequence correctly!';
-                feedbackElement.className = 'feedback correct';
-                score += 10 * level;
-                nextButton.textContent = 'Next Level';
-            } else {
-                feedbackElement.textContent = 'Oops! That wasn\'t the correct sequence or you ran out of time.';
-                feedbackElement.className = 'feedback incorrect';
-                nextButton.textContent = 'Try Again';
-            }
-            
-            feedbackElement.style.display = 'block';
-            nextButton.style.display = 'block';
-            
-            updateGameInfo();
-        }
-        
-        // Function to start the level
+
         function startLevel() {
-            // Reset game state
-            userSequence = [];
-            gameActive = true;
+            // Audio Context unlocker
+            try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); ctx.resume(); } catch(e){}
             
-            // Hide start button and feedback
-            document.getElementById('start-button').style.display = 'none';
             document.getElementById('feedback').style.display = 'none';
             document.getElementById('next-button').style.display = 'none';
             
-            // Generate and display sequence
-            currentSequence = generateSequence();
-            displaySequence();
-            
-            // Create targets and distractions
-            createTargets();
-            createDistractions();
-            
-            // Start timer
+            setupBoard();
+            gameActive = true;
             startTimer();
+            speakText("Go!");
         }
-        
-        // Function to set up the next level
-        function nextLevel() {
-            const feedbackElement = document.getElementById('feedback');
-            const nextButton = document.getElementById('next-button');
-            
-            feedbackElement.style.display = 'none';
-            nextButton.style.display = 'none';
-            
-            // Clear game area and show start button
-            const gameArea = document.getElementById('game-area');
-            gameArea.innerHTML = '<button class="start-button" id="start-button">Start Level</button>';
-            document.getElementById('start-button').addEventListener('click', startLevel);
-            
-            // Clear sequence display
-            document.getElementById('sequence-display').innerHTML = '';
-            
-            // Reset timer
-            document.getElementById('timer').style.width = '100%';
-            
-            // Update instructions based on level
-            if (level <= 3) {
-                document.getElementById('instructions').textContent = 'Focus on finding and clicking the targets in the correct sequence while ignoring distractions!';
-            } else if (level <= 6) {
-                document.getElementById('instructions').textContent = 'The challenge is getting harder! Stay focused and remember the sequence.';
-            } else {
-                document.getElementById('instructions').textContent = 'Maximum focus required! Ignore the distractions and complete the sequence quickly.';
-            }
-        }
-        
-        // Function to handle next button click
-        function handleNextButton() {
-            const feedbackElement = document.getElementById('feedback');
-            
-            if (feedbackElement.classList.contains('correct')) {
-                // Move to next level if successful
-                if (level < 10) {
-                    level++;
-                } else {
-                    // Game completed
-                    document.getElementById('game-area').innerHTML = `
-                        <div style="font-size: 2em; margin: 20px;">🏆</div>
-                        <div style="font-size: 1.5em; margin: 20px;">Congratulations!</div>
-                        <div>You've completed all levels with a score of ${score}!</div>
-                    `;
-                    document.getElementById('next-button').style.display = 'none';
-                    return;
+
+        function handleTargetClick(num, element) {
+            if(!gameActive) return;
+
+            const expected = targetSequence[currentTargetIndex];
+
+            if (num === expected) {
+                // Correct click!
+                playTone('pop');
+                speakText(num.toString());
+                
+                element.classList.add('clicked');
+                
+                const hudBox = document.getElementById(`seq-box-${num}`);
+                hudBox.classList.add('filled');
+                
+                currentTargetIndex++;
+
+                // Win Condition
+                if (currentTargetIndex === targetSequence.length) {
+                    handleGameOver(true);
                 }
+            } else {
+                // Wrong click! (Forgiving mechanic)
+                playTone('wrong');
+                streak = 0;
+                updateUI();
+                
+                // Shake screen effect
+                const container = document.getElementById('game-container');
+                container.style.transform = 'translate(-10px, 0)';
+                setTimeout(()=> container.style.transform = 'translate(10px, 0)', 50);
+                setTimeout(()=> container.style.transform = 'translate(-10px, 0)', 100);
+                setTimeout(()=> container.style.transform = 'translate(0, 0)', 150);
+                
+                // Penalty
+                timeLeft -= 2.0; 
+                
+                const feedback = document.getElementById('feedback');
+                feedback.textContent = `Oops! You need to click ${expected} next. (-2 sec)`;
+                feedback.className = 'feedback incorrect';
+                feedback.style.display = 'block';
+                setTimeout(() => feedback.style.display = 'none', 1500);
+            }
+        }
+
+        function handleGameOver(won) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const feedback = document.getElementById('feedback');
+            document.getElementById('game-area').innerHTML = ''; // clear board
+            
+            if (won) {
+                streak++;
+                let pts = 20 + Math.floor(timeLeft * 5) + (streak * 10);
+                score += pts;
+                
+                playTone('correct');
+                feedback.textContent = `🌟 Awesome Focus! +${pts} pts`;
+                feedback.className = 'feedback correct';
+                speakText("Awesome focus!");
+                
+                if (level < 10) {
+                    document.getElementById('next-button').style.display = 'block';
+                } else {
+                    document.getElementById('restart-btn').style.display = 'block';
+                    feedback.innerHTML = `🏆 CHAMPION!<br>You beat all 10 levels with ${score} points!`;
+                }
+            } else {
+                streak = 0;
+                playTone('wrong');
+                feedback.textContent = `⏳ Time's up! Distractions got the better of us. Try again!`;
+                feedback.className = 'feedback incorrect';
+                speakText("Time is up. Let's try again.");
+                
+                document.getElementById('game-area').innerHTML = '<button class="action-btn" id="start-button" onclick="startLevel()">Retry Level ↺</button>';
             }
             
-            nextLevel();
-            updateGameInfo();
+            updateUI();
+            feedback.style.display = 'block';
         }
-        
-        // Function to restart the game
-        function restartGame() {
-            level = 1;
-            score = 0;
-            clearInterval(timerInterval);
-            clearInterval(distractionInterval);
-            updateGameInfo();
-            nextLevel();
+
+        function prepNextLevel() {
+            level++;
+            updateUI();
+            startLevel();
         }
-        
-        // Event listeners
-        document.getElementById('next-button').addEventListener('click', handleNextButton);
-        document.getElementById('start-button').addEventListener('click', startLevel);
-        
-        // Initialize game
-        updateGameInfo();
+
     </script>
 </body>
 </html>
